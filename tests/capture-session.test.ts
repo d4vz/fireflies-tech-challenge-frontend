@@ -12,6 +12,7 @@ import {
   firstAcceptedMedia,
   isNameModalOpen,
   prefillName,
+  sessionLabel,
   setSessionName,
   startCaptureNaming,
   startPickingUpload,
@@ -176,4 +177,10 @@ test("upload menu item has an icon and a description", async () => {
   expect(capture).toContain("Add a recording from your computer");
   expect(capture).toContain("w-[min(18rem,calc(100vw-1.5rem))]");
   expect(capture).toContain("<Upload");
+});
+
+test("sessionLabel stays empty while uploading so Capture has no status text", () => {
+  expect(sessionLabel({ kind: "uploading", name: "standup" })).toBe("");
+  expect(sessionLabel({ kind: "recording", name: "standup" })).toBe("recording");
+  expect(sessionLabel({ kind: "idle" })).toBe("");
 });

@@ -141,12 +141,11 @@ export function isNameModalOpen(session: CaptureSession): boolean {
   }
 }
 
-export function sessionLabel(session: CaptureSession): "" | "recording" | "uploading" {
+export function sessionLabel(session: CaptureSession): "" | "recording" {
   switch (session.kind) {
     case "recording":
       return "recording";
     case "uploading":
-      return "uploading";
     case "idle":
     case "failed":
     case "naming-capture":
