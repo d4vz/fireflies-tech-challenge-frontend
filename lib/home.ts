@@ -95,6 +95,15 @@ export function assistantChrome(fred: FredParam): AssistantChrome {
   };
 }
 
+export type AssistantPanelSlot = "dock" | "sheet" | "none";
+
+export function assistantPanelSlot(isXl: boolean, isOpen: boolean): AssistantPanelSlot {
+  if (!isOpen) {
+    return "none";
+  }
+  return isXl ? "dock" : "sheet";
+}
+
 export type InsightCoverage =
   | { kind: "complete" }
   | { kind: "sample"; sampled: number; total: number };

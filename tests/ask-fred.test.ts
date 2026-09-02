@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import {
   ASK_FRED_PLACEHOLDER,
-  askFredMeetingPath,
+  askFredAppOrigin,
   isAskFredBusy,
   shouldScrollFredStick,
 } from "@lib/ask-fred";
@@ -14,26 +14,18 @@ test("Ask Fred placeholder does not mention Command J", () => {
   expect(ASK_FRED_PLACEHOLDER.includes("⌘")).toBe(false);
 });
 
+test("Ask Fred app origin is the request origin with no path", () => {
+  expect(askFredAppOrigin("http://localhost:8080/api/ask-fred")).toBe("http://localhost:8080");
+  expect(askFredAppOrigin("https://app.example.com/api/ask-fred?fred=1")).toBe(
+    "https://app.example.com",
+  );
+});
+
 test("send is busy only while submitted or streaming", () => {
   expect(isAskFredBusy("submitted")).toBe(true);
   expect(isAskFredBusy("streaming")).toBe(true);
   expect(isAskFredBusy("ready")).toBe(false);
   expect(isAskFredBusy("error")).toBe(false);
-});
-
-test("Ask Fred maps meeting hrefs onto the detail path", () => {
-  const origin = "http://127.0.0.1:8080";
-  const path = "/meetings/6a963d4f786296c73b01d6d0";
-  expect(askFredMeetingPath(path, origin)).toBe(path);
-  expect(askFredMeetingPath(`http://127.0.0.1:8080${path}`, origin)).toBe(path);
-  expect(askFredMeetingPath(`https://example.com${path}`, origin)).toBe(path);
-  expect(askFredMeetingPath(`https://your_workspace_url${path}`, origin)).toBe(path);
-  expect(
-    askFredMeetingPath(
-      "http://127.0.0.1:9000/fireflies/meetings/6a963d4f786296c73b01d6d0/video",
-      origin,
-    ),
-  ).toBeUndefined();
 });
 
 test("scrolling down after leaving the tail does not jump to the end", () => {
@@ -76,6 +68,15 @@ test("streaming tokens do not steal the viewport after the user leaves the tail"
     shouldScrollFredStick(
       { force: true, isAtBottom: false, key: "2:b:4" },
       { force: true, isAtBottom: false, key: "2:b:40" },
+    ),
+  ).toBe(false);
+});
+
+test("streaming tokens do not retrigger stick scroll while already at the tail", () => {
+  expect(
+    shouldScrollFredStick(
+      { force: true, isAtBottom: true, key: "2:b:4" },
+      { force: true, isAtBottom: true, key: "2:b:40" },
     ),
   ).toBe(false);
 });

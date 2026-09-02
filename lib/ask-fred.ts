@@ -2,7 +2,9 @@ import type { ChatStatus } from "ai";
 
 export const ASK_FRED_PLACEHOLDER = "Ask anything here";
 
-const MEETING_PATH = /^\/meetings\/[a-f0-9]{24}$/i;
+export function askFredAppOrigin(requestUrl: string): string {
+  return new URL(requestUrl).origin;
+}
 
 export function isAskFredBusy(status: ChatStatus): boolean {
   return status === "submitted" || status === "streaming";
@@ -24,17 +26,8 @@ export function shouldScrollFredStick(
   if (previous !== undefined && previous.key === next.key) {
     return false;
   }
-  return next.isAtBottom;
-}
-
-export function askFredMeetingPath(url: string, origin: string): string | undefined {
-  try {
-    const parsed = new URL(url, origin);
-    if (!MEETING_PATH.test(parsed.pathname)) {
-      return undefined;
-    }
-    return parsed.pathname;
-  } catch {
-    return undefined;
+  if (previous?.force === true) {
+    return false;
   }
+  return next.isAtBottom;
 }

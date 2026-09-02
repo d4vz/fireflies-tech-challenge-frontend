@@ -3,6 +3,7 @@ import { join } from "node:path";
 import {
   assistantChrome,
   assistantOpenHref,
+  assistantPanelSlot,
   homeHref,
   parseHomeView,
   toHomeModel,
@@ -60,6 +61,13 @@ test("assistantChrome maps fred without reading the viewport", () => {
   expect(assistantChrome("unset")).toEqual({ sheetOpen: false, dockHidden: true });
   expect(assistantChrome("open")).toEqual({ sheetOpen: true, dockHidden: false });
   expect(assistantChrome("closed")).toEqual({ sheetOpen: false, dockHidden: true });
+});
+
+test("AskFred mounts in one slot so stick-to-bottom does not run on a hidden copy", () => {
+  expect(assistantPanelSlot(true, true)).toBe("dock");
+  expect(assistantPanelSlot(false, true)).toBe("sheet");
+  expect(assistantPanelSlot(true, false)).toBe("none");
+  expect(assistantPanelSlot(false, false)).toBe("none");
 });
 
 function meeting(input: {
