@@ -132,3 +132,13 @@ test("Ask Fred shows a thinking shimmer while waiting for the model", async () =
   expect(source).toContain("Thinking...");
   expect(source).toContain('from "@/components/ai-elements/shimmer"');
 });
+
+test("Ask Fred empty state is a greeting, stacked chips, and inset send control", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/ask-fred.tsx")).text();
+  expect(source).toContain("Hi ${props.displayName}!");
+  expect(source).toContain("Get ready for your meeting.");
+  expect(source).toContain("flex-col");
+  expect(source).toContain("rounded-2xl");
+  expect(source).toContain("ArrowUp");
+  expect(source.includes("Type @ to mention")).toBe(false);
+});

@@ -5,12 +5,13 @@ import {
   parsePublicMeeting,
   toPublicMeeting,
   type Meeting,
+  type MeetingListFilter,
   type MeetingListPage,
   type MeetingTask,
   type TaskStatus,
   type TranscriptChunk,
 } from "@lib/meetings";
-import type { ActionListPage, ActionStatusFilter } from "@lib/actions";
+import { parseActionGroup, type ActionListPage, type ActionStatusFilter } from "@lib/actions";
 
 type BackendInit = RequestInit & { duplex?: "half" };
 
@@ -30,8 +31,16 @@ export async function backendFetch(path: string, init?: BackendInit): Promise<Re
   return await fetch(backendUrl(path), { ...init, headers });
 }
 
-export async function listMeetings(page: number, limit: number): Promise<MeetingListPage> {
-  const res = await backendFetch(`/meetings?page=${page}&limit=${limit}`, {
+export async function listMeetings(
+  page: number,
+  limit: number,
+  status: MeetingListFilter = "all",
+): Promise<MeetingListPage> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status !== "all") {
+    params.set("status", status);
+  }
+  const res = await backendFetch(`/meetings?${params.toString()}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -133,7 +142,10 @@ export async function listActions(
     throw new Error("could not load tasks");
   }
   const body: ActionListPage = await res.json();
-  return body;
+  return {
+    ...body,
+    items: body.items.map(parseActionGroup),
+  };
 }
 
 export async function patchTask(

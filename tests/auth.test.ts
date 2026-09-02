@@ -83,7 +83,11 @@ test("Clerk UserButton sits beside Capture with the shadcn theme", async () => {
   const accountIndex = frame.indexOf("<AccountButton");
   expect(frame).toContain('from "@clerk/ui/themes"');
   expect(frame).toContain("theme: shadcn");
-  expect(frame).toContain("size-8 shrink-0");
+  expect(frame).toContain("size-9 shrink-0");
+  expect(frame).toContain('avatarBox: "!size-9"');
+  expect(frame).toContain('userButtonTrigger: "!size-9"');
+  expect(frame).toContain("h-9");
+  expect(frame.includes("size-8 shrink-0")).toBe(false);
   expect(frame).toContain("fallback=");
   expect(layout.includes("imageUrl")).toBe(false);
   expect(captureIndex).toBeGreaterThan(-1);

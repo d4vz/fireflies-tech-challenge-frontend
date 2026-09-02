@@ -2,15 +2,24 @@ import {
   parsePublicMeeting,
   toPublicMeeting,
   type Meeting,
+  type MeetingListFilter,
   type MeetingListPage,
   type MeetingTask,
   type TaskStatus,
   type TranscriptChunk,
 } from "@lib/meetings";
-import type { ActionListPage, ActionStatusFilter } from "@lib/actions";
+import { parseActionGroup, type ActionListPage, type ActionStatusFilter } from "@lib/actions";
 
-export async function listMeetings(page: number, limit: number): Promise<MeetingListPage> {
-  const res = await fetch(`/api/meetings?page=${page}&limit=${limit}`);
+export async function listMeetings(
+  page: number,
+  limit: number,
+  status: MeetingListFilter = "all",
+): Promise<MeetingListPage> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status !== "all") {
+    params.set("status", status);
+  }
+  const res = await fetch(`/api/meetings?${params.toString()}`);
   if (!res.ok) {
     throw new Error("could not load meetings");
   }
@@ -53,7 +62,10 @@ export async function listActions(
     throw new Error("could not load tasks");
   }
   const body: ActionListPage = await res.json();
-  return body;
+  return {
+    ...body,
+    items: body.items.map(parseActionGroup),
+  };
 }
 
 export async function patchTask(

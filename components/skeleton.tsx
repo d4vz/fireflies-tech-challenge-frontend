@@ -22,12 +22,12 @@ function MeetingRowBone() {
 
 function MeetingCardBone() {
   return (
-    <div className="grid min-w-0 gap-3">
-      <Bone className="aspect-video rounded-[14px]" />
+    <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 md:grid-cols-1">
+      <Bone className="max-md:size-16 max-md:rounded-lg aspect-video rounded-[14px] md:size-auto" />
       <div className="grid min-w-0 gap-1.5 pt-0.5">
         <Bone className="h-4 w-48 max-w-full rounded-md" />
-        <Bone className="h-3.5 w-full rounded-md" />
-        <Bone className="h-3.5 w-4/5 rounded-md" />
+        <Bone className="h-3.5 w-full max-md:hidden rounded-md" />
+        <Bone className="h-3.5 w-4/5 max-md:hidden rounded-md" />
         <Bone className="h-3 w-24 rounded-md" />
       </div>
     </div>
@@ -74,19 +74,21 @@ export function HomeDashboardSkeleton() {
     <div
       aria-busy="true"
       aria-label="Loading home"
-      className="home-empty h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8"
+      className="home-empty h-full w-full overflow-y-auto"
     >
-      <Bone className="h-8 w-64 max-w-full rounded-md" />
-      <div className="mt-6 grid grid-cols-3 gap-3">
-        <Bone className="h-20 rounded-xl md:h-24" />
-        <Bone className="h-20 rounded-xl md:h-24" />
-        <Bone className="h-20 rounded-xl md:h-24" />
-      </div>
-      <div className="mt-8 grid gap-3">
-        <Bone className="h-6 w-40 max-w-full rounded-md" />
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <MeetingCardBone />
-          <MeetingCardBone />
+      <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
+        <Bone className="h-8 w-64 max-w-full rounded-md" />
+        <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
+          <Bone className="h-20 rounded-xl md:h-24" />
+          <Bone className="h-20 rounded-xl md:h-24" />
+          <Bone className="h-20 rounded-xl md:h-24" />
+        </div>
+        <div className="mt-8 grid gap-3">
+          <Bone className="h-6 w-40 max-w-full rounded-md" />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <MeetingCardBone />
+            <MeetingCardBone />
+          </div>
         </div>
       </div>
     </div>

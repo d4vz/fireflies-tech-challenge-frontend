@@ -190,7 +190,7 @@ export type TaskCountInsight = {
 
 export type InsightCard = MeetingCountInsight | BusyCountInsight | TaskCountInsight;
 
-export const HOME_PREVIEW_COUNT = 2;
+export const HOME_PREVIEW_COUNT = 3;
 
 export type HomeModel = {
   greeting: Greeting;

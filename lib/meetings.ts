@@ -50,8 +50,10 @@ export const meetingsKey = ["meetings"] as const;
 export const MEETINGS_PAGE_SIZE = 5;
 export const HOME_DASHBOARD_LIMIT = 20;
 
-export function meetingsListKey(page: number, limit: number) {
-  return ["meetings", "list", page, limit] as const;
+export type MeetingListFilter = "all" | MeetingStatus;
+
+export function meetingsListKey(page: number, limit: number, status: MeetingListFilter = "all") {
+  return ["meetings", "list", page, limit, status] as const;
 }
 
 export function meetingKey(id: string) {
@@ -68,6 +70,35 @@ export function parsePage(value: string | null | undefined) {
     return 1;
   }
   return page;
+}
+
+export function parseMeetingStatus(value: string | null | undefined): MeetingListFilter {
+  if (value === "queued" || value === "processing" || value === "ready" || value === "failed") {
+    return value;
+  }
+  return "all";
+}
+
+export function meetingsHref(status: MeetingListFilter, page = 1): string {
+  const params = new URLSearchParams();
+  if (status !== "all") {
+    params.set("status", status);
+  }
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+  const query = params.toString();
+  if (query === "") {
+    return "/meetings";
+  }
+  return `/meetings?${query}`;
+}
+
+export function parseMeetingsView(status: string | undefined, page: string | undefined) {
+  return {
+    status: parseMeetingStatus(status),
+    page: parsePage(page),
+  };
 }
 
 export function parseLimit(value: string | null | undefined, fallback: number) {

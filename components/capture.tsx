@@ -2,7 +2,15 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { InfoIcon, TriangleAlertIcon } from "lucide-react";
+import {
+  Camera,
+  ChevronDown,
+  Info,
+  Loader,
+  TriangleAlert,
+  Upload,
+} from "@animateicons/react/lucide";
+import type { IconHandle } from "@animateicons/react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -42,39 +50,13 @@ import {
   type NamingSession,
 } from "@lib/capture-session";
 import { subscribeCaptureIntent, type CaptureIntent } from "@lib/capture-intent";
+import { handleHover } from "@lib/handle-hover";
 import { actionsKey } from "@lib/actions";
 import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
-function CameraIcon() {
-  return (
-    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 8h3l2-2h6l2 2h3v11H4z" />
-      <circle cx="12" cy="13" r="3" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
-
 function Spinner() {
-  return (
-    <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1.8" />
-      <path
-        d="M21 12a9 9 0 0 0-9-9"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Loader aria-hidden="true" size={16} />;
 }
 
 function isNaming(session: CaptureSession): session is NamingSession {
@@ -161,39 +143,54 @@ function CaptureSplitButton(props: {
   onToggleMenu: () => void;
   onUploadVideo: () => void;
 }) {
+  const cameraRef = useRef<IconHandle>(null);
+  const chevronRef = useRef<IconHandle>(null);
+  const uploadRef = useRef<IconHandle>(null);
   return (
     <div className="relative" ref={props.captureRef}>
       <div className="inline-flex overflow-hidden rounded-[10px]">
         <button
           aria-busy={props.uploading}
-          className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-2.5 py-2 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent md:px-3.5"
+          className="inline-flex h-9 cursor-pointer items-center gap-1.5 border-0 bg-accent px-2.5 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent md:px-3.5"
           disabled={props.uploading}
           type="button"
           onClick={props.onCapture}
+          onMouseEnter={(event) => handleHover(event, cameraRef)}
+          onMouseLeave={(event) => handleHover(event, cameraRef)}
         >
-          {props.uploading ? <Spinner /> : <CameraIcon />}
+          {props.uploading ? <Spinner /> : <Camera ref={cameraRef} size={16} />}
           <span className="max-md:sr-only">Capture</span>
         </button>
         <button
           aria-expanded={props.menuOpen}
           aria-haspopup="menu"
           aria-label="Upload"
-          className="inline-flex cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
+          className="inline-flex h-9 cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
           disabled={props.uploading}
           type="button"
           onClick={props.onToggleMenu}
+          onMouseEnter={(event) => handleHover(event, chevronRef)}
+          onMouseLeave={(event) => handleHover(event, chevronRef)}
         >
-          <ChevronIcon />
+          <ChevronDown ref={chevronRef} size={14} />
         </button>
       </div>
       {props.menuOpen ? (
-        <div className="absolute top-[calc(100%+0.4rem)] right-0 z-10 min-w-45 rounded-xl border border-line bg-paper p-1.5 shadow-[0_10px_30px_rgba(16,18,27,0.1)]">
+        <div className="absolute top-[calc(100%+0.4rem)] right-0 z-10 w-[min(18rem,calc(100vw-1.5rem))] rounded-xl border border-line bg-paper p-1.5 shadow-[0_10px_30px_rgba(16,18,27,0.1)]">
           <button
-            className="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-2 text-left hover:bg-nav"
+            className="flex w-full cursor-pointer items-start gap-3 rounded-lg border-0 bg-transparent px-3 py-2.5 text-left hover:bg-nav"
             type="button"
             onClick={props.onUploadVideo}
+            onMouseEnter={(event) => handleHover(event, uploadRef)}
+            onMouseLeave={(event) => handleHover(event, uploadRef)}
           >
-            Upload
+            <Upload ref={uploadRef} className="mt-0.5 shrink-0" size={16} />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Upload</span>
+              <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">
+                Add a recording from your computer
+              </span>
+            </span>
           </button>
         </div>
       ) : null}
@@ -210,7 +207,7 @@ const SCREEN_CAPTURE_PERMISSION_HINT =
 function CaptureDeviceAlert() {
   return (
     <Alert variant="warning">
-      <TriangleAlertIcon />
+      <TriangleAlert />
       <AlertTitle>Limited device support</AlertTitle>
       <AlertDescription>
         Screen capture does not work properly on some phones, tablets, and browsers.{" "}
@@ -226,7 +223,7 @@ function CaptureDeviceAlert() {
 function UploadPendingAlert() {
   return (
     <Alert variant="info">
-      <InfoIcon />
+      <Info />
       <AlertTitle>Pending after upload</AlertTitle>
       <AlertDescription>
         {UPLOAD_PENDING_HINT.replace(/Meetings\.$/, "")}
@@ -303,13 +300,13 @@ function CaptureNameDialog(props: {
     >
       <DialogContent className="sm:max-w-lg md:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Meeting name</DialogTitle>
+          <DialogTitle>Create a meeting</DialogTitle>
         </DialogHeader>
         <Input
-          aria-label="Meeting name"
+          aria-label="Create a meeting"
           value={name}
           autoFocus
-          placeholder="Meeting name"
+          placeholder="Create a meeting"
           onChange={(event) => {
             const nextName = event.target.value;
             props.setSession((current) =>
@@ -428,7 +425,7 @@ export function Capture() {
       ) : null}
       {recording ? (
         <button
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-danger px-3.5 py-2 font-semibold text-white"
+          className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-danger px-3.5 font-semibold text-white"
           type="button"
           onClick={() => recordingRef.current?.stop()}
         >

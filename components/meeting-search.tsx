@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search } from "@animateicons/react/lucide";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,10 @@ export function MeetingSearch(props: MeetingSearchProps) {
 
   return (
     <form className={`relative ${props.className}`} onSubmit={onSubmit}>
-      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
+      <Search
+        className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
+        size={16}
+      />
       <Input
         ref={inputRef}
         key={props.view.query}
@@ -63,7 +66,7 @@ export function MeetingSearch(props: MeetingSearchProps) {
         aria-label="Search meetings"
       />
       {props.hotkey ? (
-        <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-md border border-line bg-paper px-1.5 text-[0.7rem] text-muted md:inline">
+        <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-md border border-line bg-paper px-1.5 text-[0.7rem] text-muted-foreground md:inline">
           ⌘K
         </kbd>
       ) : null}

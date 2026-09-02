@@ -27,11 +27,18 @@ import {
   type FredStickSnapshot,
 } from "@lib/ask-fred";
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { ArrowUp, ListChecks, Sparkles } from "@animateicons/react/lucide";
+import type { IconHandle } from "@animateicons/react";
 import { isDynamicToolUIPart, isStaticToolUIPart, type UIMessage } from "ai";
-import { CornerDownLeft } from "lucide-react";
 import { useEffect, useRef, type FormEvent } from "react";
+import { handleHover } from "@lib/handle-hover";
 
-const CHIPS = ["What's my day looking like?", "Pending tasks across all meetings"];
+const CHIPS = ["What's my day looking like?", "Pending tasks across all meetings"] as const;
+
+const CHIP_ICONS = {
+  "What's my day looking like?": Sparkles,
+  "Pending tasks across all meetings": ListChecks,
+} as const;
 
 function FredMarkdown(props: { children: string; streaming?: boolean }) {
   const streaming = props.streaming === true;
@@ -152,6 +159,7 @@ function FredStick(props: { messages: UIMessage[]; force: boolean }) {
 }
 
 function FredComposer(props: { busy: boolean; onSend: (text: string) => void }) {
+  const sendRef = useRef<IconHandle>(null);
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (props.busy) {
@@ -163,24 +171,61 @@ function FredComposer(props: { busy: boolean; onSend: (text: string) => void }) 
   }
 
   return (
-    <form className="flex shrink-0 items-center gap-2 border-t border-line p-3" onSubmit={onSubmit}>
-      <Input
-        aria-label="Ask Fred"
-        autoComplete="off"
-        className="min-w-0 flex-1"
-        name="message"
-        placeholder={ASK_FRED_PLACEHOLDER}
-      />
-      <Button
-        aria-label="Send"
-        className="size-8 rounded-full"
-        disabled={props.busy}
-        size="icon"
-        type="submit"
-      >
-        <CornerDownLeft className="size-4" />
-      </Button>
+    <form className="shrink-0 p-3" onSubmit={onSubmit}>
+      <div className="rounded-2xl border border-line bg-paper p-3">
+        <Input
+          aria-label="Ask Fred"
+          autoComplete="off"
+          className="min-h-16 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+          name="message"
+          placeholder={ASK_FRED_PLACEHOLDER}
+        />
+        <div className="flex justify-end pt-1">
+          <Button
+            aria-label="Send"
+            className="size-8 rounded-lg bg-process-wash text-accent hover:bg-process-wash hover:text-accent"
+            disabled={props.busy}
+            size="icon"
+            type="submit"
+            onMouseEnter={(event) => handleHover(event, sendRef)}
+            onMouseLeave={(event) => handleHover(event, sendRef)}
+          >
+            <ArrowUp ref={sendRef} size={16} />
+          </Button>
+        </div>
+      </div>
     </form>
+  );
+}
+
+function FredChip(props: { chip: (typeof CHIPS)[number]; onSend: (text: string) => void }) {
+  const iconRef = useRef<IconHandle>(null);
+  const Icon = CHIP_ICONS[props.chip];
+  return (
+    <Suggestion
+      className="h-auto justify-start gap-2 rounded-[10px] py-2.5 text-left whitespace-normal"
+      onClick={props.onSend}
+      onMouseEnter={(event) => handleHover(event, iconRef)}
+      onMouseLeave={(event) => handleHover(event, iconRef)}
+      suggestion={props.chip}
+    >
+      <Icon ref={iconRef} size={16} />
+      {props.chip}
+    </Suggestion>
+  );
+}
+
+function FredLanding(props: { displayName: string }) {
+  return (
+    <div className="flex flex-col items-center px-4 pt-10 pb-2 text-center">
+      <div className="mb-3 flex items-end gap-1 text-[#7dcdc3]">
+        <Sparkles size={14} />
+        <Sparkles size={22} />
+        <Sparkles size={14} />
+      </div>
+      <h2 className="m-0 text-[1.35rem] font-semibold tracking-tight">{`Hi ${props.displayName}!`}</h2>
+      <p className="mt-1 mb-0 text-[0.95rem] text-muted-foreground">Get ready for your meeting.</p>
+    </div>
   );
 }
 
@@ -199,14 +244,10 @@ export function AskFred(props: AskFredProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {showSuggestions ? <FredLanding displayName={props.displayName} /> : null}
       <Conversation className="min-h-0 flex-1" initial="smooth" resize="smooth">
         <FredStick force={busy} messages={props.messages} />
         <ConversationContent className="px-4 py-4" scrollClassName="h-full min-h-0 overflow-y-auto">
-          <Message from="assistant">
-            <MessageContent>
-              <FredMarkdown>{`Hi ${props.displayName}! Get ready for your meeting.`}</FredMarkdown>
-            </MessageContent>
-          </Message>
           {props.messages.map((message) =>
             hasVisibleFredParts(message) ? (
               <FredMessage
@@ -227,14 +268,9 @@ export function AskFred(props: AskFredProps) {
         <ConversationScrollButton />
       </Conversation>
       {showSuggestions ? (
-        <div className="flex flex-wrap gap-2 px-4 py-2">
+        <div className="flex flex-col items-stretch gap-2 px-4 py-2">
           {CHIPS.map((chip) => (
-            <Suggestion
-              className="h-auto max-w-full py-1.5 text-left whitespace-normal"
-              key={chip}
-              onClick={send}
-              suggestion={chip}
-            />
+            <FredChip chip={chip} key={chip} onSend={send} />
           ))}
         </div>
       ) : null}

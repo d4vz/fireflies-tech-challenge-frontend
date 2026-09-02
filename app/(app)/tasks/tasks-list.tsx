@@ -2,9 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { MeetingsEmpty } from "@components/meetings-empty";
 import { MeetingsListSkeleton } from "@components/skeleton";
-import { TaskChecklist } from "@components/task-list";
-import { When } from "@components/when";
+import { TaskGroupCard } from "@components/task-group";
 import { listActions } from "@lib/api";
 import {
   ACTIONS_PAGE_SIZE,
@@ -94,29 +94,22 @@ export function TasksList(props: TasksListProps) {
           <FilterLink status="completed" current={props.status} label="Completed" />
         </div>
         {total === 0 ? (
-          <div className="flex flex-col items-center rounded-2xl bg-paper px-6 py-12 text-center shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line md:py-16">
-            <h2 className="mt-0 mb-0 text-[1.15rem] font-semibold tracking-tight">{empty.title}</h2>
-            <p className="mt-2 mb-0 max-w-md text-[0.9rem] leading-6 text-muted-foreground">
-              {empty.body}
-            </p>
-          </div>
+          props.status === "all" ? (
+            <MeetingsEmpty />
+          ) : (
+            <div className="flex flex-col items-center rounded-2xl bg-paper px-6 py-12 text-center shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line md:py-16">
+              <h2 className="mt-0 mb-0 text-[1.15rem] font-semibold tracking-tight">
+                {empty.title}
+              </h2>
+              <p className="mt-2 mb-0 max-w-md text-[0.9rem] leading-6 text-muted-foreground">
+                {empty.body}
+              </p>
+            </div>
+          )
         ) : (
           <div className="grid max-w-190 gap-4">
             {items.map((group) => (
-              <section
-                key={group.meetingId}
-                className="rounded-2xl bg-paper p-4 shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line md:p-5"
-              >
-                <header className="mb-3 flex min-w-0 items-baseline justify-between gap-3">
-                  <h2 className="m-0 min-w-0 truncate text-[1.05rem] font-semibold">
-                    <Link className="text-ink no-underline hover:text-accent" href={group.href}>
-                      {group.sourceId}
-                    </Link>
-                  </h2>
-                  <When value={group.createdAt} />
-                </header>
-                <TaskChecklist meetingId={group.meetingId} tasks={group.tasks} />
-              </section>
+              <TaskGroupCard key={group.meetingId} group={group} />
             ))}
           </div>
         )}

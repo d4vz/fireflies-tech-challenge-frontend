@@ -2,22 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import {
-  BarChart3,
-  Home,
+  ChartBar,
+  House,
   LayoutGrid,
-  ListTodo,
+  ListChecks,
   Mic,
   Settings,
   Sparkles,
+  Star,
   Video,
-  WandSparkles,
-  type LucideIcon,
-} from "lucide-react";
+} from "@animateicons/react/lucide";
+import type { IconHandle } from "@animateicons/react";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { handleHover } from "@lib/handle-hover";
 import {
   assistantOpenClickKind,
   assistantOpenHref,
@@ -34,17 +35,19 @@ import {
   type RouteNavItem,
 } from "@lib/nav";
 
+type NavGlyphIcon = typeof House;
+
 const NAV_ICONS = {
-  home: Home,
+  home: House,
   meetings: Video,
   askfred: Sparkles,
-  tasks: ListTodo,
-  skills: WandSparkles,
-  analytics: BarChart3,
+  tasks: ListChecks,
+  skills: Star,
+  analytics: ChartBar,
   voice: Mic,
   integrations: LayoutGrid,
   settings: Settings,
-} as const satisfies Record<NavIcon, LucideIcon>;
+} as const satisfies Record<NavIcon, NavGlyphIcon>;
 
 function navClass(active: boolean) {
   if (active) {
@@ -53,9 +56,15 @@ function navClass(active: boolean) {
   return "flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left text-gray-600";
 }
 
-function NavGlyph(props: { icon: NavIcon }) {
+function NavGlyph(props: { icon: NavIcon; iconRef: Ref<IconHandle> }) {
   const Icon = NAV_ICONS[props.icon];
-  return <Icon className={cn("size-4.5 shrink-0", props.icon === "askfred" && "text-accent")} />;
+  return (
+    <Icon
+      ref={props.iconRef}
+      className={cn("shrink-0", props.icon === "askfred" && "text-accent")}
+      size={18}
+    />
+  );
 }
 
 export type NavProps = {
@@ -65,24 +74,34 @@ export type NavProps = {
 };
 
 function RouteLink(props: { item: RouteNavItem; pathname: string }) {
+  const iconRef = useRef<IconHandle>(null);
   const active = isRouteActive(props.item, props.pathname);
   return (
     <Link
       href={props.item.href}
       className={navClass(active)}
       aria-current={active ? "page" : undefined}
+      onMouseEnter={(event) => handleHover(event, iconRef)}
+      onMouseLeave={(event) => handleHover(event, iconRef)}
     >
-      <NavGlyph icon={props.item.icon} />
+      <NavGlyph icon={props.item.icon} iconRef={iconRef} />
       {props.item.label}
     </Link>
   );
 }
 
 function PlaceholderItem(props: { item: PlaceholderNavItem }) {
+  const iconRef = useRef<IconHandle>(null);
   return (
     <Tooltip>
-      <TooltipTrigger type="button" className={navClass(false)} aria-disabled="true">
-        <NavGlyph icon={props.item.icon} />
+      <TooltipTrigger
+        type="button"
+        className={navClass(false)}
+        aria-disabled="true"
+        onMouseEnter={(event) => handleHover(event, iconRef)}
+        onMouseLeave={(event) => handleHover(event, iconRef)}
+      >
+        <NavGlyph icon={props.item.icon} iconRef={iconRef} />
         {props.item.label}
       </TooltipTrigger>
       <TooltipContent side="right">Coming soon</TooltipContent>
@@ -91,10 +110,13 @@ function PlaceholderItem(props: { item: PlaceholderNavItem }) {
 }
 
 function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | null }) {
+  const iconRef = useRef<IconHandle>(null);
   return (
     <Link
       href={assistantOpenHref({ current: props.view })}
       className={navClass(false)}
+      onMouseEnter={(event) => handleHover(event, iconRef)}
+      onMouseLeave={(event) => handleHover(event, iconRef)}
       onClick={(event) => {
         if (assistantOpenClickKind(props.view, isPlainLeftClick(event)) !== "push") {
           return;
@@ -106,7 +128,7 @@ function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | nul
         pushHomeUrl({ ...props.view, fred: "open" });
       }}
     >
-      <NavGlyph icon={props.item.icon} />
+      <NavGlyph icon={props.item.icon} iconRef={iconRef} />
       {props.item.label}
     </Link>
   );

@@ -1,11 +1,12 @@
 import { MeetingsList } from "./meetings-list";
-import { parsePage } from "@lib/meetings";
+import { parseMeetingsView } from "@lib/meetings";
 
 type MeetingsPageProps = {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 };
 
 export default async function MeetingsPage(props: MeetingsPageProps) {
   const searchParams = await props.searchParams;
-  return <MeetingsList page={parsePage(searchParams.page)} />;
+  const view = parseMeetingsView(searchParams.status, searchParams.page);
+  return <MeetingsList page={view.page} status={view.status} />;
 }

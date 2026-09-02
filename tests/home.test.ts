@@ -74,6 +74,37 @@ test("Home Tasks card links to /tasks and shows pending and completed counts", a
   expect(dashboard).toContain("task-count");
 });
 
+test("Home recent tasks shows two pending meeting groups with the tasks list card", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const page = await Bun.file(join(import.meta.dir, "../app/(app)/page.tsx")).text();
+  const recent = dashboard.slice(
+    dashboard.indexOf("function RecentTasks("),
+    dashboard.indexOf("function AskFredPanel"),
+  );
+  expect(dashboard).toContain("Recent tasks");
+  expect(dashboard).toContain("TaskGroupCard");
+  expect(dashboard).toContain("HOME_RECENT_TASK_GROUPS");
+  expect(dashboard).toContain('listActions(1, HOME_RECENT_TASK_GROUPS, "pending")');
+  expect(dashboard).toContain('tasksHref("pending")');
+  expect(dashboard).toContain('aria-label="View more tasks"');
+  expect(dashboard).toContain("initialActions");
+  expect(recent).toContain("grid-cols-1");
+  expect(recent).toContain("md:grid-cols-2");
+  expect(page).toContain("listActions");
+  expect(page).toContain("HOME_RECENT_TASK_GROUPS");
+  expect(page).toContain("initialActions");
+});
+
+test("Home content is centered with a max width", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
+  expect(dashboard).toContain("mx-auto");
+  expect(dashboard).toContain("max-w-5xl");
+  expect(dashboard).toContain("w-full");
+  expect(skeleton).toContain("mx-auto");
+  expect(skeleton).toContain("max-w-5xl");
+});
+
 test("Home lists the last meetings in a two-column grid with view more beside the title", async () => {
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
@@ -109,6 +140,15 @@ test("Home skeleton uses stacked meeting cards, not list rows", async () => {
   );
   expect(cardBone).toContain("aspect-video");
   expect(cardBone.includes("lg:grid-cols-[240px")).toBe(false);
+  expect(cardBone).toContain("max-md:hidden");
+});
+
+test("last meeting cards hide summary and status on mobile and use a compact thumb", async () => {
+  const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
+  expect(row).toContain('layout === "card"');
+  expect(row).toContain("max-md:hidden");
+  expect(row).toContain("max-md:size-16");
+  expect(row).toContain("md:aspect-video");
 });
 
 test("Home empty library prompts capture and upload instead of a blank last-meetings line", async () => {
@@ -118,6 +158,7 @@ test("Home empty library prompts capture and upload instead of a blank last-meet
     join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
   ).text();
   expect(dashboard).toContain("MeetingsEmpty");
+  expect(dashboard).toContain("Recent tasks");
   expect(dashboard.includes("No meetings in this view.")).toBe(false);
   expect(empty).toContain("Capture your first meeting");
   expect(empty).toContain("No meetings yet. Capture or upload a file to start.");
