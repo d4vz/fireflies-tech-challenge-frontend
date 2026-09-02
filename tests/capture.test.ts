@@ -7,6 +7,15 @@ test("Capture invalidates meeting lists after upload so Home and Meetings do not
   expect(source).toContain("meetingsKey");
 });
 
+test("Capture starts naming from empty-state capture and upload intents", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
+  expect(source).toContain("subscribeCaptureIntent");
+  expect(source).toContain('case "capture":');
+  expect(source).toContain('case "upload":');
+  expect(source).toContain("startCaptureNaming");
+  expect(source).toContain("startPickingUpload");
+});
+
 test("screen capture modal shows mic, window, and entire screen readiness checks", async () => {
   const capture = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
   const readiness = await Bun.file(join(import.meta.dir, "../lib/capture-readiness.ts")).text();

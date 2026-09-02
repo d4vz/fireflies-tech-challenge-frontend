@@ -85,6 +85,41 @@ test("Home lists the last meetings in a two-column grid with view more beside th
   expect(cardClass.includes("hover:bg-paper")).toBe(false);
 });
 
+test("Home skeleton uses stacked meeting cards, not list rows", async () => {
+  const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
+  const home = skeleton.slice(skeleton.indexOf("export function HomeDashboardSkeleton"));
+  const list = skeleton.slice(
+    skeleton.indexOf("export function MeetingsListSkeleton"),
+    skeleton.indexOf("export function HomeDashboardSkeleton"),
+  );
+  expect(home).toContain("MeetingCardBone");
+  expect(home.includes("MeetingRowBone")).toBe(false);
+  expect(home).toContain("md:grid-cols-2");
+  expect(list).toContain("MeetingRowBone");
+  const cardBone = skeleton.slice(
+    skeleton.indexOf("function MeetingCardBone"),
+    skeleton.indexOf("export function TranscriptSkeleton"),
+  );
+  expect(cardBone).toContain("aspect-video");
+  expect(cardBone.includes("lg:grid-cols-[240px")).toBe(false);
+});
+
+test("Home empty library prompts capture and upload instead of a blank last-meetings line", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const empty = await Bun.file(join(import.meta.dir, "../components/meetings-empty.tsx")).text();
+  const list = await Bun.file(
+    join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
+  ).text();
+  expect(dashboard).toContain("MeetingsEmpty");
+  expect(dashboard.includes("No meetings in this view.")).toBe(false);
+  expect(empty).toContain("Capture your first meeting");
+  expect(empty).toContain("No meetings yet. Capture or upload a file to start.");
+  expect(empty).toContain("Capture a meeting");
+  expect(empty).toContain("Upload a recording");
+  expect(empty).toContain("requestCaptureIntent");
+  expect(list).toContain("MeetingsEmpty");
+});
+
 test("AppFrame and AskFred sheet follow pushHomeUrl so tab stays in the header href", async () => {
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
   const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
@@ -285,7 +320,7 @@ test("AskFred sheet uses full-travel slide and the dock animates width", async (
   expect(canvas).toContain("data-[side=right]:data-closed:slide-out-to-right");
   expect(canvas.includes("slide-in-from-right-10")).toBe(false);
   expect(canvas).toContain("transition-[width]");
-  expect(canvas).toContain("w-[360px]");
+  expect(canvas).toContain("w-[420px]");
   expect(canvas.includes("animate-in fade-in-0 slide-in-from-right")).toBe(false);
   expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right ");
   expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right-10");

@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test";
+import { join } from "node:path";
 import {
   ASK_FRED_PLACEHOLDER,
   isAskFredBusy,
   shouldScrollFredStick,
+  shouldShowFredPending,
   shouldShowFredSuggestions,
 } from "@lib/ask-fred";
 
@@ -19,6 +21,18 @@ test("send is busy only while submitted or streaming", () => {
   expect(isAskFredBusy("streaming")).toBe(true);
   expect(isAskFredBusy("ready")).toBe(false);
   expect(isAskFredBusy("error")).toBe(false);
+});
+
+test("pending reply stays until the assistant has text", () => {
+  const emptyAssistant = { role: "assistant", parts: [{ type: "text", text: "" }] };
+  const userTurn = { role: "user", parts: [{ type: "text", text: "hello" }] };
+  const withText = { role: "assistant", parts: [{ type: "text", text: "Hi" }] };
+
+  expect(shouldShowFredPending("submitted", userTurn)).toBe(true);
+  expect(shouldShowFredPending("streaming", emptyAssistant)).toBe(true);
+  expect(shouldShowFredPending("streaming", withText)).toBe(false);
+  expect(shouldShowFredPending("ready", emptyAssistant)).toBe(false);
+  expect(shouldShowFredPending("error", emptyAssistant)).toBe(false);
 });
 
 test("scrolling down after leaving the tail does not jump to the end", () => {
@@ -110,4 +124,11 @@ test("suggestion chips stay until the first assistant reply", () => {
   expect(shouldShowFredSuggestions([{ role: "user" }])).toBe(true);
   expect(shouldShowFredSuggestions([{ role: "user" }, { role: "assistant" }])).toBe(false);
   expect(shouldShowFredSuggestions([{ role: "assistant" }])).toBe(false);
+});
+
+test("Ask Fred shows a thinking shimmer while waiting for the model", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/ask-fred.tsx")).text();
+  expect(source).toContain("shouldShowFredPending");
+  expect(source).toContain("Thinking...");
+  expect(source).toContain('from "@/components/ai-elements/shimmer"');
 });
