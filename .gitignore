@@ -2,3 +2,7 @@
 .env*
 node_modules/
 .worktrees/
+.next/
+out/
+tsconfig.tsbuildinfo
+
