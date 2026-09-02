@@ -2,8 +2,7 @@ FROM oven/bun:1.3-debian AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 ENV HUSKY=0
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-  bun install --frozen-lockfile --ignore-scripts
+RUN bun install --frozen-lockfile --ignore-scripts
 
 FROM oven/bun:1.3-debian AS builder
 WORKDIR /app
