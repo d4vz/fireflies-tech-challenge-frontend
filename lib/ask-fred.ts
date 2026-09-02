@@ -2,10 +2,6 @@ import type { ChatStatus } from "ai";
 
 export const ASK_FRED_PLACEHOLDER = "Ask anything here";
 
-export function askFredAppOrigin(requestUrl: string): string {
-  return new URL(requestUrl).origin;
-}
-
 export function isAskFredBusy(status: ChatStatus): boolean {
   return status === "submitted" || status === "streaming";
 }
