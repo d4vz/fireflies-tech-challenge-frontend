@@ -144,7 +144,15 @@ export function PageTitle() {
   const pathname = usePathname();
   const [title, setTitle] = useState("Home");
   useEffect(() => {
-    setTitle(pathname.startsWith("/meetings") ? "Meetings" : "Home");
+    if (pathname.startsWith("/meetings")) {
+      setTitle("Meetings");
+      return;
+    }
+    if (pathname.startsWith("/tasks")) {
+      setTitle("Tasks");
+      return;
+    }
+    setTitle("Home");
   }, [pathname]);
   return (
     <h1 className="m-0 hidden min-w-0 shrink-0 truncate text-[1.05rem] font-semibold md:block">

@@ -24,6 +24,8 @@ test("Hono helpers call backendFetch and do not take a token argument", () => {
   expect(backend).toContain("export async function proxyUpload");
   expect(backend).toContain("export async function proxyAskFred");
   expect(backend).toContain("export async function getTranscripts");
+  expect(backend).toContain("export async function listActions");
+  expect(backend).toContain("export async function patchTask");
   expect(backend).toContain("export async function proxyStoredObject");
   expect(backend.includes("token:")).toBe(false);
   expect(backend.includes("token,")).toBe(false);
@@ -32,7 +34,14 @@ test("Hono helpers call backendFetch and do not take a token argument", () => {
   expect(backend).toContain("`/meetings/upload?filename=${encodeURIComponent(filename)}`");
   expect(backend).toContain('backendFetch("/ask-fred"');
   expect(backend).toContain("backendFetch(`/meetings/${id}/transcripts`");
+  expect(backend).toContain("backendFetch(`/actions?${params.toString()}`");
+  expect(backend).toContain("backendFetch(`/meetings/${meetingId}/tasks/${taskId}`");
   expect(backend).toContain("backendFetch(path");
+});
+
+test("listActions forwards status when it is not all", () => {
+  expect(backend).toContain('params.set("status", status)');
+  expect(backend).toContain('status !== "all"');
 });
 
 test("only backendFetch calls fetch", () => {

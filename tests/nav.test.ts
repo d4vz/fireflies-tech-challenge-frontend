@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import { isRouteActive, type RouteNavItem } from "@lib/nav";
+import { isRouteActive, NAV_ITEMS, type RouteNavItem } from "@lib/nav";
 
 const home: RouteNavItem = {
   kind: "route",
@@ -33,4 +33,36 @@ test("AskFred sidebar glyph uses the accent color", async () => {
   const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
   expect(nav).toContain('props.icon === "askfred"');
   expect(nav).toContain("text-accent");
+});
+
+test("Tasks is a real route, not a placeholder", () => {
+  expect(NAV_ITEMS).toContainEqual({
+    kind: "route",
+    href: "/tasks",
+    label: "Tasks",
+    icon: "tasks",
+    active: "exact",
+  });
+  expect(NAV_ITEMS.some((item) => item.kind === "placeholder" && item.label === "Tasks")).toBe(
+    false,
+  );
+});
+
+test("exact Tasks is active only on /tasks", () => {
+  const tasks: RouteNavItem = {
+    kind: "route",
+    href: "/tasks",
+    label: "Tasks",
+    icon: "tasks",
+    active: "exact",
+  };
+  expect(isRouteActive(tasks, "/tasks")).toBe(true);
+  expect(isRouteActive(tasks, "/meetings")).toBe(false);
+  expect(isRouteActive(home, "/tasks")).toBe(false);
+});
+
+test("PageTitle treats /tasks as Tasks", async () => {
+  const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
+  expect(nav).toContain('pathname.startsWith("/tasks")');
+  expect(nav).toContain('setTitle("Tasks")');
 });

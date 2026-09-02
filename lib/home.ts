@@ -181,13 +181,14 @@ export type BusyCountInsight = {
   coverage: InsightCoverage;
 };
 
-export type ActionItemCountInsight = {
-  kind: "action-item-count";
-  count: number;
+export type TaskCountInsight = {
+  kind: "task-count";
+  pending: number;
+  completed: number;
   coverage: InsightCoverage;
 };
 
-export type InsightCard = MeetingCountInsight | BusyCountInsight | ActionItemCountInsight;
+export type InsightCard = MeetingCountInsight | BusyCountInsight | TaskCountInsight;
 
 export const HOME_PREVIEW_COUNT = 2;
 
@@ -214,12 +215,24 @@ function coverageOf(page: MeetingListPage): InsightCoverage {
   return { kind: "sample", sampled: page.items.length, total: page.total };
 }
 
-function actionItemTotal(items: Meeting[]): number {
-  let count = 0;
+type TaskCounts = {
+  pending: number;
+  completed: number;
+};
+
+function taskCounts(items: Meeting[]): TaskCounts {
+  let pending = 0;
+  let completed = 0;
   for (const meeting of items) {
-    count += meeting.summary?.actionItems.length ?? 0;
+    for (const task of meeting.tasks ?? []) {
+      if (task.status === "completed") {
+        completed += 1;
+      } else {
+        pending += 1;
+      }
+    }
   }
-  return count;
+  return { pending, completed };
 }
 
 function matchesQuery(meeting: Meeting, query: string): boolean {
@@ -243,10 +256,16 @@ function previewRows(items: Meeting[], query: string): Meeting[] {
 
 function insightsOf(page: MeetingListPage, coverage: InsightCoverage): InsightCard[] {
   const busyItems = page.items.filter((item) => isBusy(item.status));
+  const counts = taskCounts(page.items);
   return [
     { kind: "meeting-count", total: page.total },
     { kind: "busy-count", count: busyItems.length, coverage },
-    { kind: "action-item-count", count: actionItemTotal(page.items), coverage },
+    {
+      kind: "task-count",
+      pending: counts.pending,
+      completed: counts.completed,
+      coverage,
+    },
   ];
 }
 

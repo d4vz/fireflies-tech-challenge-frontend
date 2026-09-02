@@ -1,4 +1,4 @@
-export type AppRoute = "/" | "/meetings";
+export type AppRoute = "/" | "/meetings" | "/tasks";
 
 export type NavIcon =
   | "home"
@@ -43,7 +43,7 @@ export const NAV_ITEMS: NavItem[] = [
     active: "meetings-tree",
   },
   { kind: "home-assistant", label: "AskFred", icon: "askfred" },
-  { kind: "placeholder", label: "Tasks", icon: "tasks" },
+  { kind: "route", href: "/tasks", label: "Tasks", icon: "tasks", active: "exact" },
   { kind: "placeholder", label: "AI Apps", icon: "skills" },
   { kind: "placeholder", label: "Analytics", icon: "analytics" },
   { kind: "placeholder", label: "Voice Agents", icon: "voice" },

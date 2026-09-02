@@ -38,6 +38,48 @@ test("toPublicMeeting rewrites audio url and does not add thumbnailUrl", () => {
   expect("thumbnailUrl" in meeting.blob).toBe(false);
 });
 
+test("parsePublicMeeting maps tasks and defaults missing status to pending", () => {
+  const meeting = parsePublicMeeting({
+    _id: "abc",
+    sourceId: "clip.mp4",
+    createdAt: "2026-09-01T00:00:00.000Z",
+    status: "ready",
+    tasks: [
+      {
+        _id: "t1",
+        text: "review notes",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+      },
+      {
+        _id: "t2",
+        text: "send recap",
+        status: "completed",
+        updatedAt: "2026-09-01T00:01:00.000Z",
+      },
+    ],
+    blob: {
+      kind: "video",
+      url: "/v",
+      durationInSeconds: 12,
+      thumbnailUrl: "/t",
+    },
+  });
+  expect(meeting.tasks).toEqual([
+    {
+      _id: "t1",
+      text: "review notes",
+      status: "pending",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    },
+    {
+      _id: "t2",
+      text: "send recap",
+      status: "completed",
+      updatedAt: "2026-09-01T00:01:00.000Z",
+    },
+  ]);
+});
+
 test("parsePublicMeeting treats audio even when thumbnailUrl is present", () => {
   const meeting = parsePublicMeeting({
     _id: "abc",

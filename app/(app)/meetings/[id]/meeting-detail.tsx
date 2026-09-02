@@ -6,6 +6,7 @@ import { Clip } from "@components/clip";
 import { DetailCanvas, type TranscriptView } from "@components/detail-canvas";
 import { MeetingDetailSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
+import { TaskChecklist } from "@components/task-list";
 import { When } from "@components/when";
 import {
   Breadcrumb,
@@ -85,11 +86,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
       </section>
       <section>
         <h2 className="mb-1.5 text-base">Action items</h2>
-        <ul className="m-0 pl-[1.1rem]">
-          {(meeting.summary?.actionItems ?? []).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+        <TaskChecklist meetingId={meeting._id} tasks={meeting.tasks ?? []} />
       </section>
     </article>
   );

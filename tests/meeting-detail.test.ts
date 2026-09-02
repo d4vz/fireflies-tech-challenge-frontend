@@ -13,3 +13,13 @@ test("meeting detail uses shadcn breadcrumbs and the list page does not", async 
   expect(detail).toContain('href="/meetings"');
   expect(list.includes("Breadcrumb")).toBe(false);
 });
+
+test("meeting detail action items are a checkbox list from meeting.tasks", async () => {
+  const detail = await Bun.file(
+    join(import.meta.dir, "../app/(app)/meetings/[id]/meeting-detail.tsx"),
+  ).text();
+  expect(detail).toContain("Action items");
+  expect(detail).toContain("TaskChecklist");
+  expect(detail).toContain("meeting.tasks");
+  expect(detail.includes("actionItems")).toBe(false);
+});
