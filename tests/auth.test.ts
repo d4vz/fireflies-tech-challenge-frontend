@@ -30,8 +30,8 @@ test("app group wraps pages with AppFrame and auth routes do not", async () => {
   const signIn = await Bun.file(join(root, "app/(auth)/sign-in/[[...sign-in]]/page.tsx")).text();
   const sso = await Bun.file(join(root, "app/(auth)/sso-callback/page.tsx")).text();
   expect(appLayout).toContain("AppFrame");
-  expect(appLayout).toContain("currentUser()");
-  expect(appLayout).toContain("displayNameFrom");
+  expect(appLayout.includes("currentUser()")).toBe(false);
+  expect(appLayout.includes("displayNameFrom")).toBe(false);
   expect(signIn.includes("AppFrame")).toBe(false);
   expect(signIn.includes("Capture")).toBe(false);
   expect(signIn.includes("AskFred")).toBe(false);
@@ -67,7 +67,33 @@ test("WORKSPACE_NAME is gone from chrome and greeting callers", async () => {
   expect(home.includes("WORKSPACE_NAME")).toBe(false);
   expect(fred.includes("WORKSPACE_NAME")).toBe(false);
   expect(frame).toContain("UserButton");
-  expect(frame).toContain("displayName");
+  expect(frame.includes("WorkspaceMark")).toBe(false);
+  expect(frame.includes("displayName")).toBe(false);
+  expect(frame).toContain('src="/fireflies-logo.svg"');
   expect(home).toContain("displayName");
   expect(fred).toContain("displayName");
+});
+
+test("sidebar brand mark is the Fireflies SVG wordmark", async () => {
+  const logo = await Bun.file(join(root, "public/fireflies-logo.svg")).text();
+  expect(logo).toContain('viewBox="0 0 235 48"');
+  expect(logo).toContain("#E82A73");
+  expect(logo).toContain("#0C083D");
+});
+
+test("Clerk UserButton sits beside Capture with the shadcn theme", async () => {
+  const frame = await Bun.file(join(root, "components/app-frame.tsx")).text();
+  const layout = await Bun.file(join(root, "app/(app)/layout.tsx")).text();
+  const captureIndex = frame.indexOf("<Capture />");
+  const accountIndex = frame.indexOf("<AccountButton");
+  expect(frame).toContain('from "@clerk/ui/themes"');
+  expect(frame).toContain("theme: shadcn");
+  expect(frame).toContain("size-8 shrink-0");
+  expect(frame).toContain("fallback=");
+  expect(layout.includes("imageUrl")).toBe(false);
+  expect(captureIndex).toBeGreaterThan(-1);
+  expect(accountIndex).toBeGreaterThan(captureIndex);
+  expect(frame.includes("displayName.slice(0, 1)")).toBe(false);
+  expect(frame.includes("AccountControl")).toBe(false);
+  expect(frame.includes("props.imageUrl")).toBe(false);
 });

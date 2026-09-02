@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { currentUser } from "@clerk/nextjs/server";
 import { AppFrame } from "@components/app-frame";
-import { displayNameFrom } from "@lib/chrome";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -20,15 +18,10 @@ function AppFrameFallback(props: { children: ReactNode }) {
   );
 }
 
-export default async function AppLayout(props: AppLayoutProps) {
-  const user = await currentUser();
-  const displayName = displayNameFrom(
-    user?.firstName,
-    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses[0]?.emailAddress,
-  );
+export default function AppLayout(props: AppLayoutProps) {
   return (
     <Suspense fallback={<AppFrameFallback>{props.children}</AppFrameFallback>}>
-      <AppFrame displayName={displayName}>{props.children}</AppFrame>
+      <AppFrame>{props.children}</AppFrame>
     </Suspense>
   );
 }

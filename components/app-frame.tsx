@@ -1,6 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import { Menu, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -21,44 +22,48 @@ import { NAV_ITEMS } from "@lib/nav";
 
 export type AppFrameProps = {
   children: ReactNode;
-  displayName: string;
 };
 
 function homeSearchSnapshot(): string {
   return window.location.search;
 }
 
-function WorkspaceMark(props: { displayName: string }) {
+function AccountButton() {
   return (
-    <div className="flex items-center gap-2.5 px-2 py-1.5 text-ink">
-      <span className="grid size-7 place-items-center rounded-full bg-process-wash text-xs font-bold text-accent">
-        {props.displayName.slice(0, 1)}
-      </span>
-      <span className="text-[0.95rem] font-semibold">{props.displayName}</span>
+    <div aria-label="Account" className="size-8 shrink-0">
+      <UserButton
+        appearance={{ theme: shadcn, elements: { avatarBox: "size-8" } }}
+        fallback={<span aria-hidden="true" className="block size-8 rounded-full bg-nav" />}
+      />
     </div>
+  );
+}
+
+function BrandMark() {
+  return (
+    <Link className="block px-2 py-1.5" href="/">
+      <img
+        alt="Fireflies"
+        className="h-6 w-auto"
+        height={24}
+        src="/fireflies-logo.svg"
+        width={118}
+      />
+    </Link>
   );
 }
 
 type NavPaneProps = {
   pathname: string;
   view: HomeView | null;
-  displayName: string;
 };
 
 function NavPane(props: NavPaneProps) {
   return (
     <>
-      <WorkspaceMark displayName={props.displayName} />
+      <BrandMark />
       <Nav items={NAV_ITEMS} pathname={props.pathname} view={props.view} />
     </>
-  );
-}
-
-function AccountControl() {
-  return (
-    <div className="mt-auto px-2 py-1">
-      <UserButton />
-    </div>
   );
 }
 
@@ -82,8 +87,7 @@ export function AppFrame(props: AppFrameProps) {
     <TooltipProvider>
       <div className="grid h-screen min-w-0 overflow-hidden md:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="hidden min-h-0 flex-col gap-6 overflow-y-auto border-r border-line bg-paper px-3.5 py-[1.15rem] md:flex">
-          <NavPane displayName={props.displayName} pathname={pathname} view={homeView} />
-          <AccountControl />
+          <NavPane pathname={pathname} view={homeView} />
         </aside>
         <div className="grid min-h-0 min-w-0 grid-rows-[64px_minmax(0,1fr)]">
           <header className="flex min-w-0 items-center gap-2 border-b border-line bg-paper px-3 md:gap-4 md:px-6">
@@ -113,6 +117,7 @@ export function AppFrame(props: AppFrameProps) {
               AskFred
             </Link>
             <Capture />
+            <AccountButton />
           </header>
           <div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>
         </div>
@@ -123,8 +128,7 @@ export function AppFrame(props: AppFrameProps) {
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3.5 py-[1.15rem]">
-            <NavPane displayName={props.displayName} pathname={pathname} view={homeView} />
-            <AccountControl />
+            <NavPane pathname={pathname} view={homeView} />
           </div>
         </SheetContent>
       </Sheet>
