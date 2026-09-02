@@ -1,10 +1,11 @@
-import { HomeMeetings } from "@app/home-meetings";
+import { HomeDashboard } from "@components/home";
+import { parseHomeView, type HomeSearchParams } from "@lib/home";
 
-export default function Home() {
-  return (
-    <main className="home-empty h-full overflow-y-auto px-8 pt-8 pb-12">
-      <h2 className="mb-4 text-[0.95rem] font-semibold">Recent meetings</h2>
-      <HomeMeetings />
-    </main>
-  );
+type HomePageProps = {
+  searchParams: Promise<HomeSearchParams>;
+};
+
+export default async function Home(props: HomePageProps) {
+  const view = parseHomeView(await props.searchParams);
+  return <HomeDashboard view={view} />;
 }

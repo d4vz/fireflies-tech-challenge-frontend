@@ -20,20 +20,6 @@ function MeetingRowBone() {
   );
 }
 
-function HomeCardBone() {
-  return (
-    <div className="overflow-hidden rounded-[14px] bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)]">
-      <Bone className="aspect-video" />
-      <div className="grid gap-2 p-3.5">
-        <Bone className="h-4 w-3/4 rounded-md" />
-        <Bone className="h-3.5 w-full rounded-md" />
-        <Bone className="h-3.5 w-2/3 rounded-md" />
-        <Bone className="h-3 w-20 rounded-md" />
-      </div>
-    </div>
-  );
-}
-
 export function TranscriptSkeleton() {
   return (
     <div className="grid gap-2.5">
@@ -69,16 +55,26 @@ export function MeetingsListSkeleton() {
   );
 }
 
-export function HomeMeetingsSkeleton() {
+export function HomeDashboardSkeleton() {
   return (
     <div
       aria-busy="true"
-      aria-label="Loading meetings"
-      className="grid max-w-240 grid-cols-3 gap-4"
+      aria-label="Loading home"
+      className="home-empty h-full overflow-y-auto px-6 pt-8 pb-12 md:px-8"
     >
-      <HomeCardBone />
-      <HomeCardBone />
-      <HomeCardBone />
+      <Bone className="h-8 w-64 rounded-md" />
+      <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <Bone className="h-24 rounded-xl" />
+        <Bone className="h-24 rounded-xl" />
+        <Bone className="h-24 rounded-xl" />
+      </div>
+      <div className="mt-8 grid gap-3">
+        <Bone className="h-8 w-80 rounded-md" />
+        <MeetingRowBone />
+        <MeetingRowBone />
+        <MeetingRowBone />
+        <MeetingRowBone />
+      </div>
     </div>
   );
 }
