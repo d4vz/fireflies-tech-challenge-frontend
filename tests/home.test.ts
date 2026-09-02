@@ -87,7 +87,7 @@ test("Home recent tasks shows two pending meeting groups with the tasks list car
   expect(dashboard).toContain("HOME_RECENT_TASK_GROUPS");
   expect(dashboard).toContain('listActions(1, HOME_RECENT_TASK_GROUPS, "pending")');
   expect(dashboard).toContain('tasksHref("pending")');
-  expect(dashboard).toContain('aria-label="View more tasks"');
+  expect(dashboard).toContain("View more tasks");
   expect(dashboard).toContain("initialActions");
   expect(recent).toContain("@container");
   expect(recent).toContain("grid-cols-1");
@@ -101,15 +101,40 @@ test("Home recent tasks shows two pending meeting groups with the tasks list car
   expect(page).toContain("initialActions");
 });
 
-test("Home insight cards put the metric beside the icon on mobile", async () => {
+test("Home insight cards show icon and metric on mobile, title and body from md", async () => {
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
   const card = dashboard.slice(
-    dashboard.indexOf("function InsightCardView"),
-    dashboard.indexOf("function LastMeetingsHeader"),
+    dashboard.indexOf("function staggerClass"),
+    dashboard.indexOf("function ViewMoreLink"),
   );
-  expect(card).toContain("flex-row items-center justify-center");
-  expect(card).toContain("md:justify-start");
-  expect(card.includes("flex-col items-center")).toBe(false);
+  const bone = skeleton.slice(
+    skeleton.indexOf("function InsightCardBone"),
+    skeleton.indexOf("function MeetingCardBone"),
+  );
+  expect(card).toContain("text-2xl font-semibold tabular-nums");
+  expect(card).toContain("flex-col gap-2");
+  expect(card).toContain("shadow-none");
+  expect(card).toContain("ring-line");
+  expect(card).toContain("hover:bg-wash");
+  expect(card).toContain("rise-in");
+  expect(card).toContain("sr-only md:hidden");
+  expect(card).toContain("${copy.title}: ${copy.body}");
+  expect(card).toContain("hidden min-w-0 md:block");
+  expect(card.includes("surface-card-hover")).toBe(false);
+  expect(card.includes("flex-row items-center justify-center")).toBe(false);
+  expect(bone.includes("surface-card")).toBe(false);
+  expect(bone).toContain("ring-line");
+  expect(bone).toContain("hidden h-4 w-16 rounded-md md:block");
+  expect(bone).toContain("hidden h-3 w-full rounded-md md:block");
+  const css = await Bun.file(join(import.meta.dir, "../app/globals.css")).text();
+  const hover = css.slice(
+    css.indexOf("@utility surface-card-hover"),
+    css.indexOf("@keyframes rise-in"),
+  );
+  expect(hover.includes("box-shadow")).toBe(false);
+  expect(hover.includes("transform")).toBe(false);
+  expect(hover).toContain("background-color");
 });
 
 test("Home content is centered with a max width", async () => {
@@ -142,7 +167,7 @@ test("Home lists the last meetings in a two-column grid with view more beside th
   expect(row.includes("{meeting.sourceId}")).toBe(false);
 });
 
-test("meeting title clamps to one line beside the status label", async () => {
+test("meeting title clamps to one line", async () => {
   const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
   const heading = row.slice(row.indexOf("<h2"), row.indexOf("</h2>"));
   expect(row.includes("flex-wrap")).toBe(false);

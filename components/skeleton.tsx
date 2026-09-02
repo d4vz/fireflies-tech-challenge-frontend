@@ -5,7 +5,18 @@ type BoneProps = {
 };
 
 function Bone(props: BoneProps) {
-  return <div className={`animate-pulse bg-neutral-200 ${props.className}`} />;
+  return <div className={`animate-pulse bg-line ${props.className}`} />;
+}
+
+function InsightCardBone() {
+  return (
+    <div className="min-w-0 rounded-xl bg-paper p-2.5 ring-1 ring-line md:p-4">
+      <Bone className="size-8 rounded-xl md:size-10" />
+      <Bone className="mt-3 h-8 w-10 rounded-md" />
+      <Bone className="mt-2 hidden h-4 w-16 rounded-md md:block" />
+      <Bone className="mt-1 hidden h-3 w-full rounded-md md:block" />
+    </div>
+  );
 }
 
 function MeetingCardBone() {
@@ -62,10 +73,11 @@ export function HomeDashboardSkeleton() {
     >
       <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
         <Bone className="h-8 w-64 max-w-full rounded-md" />
+        <Bone className="mt-2 h-4 w-40 max-w-full rounded-md" />
         <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
-          <Bone className="h-20 rounded-xl md:h-24" />
-          <Bone className="h-20 rounded-xl md:h-24" />
-          <Bone className="h-20 rounded-xl md:h-24" />
+          <InsightCardBone />
+          <InsightCardBone />
+          <InsightCardBone />
         </div>
         <div className="mt-8 grid gap-3">
           <div className="flex items-baseline justify-between gap-3">
@@ -122,7 +134,7 @@ export function MeetingDetailSkeleton() {
 
 export function TaskGroupBone() {
   return (
-    <div className="overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line">
+    <div className="surface-card overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-3.5">
         <Bone className="h-8 aspect-video shrink-0 rounded-lg" />
         <Bone className="h-4 w-40 max-w-full rounded-md" />

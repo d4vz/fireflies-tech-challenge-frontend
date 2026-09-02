@@ -51,9 +51,9 @@ const NAV_ICONS = {
 
 function navClass(active: boolean) {
   if (active) {
-    return "flex w-full items-center gap-2.5 rounded-[10px] bg-nav px-2.5 py-2 text-left font-semibold text-ink";
+    return "relative flex w-full items-center gap-2.5 rounded-[10px] bg-nav px-2.5 py-2 text-left font-semibold text-ink before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent";
   }
-  return "flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left text-gray-600";
+  return "flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left text-gray-600 transition-colors hover:bg-nav/70 hover:text-ink";
 }
 
 function NavGlyph(props: { icon: NavIcon; iconRef: Ref<IconHandle> }) {

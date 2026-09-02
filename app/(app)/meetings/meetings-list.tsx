@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyNote } from "@components/empty-note";
 import { FilterTab } from "@components/filter-tab";
+import { ListPager } from "@components/list-pager";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
 import { MeetingsListSkeleton } from "@components/skeleton";
@@ -54,7 +56,11 @@ function MeetingsResults(props: {
   page: MeetingListPage | undefined;
 }) {
   if (props.error !== null) {
-    return <p className="text-[0.85rem] text-danger">{props.error.message}</p>;
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{props.error.message}</AlertDescription>
+      </Alert>
+    );
   }
   if (props.page === undefined) {
     return <MeetingsListSkeleton />;
@@ -64,14 +70,7 @@ function MeetingsResults(props: {
     if (empty === null) {
       return <MeetingsEmpty />;
     }
-    return (
-      <div className="flex flex-col items-center rounded-2xl bg-paper px-6 py-12 text-center shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line md:py-16">
-        <h2 className="mt-0 mb-0 text-[1.15rem] font-semibold tracking-tight">{empty.title}</h2>
-        <p className="mt-2 mb-0 max-w-md text-[0.9rem] leading-6 text-muted-foreground">
-          {empty.body}
-        </p>
-      </div>
-    );
+    return <EmptyNote title={empty.title} body={empty.body} />;
   }
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -117,31 +116,12 @@ export function MeetingsList(props: MeetingsListProps) {
         <MeetingsResults error={query.error} page={page} status={props.status} />
       </div>
       {page !== undefined && page.total > 0 ? (
-        <nav className="flex shrink-0 items-center justify-end gap-3 border-t border-line bg-wash px-4 py-3 text-[0.85rem] md:px-8">
-          {props.page > 1 ? (
-            <Link
-              className="font-semibold text-accent"
-              href={meetingsHref(props.status, props.page - 1)}
-            >
-              Previous
-            </Link>
-          ) : (
-            <span className="text-muted-foreground">Previous</span>
-          )}
-          <span className="text-muted-foreground">
-            Page {props.page} of {pageCount}
-          </span>
-          {props.page < pageCount ? (
-            <Link
-              className="font-semibold text-accent"
-              href={meetingsHref(props.status, props.page + 1)}
-            >
-              Next
-            </Link>
-          ) : (
-            <span className="text-muted-foreground">Next</span>
-          )}
-        </nav>
+        <ListPager
+          page={props.page}
+          pageCount={pageCount}
+          prevHref={meetingsHref(props.status, props.page - 1)}
+          nextHref={meetingsHref(props.status, props.page + 1)}
+        />
       ) : null}
     </main>
   );

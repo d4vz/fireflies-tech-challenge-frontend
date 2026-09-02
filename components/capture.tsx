@@ -266,7 +266,7 @@ function CaptureReadinessChecks(props: CaptureReadinessChecksProps) {
         >
           {item.label}
           <span
-            className={`size-2 shrink-0 rounded-full ${readinessDotClass(item.status)}`}
+            className={`size-2 shrink-0 rounded-full ${readinessDotClass(item.status)} ${item.status === "checking" ? "motion-safe:animate-pulse" : ""}`}
             aria-hidden="true"
           />
         </Badge>
@@ -332,7 +332,7 @@ function CaptureNameDialog(props: {
             <UploadPendingAlert />
             <Dropzone
               accept={MEDIA_ACCEPT}
-              className="min-h-32 gap-1.5 sm:min-h-40"
+              className="min-h-32 gap-1.5 border-line sm:min-h-40 data-[active=true]:border-accent data-[active=true]:bg-process-wash data-[active=true]:ring-0"
               onDrop={(files) => {
                 const file = firstAcceptedMedia(files);
                 if (!file) {
@@ -349,6 +349,9 @@ function CaptureNameDialog(props: {
           </>
         ) : null}
         <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => props.setSession(resetSession())}>
+            Cancel
+          </Button>
           <Button type="button" disabled={!confirmEnabled} onClick={props.onConfirm}>
             {confirmLabel}
           </Button>
@@ -429,6 +432,10 @@ export function Capture() {
           type="button"
           onClick={() => recordingRef.current?.stop()}
         >
+          <span
+            aria-hidden="true"
+            className="size-2 shrink-0 rounded-full bg-white motion-safe:animate-pulse"
+          />
           Stop
         </button>
       ) : (

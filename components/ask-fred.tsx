@@ -37,6 +37,7 @@ import type { IconHandle } from "@animateicons/react";
 import { isDynamicToolUIPart, isStaticToolUIPart, type UIMessage } from "ai";
 import { useEffect, useRef } from "react";
 import { handleHover } from "@lib/handle-hover";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CHIPS = ["What's my day looking like?", "Pending tasks across all meetings"] as const;
 
@@ -114,7 +115,7 @@ function FredToolPart(props: { part: UIMessage["parts"][number] }) {
 function FredMessage(props: { message: UIMessage; streaming: boolean }) {
   return (
     <Message from={props.message.role}>
-      <MessageContent>
+      <MessageContent className={props.message.role === "user" ? "bg-process-wash" : undefined}>
         {props.message.parts.map((part, index) => {
           if (part.type === "text") {
             if (part.text.trim() === "") {
@@ -179,7 +180,7 @@ function FredComposer(props: {
 
   return (
     <PromptInput
-      className="shrink-0 p-3 [&_[data-slot=input-group]]:rounded-2xl [&_[data-slot=input-group]]:border-line [&_[data-slot=input-group]]:bg-paper"
+      className="shrink-0 p-3 [&_[data-slot=input-group]]:rounded-2xl [&_[data-slot=input-group]]:border-line [&_[data-slot=input-group]]:bg-paper [&_[data-slot=input-group]]:focus-within:border-accent [&_[data-slot=input-group]]:focus-within:ring-2 [&_[data-slot=input-group]]:focus-within:ring-accent/30 [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:bg-accent [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:text-white [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:hover:bg-accent-hover [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:hover:text-white"
       onSubmit={onSubmit}
     >
       <PromptInputTextarea
@@ -208,13 +209,15 @@ function FredChip(props: { chip: (typeof CHIPS)[number]; onSend: (text: string) 
   const Icon = CHIP_ICONS[props.chip];
   return (
     <Suggestion
-      className="h-auto justify-start gap-2 rounded-[10px] py-2.5 text-left whitespace-normal"
+      className="surface-card-hover h-auto w-full justify-start gap-2 rounded-[10px] py-2.5 text-left whitespace-normal"
       onClick={props.onSend}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
       suggestion={props.chip}
     >
-      <Icon ref={iconRef} size={16} />
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-process-wash text-accent">
+        <Icon ref={iconRef} size={16} />
+      </span>
       {props.chip}
     </Suggestion>
   );
@@ -223,10 +226,10 @@ function FredChip(props: { chip: (typeof CHIPS)[number]; onSend: (text: string) 
 function FredLanding(props: { displayName: string }) {
   return (
     <div className="flex flex-col items-center px-4 pt-10 pb-2 text-center">
-      <div className="mb-3 flex items-end gap-1 text-[#7dcdc3]">
-        <Sparkles size={14} />
-        <Sparkles size={22} />
-        <Sparkles size={14} />
+      <div className="mb-3 flex items-end gap-1 text-accent">
+        <Sparkles className="rise-in [--stagger:0]" size={14} />
+        <Sparkles className="rise-in [--stagger:1]" size={22} />
+        <Sparkles className="rise-in [--stagger:2]" size={14} />
       </div>
       <h2 className="m-0 text-[1.35rem] font-semibold tracking-tight">{`Hi ${props.displayName}!`}</h2>
       <p className="mt-1 mb-0 text-[0.95rem] text-muted-foreground">Get ready for your meeting.</p>
@@ -280,7 +283,9 @@ export function AskFred(props: AskFredProps) {
         </div>
       ) : null}
       {props.error !== undefined ? (
-        <p className="px-4 pb-2 text-[0.85rem] text-danger">{props.error.message}</p>
+        <Alert className="mx-4 mb-2" variant="destructive">
+          <AlertDescription>{props.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       <FredComposer busy={busy} onSend={send} status={props.status} />
     </div>

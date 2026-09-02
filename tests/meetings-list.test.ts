@@ -52,6 +52,11 @@ test("Meetings and Tasks pagers sit on the right", async () => {
     join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
   ).text();
   const tasks = await Bun.file(join(import.meta.dir, "../app/(app)/tasks/tasks-list.tsx")).text();
-  expect(meetings).toContain("justify-end");
-  expect(tasks).toContain("justify-end");
+  const pager = await Bun.file(join(import.meta.dir, "../components/list-pager.tsx")).text();
+  expect(meetings).toContain("ListPager");
+  expect(tasks).toContain("ListPager");
+  expect(pager).toContain("justify-end");
+  expect(pager).toContain("Previous");
+  expect(pager).toContain("Next");
+  expect(pager).toContain("Page {props.page} of {props.pageCount}");
 });

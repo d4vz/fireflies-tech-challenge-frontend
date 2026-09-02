@@ -124,7 +124,7 @@ export function AppFrame(props: AppFrameProps) {
             <Link
               href={assistantOpenHref({ current: homeView })}
               aria-label="AskFred"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 font-semibold text-ink hover:bg-nav"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 font-semibold text-ink hover:border-accent/30 hover:bg-process-wash"
               onMouseEnter={(event) => handleHover(event, askFredRef)}
               onMouseLeave={(event) => handleHover(event, askFredRef)}
               onClick={(event) => {
