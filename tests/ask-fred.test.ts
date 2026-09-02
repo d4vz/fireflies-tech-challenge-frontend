@@ -101,3 +101,12 @@ test("isAtBottom flipping on the same key does not retrigger scroll", () => {
 test("first paint sticks when the user is on the tail", () => {
   expect(shouldScrollFredStick(undefined, atBottom)).toBe(true);
 });
+
+test("escaped while still near the bottom does not follow new tokens", () => {
+  expect(
+    shouldScrollFredStick(
+      { force: false, isAtBottom: false, key: "1:a:10" },
+      { force: false, isAtBottom: false, key: "1:a:40" },
+    ),
+  ).toBe(false);
+});

@@ -1,7 +1,8 @@
 "use client";
 
-import { useChat, type UseChatHelpers } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import type { AskFredProps } from "@components/ask-fred";
 import { useQuery } from "@tanstack/react-query";
 import { ListChecks, ListVideo, Loader, Sparkles, Timer, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -36,8 +37,6 @@ export type HomeCanvasProps = {
   model: HomeModel;
   fred: FredParam;
 };
-
-type AskFredProps = Pick<UseChatHelpers<UIMessage>, "messages" | "sendMessage" | "status">;
 
 const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
   ssr: false,
@@ -190,7 +189,12 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
         </Button>
       </div>
       <div className="min-h-0 flex-1">
-        <AskFred messages={props.messages} sendMessage={props.sendMessage} status={props.status} />
+        <AskFred
+          error={props.error}
+          messages={props.messages}
+          sendMessage={props.sendMessage}
+          status={props.status}
+        />
       </div>
     </div>
   );
@@ -199,7 +203,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
   const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" });
-  const { messages, sendMessage, status } = useChat({
+  const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
   });
   return (
@@ -210,6 +214,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
         panel: (
           <AskFredPanel
             closeHref={closeHref}
+            error={error}
             messages={messages}
             sendMessage={sendMessage}
             status={status}

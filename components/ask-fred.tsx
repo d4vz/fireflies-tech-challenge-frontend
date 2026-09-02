@@ -92,7 +92,10 @@ function isLiveFredMessage(
   return busy && last !== undefined && message.id === last.id && message.role === "assistant";
 }
 
-export type AskFredProps = Pick<UseChatHelpers<UIMessage>, "messages" | "sendMessage" | "status">;
+export type AskFredProps = Pick<
+  UseChatHelpers<UIMessage>,
+  "error" | "messages" | "sendMessage" | "status"
+>;
 
 function FredToolPart(props: { part: UIMessage["parts"][number] }) {
   const part = props.part;
@@ -153,12 +156,12 @@ function stickKey(messages: UIMessage[]): string {
 }
 
 function FredStick(props: { messages: UIMessage[]; force: boolean }) {
-  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+  const { scrollToBottom, state } = useStickToBottomContext();
   const key = stickKey(props.messages);
   const previous = useRef<FredStickSnapshot | undefined>(undefined);
-  const atBottom = useRef(isAtBottom);
+  const atBottom = useRef(state.isAtBottom);
   const scroll = useRef(scrollToBottom);
-  atBottom.current = isAtBottom;
+  atBottom.current = state.isAtBottom;
   scroll.current = scrollToBottom;
   useEffect(() => {
     const next: FredStickSnapshot = { force: props.force, isAtBottom: atBottom.current, key };
@@ -245,6 +248,9 @@ export function AskFred(props: AskFredProps) {
           />
         ))}
       </div>
+      {props.error !== undefined ? (
+        <p className="px-4 pb-2 text-[0.85rem] text-danger">{props.error.message}</p>
+      ) : null}
       <FredComposer busy={busy} onSend={send} />
     </div>
   );
