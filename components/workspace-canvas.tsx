@@ -52,7 +52,7 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
       <div className={dockClass}>
         <div className="min-h-0 min-w-0 overflow-y-auto">{props.children}</div>
         {chrome.dockHidden ? null : (
-          <aside className="hidden min-h-0 overflow-hidden border-l border-line bg-paper xl:flex xl:flex-col">
+          <aside className="hidden min-h-0 overflow-hidden border-l border-line bg-paper duration-200 ease-in-out animate-in fade-in-0 slide-in-from-right xl:flex xl:flex-col">
             {props.rail.panel}
           </aside>
         )}
@@ -70,8 +70,9 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
         <SheetContent
           side="right"
           overlayClassName="xl:hidden"
-          className="w-full p-0 sm:max-w-[360px] xl:hidden"
+          className="w-full p-0 sm:max-w-[360px] xl:hidden data-[side=right]:data-open:slide-in-from-right data-[side=right]:data-closed:slide-out-to-right"
           showCloseButton={false}
+          slideTravel="full"
           onInteractOutside={(event) => {
             event.preventDefault();
           }}

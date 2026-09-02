@@ -218,3 +218,15 @@ test("Home RSC fetches meetings on the server and hydrates the client dashboard"
   expect(dashboard).toContain("initialData:");
   expect(dashboard).toContain("props.initialPage");
 });
+
+test("AskFred sheet uses full-travel slide and the dock animates", async () => {
+  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
+  const sheet = await Bun.file(join(import.meta.dir, "../components/ui/sheet.tsx")).text();
+  expect(canvas).toContain('slideTravel="full"');
+  expect(canvas).toContain("data-[side=right]:data-open:slide-in-from-right");
+  expect(canvas).toContain("data-[side=right]:data-closed:slide-out-to-right");
+  expect(canvas.includes("slide-in-from-right-10")).toBe(false);
+  expect(canvas).toContain("animate-in fade-in-0 slide-in-from-right");
+  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right ");
+  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right-10");
+});
