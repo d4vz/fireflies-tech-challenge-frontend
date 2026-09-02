@@ -31,13 +31,13 @@ export function MeetingRow(props: MeetingRowProps) {
           <StatusLabel status={meeting.status} />
         </div>
         {meeting.summary?.text ? (
-          <p className="m-0 line-clamp-3 text-[0.85rem] leading-5 text-muted">
+          <p className="m-0 line-clamp-3 text-[0.85rem] leading-5 text-muted-foreground">
             {meeting.summary.text}
           </p>
         ) : null}
-        <When className="text-[0.8rem] text-muted" value={meeting.createdAt} />
+        <When className="text-[0.8rem] text-muted-foreground" value={meeting.createdAt} />
       </div>
-      <ChevronRight className="hidden size-5 shrink-0 self-center text-muted lg:block" />
+      <ChevronRight className="hidden size-5 shrink-0 self-center text-muted-foreground lg:block" />
     </Link>
   );
 }

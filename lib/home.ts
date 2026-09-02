@@ -121,17 +121,7 @@ export type ActionItemCountInsight = {
   coverage: InsightCoverage;
 };
 
-export type LongestProcessingInsight = {
-  kind: "longest-processing";
-  meeting: Meeting;
-  processingForMs: number;
-};
-
-export type InsightCard =
-  | MeetingCountInsight
-  | BusyCountInsight
-  | ActionItemCountInsight
-  | LongestProcessingInsight;
+export type InsightCard = MeetingCountInsight | BusyCountInsight | ActionItemCountInsight;
 
 export type TabCounts = {
   all: number;
@@ -172,19 +162,6 @@ function actionItemTotal(items: Meeting[]): number {
   return count;
 }
 
-function oldestBusy(items: Meeting[]): Meeting | undefined {
-  let found: Meeting | undefined;
-  for (const meeting of items) {
-    if (!isBusy(meeting.status)) {
-      continue;
-    }
-    if (found === undefined || meeting.createdAt < found.createdAt) {
-      found = meeting;
-    }
-  }
-  return found;
-}
-
 function matchesTab(meeting: Meeting, tab: HomeTab): boolean {
   if (tab === "all") {
     return true;
@@ -219,23 +196,13 @@ function tabCountsOf(items: Meeting[]): TabCounts {
   return counts;
 }
 
-function insightsOf(page: MeetingListPage, coverage: InsightCoverage, now: Date): InsightCard[] {
+function insightsOf(page: MeetingListPage, coverage: InsightCoverage): InsightCard[] {
   const busyItems = page.items.filter((item) => isBusy(item.status));
-  const cards: InsightCard[] = [
+  return [
     { kind: "meeting-count", total: page.total },
     { kind: "busy-count", count: busyItems.length, coverage },
     { kind: "action-item-count", count: actionItemTotal(page.items), coverage },
   ];
-  const busy = oldestBusy(page.items);
-  if (busy === undefined) {
-    return cards;
-  }
-  cards.push({
-    kind: "longest-processing",
-    meeting: busy,
-    processingForMs: now.getTime() - Date.parse(busy.createdAt),
-  });
-  return cards;
 }
 
 export function toHomeModel(input: ToHomeModelInput): HomeModel {
@@ -246,7 +213,7 @@ export function toHomeModel(input: ToHomeModelInput): HomeModel {
       workspaceName: input.workspaceName,
     },
     coverage,
-    insights: insightsOf(input.page, coverage, input.now),
+    insights: insightsOf(input.page, coverage),
     tab: input.view.tab,
     query: input.view.query,
     tabCounts: tabCountsOf(input.page.items),

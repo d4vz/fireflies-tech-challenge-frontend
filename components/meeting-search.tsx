@@ -52,7 +52,7 @@ export function MeetingSearch(props: MeetingSearchProps) {
 
   return (
     <form className={`relative ${props.className}`} onSubmit={onSubmit}>
-      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted" />
+      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         ref={inputRef}
         key={props.view.query}
@@ -63,7 +63,7 @@ export function MeetingSearch(props: MeetingSearchProps) {
         aria-label="Search meetings"
       />
       {props.hotkey ? (
-        <kbd className="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 rounded-md border border-line bg-paper px-1 text-[0.65rem] text-muted md:inline">
+        <kbd className="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 rounded-md border border-line bg-paper px-1 text-[0.65rem] text-muted-foreground md:inline">
           ⌘K
         </kbd>
       ) : null}

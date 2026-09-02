@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { AskFredProps } from "@components/ask-fred";
 import { useQuery } from "@tanstack/react-query";
-import { ListChecks, ListVideo, Loader, Sparkles, Timer, X } from "lucide-react";
+import { ListChecks, ListVideo, Loader, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -68,14 +68,6 @@ function coverageNote(coverage: InsightCoverage): string | undefined {
   return `From ${coverage.sampled} of ${coverage.total}`;
 }
 
-function formatDuration(ms: number): string {
-  const minutes = Math.max(0, Math.round(ms / 60000));
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-  return `${Math.round(minutes / 60)}h`;
-}
-
 type InsightCopy = {
   title: string;
   body: string;
@@ -95,18 +87,11 @@ function insightCopy(card: InsightCard): InsightCopy {
       note: coverageNote(card.coverage),
     };
   }
-  if (card.kind === "action-item-count") {
-    return {
-      title: "Tasks",
-      body: `${card.count} action items`,
-      metric: String(card.count),
-      note: coverageNote(card.coverage),
-    };
-  }
   return {
-    title: card.meeting.sourceId,
-    body: `Processing for ${formatDuration(card.processingForMs)}`,
-    metric: formatDuration(card.processingForMs),
+    title: "Tasks",
+    body: `${card.count} action items`,
+    metric: String(card.count),
+    note: coverageNote(card.coverage),
   };
 }
 
@@ -117,10 +102,7 @@ function InsightIcon(props: { kind: InsightCard["kind"] }) {
   if (props.kind === "busy-count") {
     return <Loader className="size-5 text-orange-600" />;
   }
-  if (props.kind === "action-item-count") {
-    return <ListChecks className="size-5 text-green-700" />;
-  }
-  return <Timer className="size-5 text-accent" />;
+  return <ListChecks className="size-5 text-green-700" />;
 }
 
 function InsightCardView(props: { card: InsightCard }) {
@@ -135,8 +117,8 @@ function InsightCardView(props: { card: InsightCard }) {
         <p className="sr-only md:hidden">{`${copy.title}: ${copy.body}`}</p>
         <div className="hidden min-w-0 md:block">
           <CardTitle className="truncate">{copy.title}</CardTitle>
-          <CardDescription className="text-muted">{copy.body}</CardDescription>
-          {copy.note ? <p className="m-0 text-xs text-muted">{copy.note}</p> : null}
+          <CardDescription className="text-muted-foreground">{copy.body}</CardDescription>
+          {copy.note ? <p className="m-0 text-xs text-muted-foreground">{copy.note}</p> : null}
         </div>
       </CardHeader>
     </Card>
@@ -154,7 +136,6 @@ function HomeTabs(props: HomeTabsProps) {
       <nav className="flex flex-wrap gap-1">
         {HOME_TABS.map((item) => {
           const active = props.model.tab === item.tab;
-          const count = props.model.tabCounts[item.tab];
           return (
             <Link
               key={item.tab}
@@ -162,11 +143,10 @@ function HomeTabs(props: HomeTabsProps) {
               className={
                 active
                   ? "border-b-2 border-ink px-3 py-2 text-sm font-semibold text-ink"
-                  : "px-3 py-2 text-sm text-muted"
+                  : "px-3 py-2 text-sm text-muted-foreground"
               }
             >
               {item.label}
-              {count > 0 ? ` ${count}` : ""}
             </Link>
           );
         })}
@@ -229,10 +209,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
         </h2>
         <div className="mt-6 grid grid-cols-3 gap-3">
           {model.insights.map((card) => (
-            <InsightCardView
-              key={card.kind === "longest-processing" ? card.meeting._id : card.kind}
-              card={card}
-            />
+            <InsightCardView key={card.kind} card={card} />
           ))}
         </div>
         <div className="mt-8 grid gap-3">
@@ -243,7 +220,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
           />
           <HomeTabs model={model} fred={props.fred} />
           {model.rows.length === 0 ? (
-            <p className="mt-1 text-[0.85rem] text-muted">
+            <p className="mt-1 text-[0.85rem] text-muted-foreground">
               No meetings in this view.{" "}
               <Link className="font-semibold text-accent" href="/meetings">
                 View all meetings

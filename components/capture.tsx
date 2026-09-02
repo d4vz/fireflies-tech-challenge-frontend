@@ -1,8 +1,10 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { InfoIcon, TriangleAlertIcon } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,7 +17,10 @@ import { Dropzone } from "@/components/ui/dropzone";
 import { Input } from "@/components/ui/input";
 import { uploadVideo } from "@lib/api";
 import {
+  PROCESSING_NOTICE,
+  UPLOAD_PENDING_HINT,
   VIDEO_ACCEPT,
+  VIDEO_FORMAT_LABEL,
   applyUploadFile,
   canConfirm,
   confirmCaptureNaming,
@@ -32,7 +37,7 @@ import {
   type CaptureSession,
   type NamingSession,
 } from "@lib/capture-session";
-import { meetingsKey } from "@lib/meetings";
+import { meetingId, type Meeting } from "@lib/meetings";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
 function CameraIcon() {
@@ -76,11 +81,13 @@ function isNaming(session: CaptureSession): session is NamingSession {
 
 type SessionSetter = Dispatch<SetStateAction<CaptureSession>>;
 
+type AfterUpload = (meeting: Meeting) => void;
+
 async function recordThenUpload(
   current: Extract<CaptureSession, { kind: "naming-capture" }>,
   recordingRef: { current: ScreenRecording | null },
   setSession: SessionSetter,
-  afterUpload: () => Promise<void>,
+  afterUpload: AfterUpload,
 ) {
   const next = confirmCaptureNaming(current);
   setSession(next);
@@ -93,9 +100,9 @@ async function recordThenUpload(
     const file = await handle.done;
     recordingRef.current = null;
     setSession({ kind: "uploading", name: next.name });
-    await uploadVideo(file, uploadFilename(next.name, file));
+    const meeting = await uploadVideo(file, uploadFilename(next.name, file));
     setSession(resetSession());
-    await afterUpload();
+    afterUpload(meeting);
   } catch (caught) {
     recordingRef.current = null;
     if (caught instanceof DOMException && caught.name === "NotAllowedError") {
@@ -109,7 +116,7 @@ async function recordThenUpload(
 async function uploadNamedFile(
   current: Extract<CaptureSession, { kind: "naming-upload" }>,
   setSession: SessionSetter,
-  afterUpload: () => Promise<void>,
+  afterUpload: AfterUpload,
 ) {
   const confirmed = confirmUploadNaming(current);
   if (confirmed.kind !== "uploading") {
@@ -117,9 +124,9 @@ async function uploadNamedFile(
   }
   setSession(confirmed.session);
   try {
-    await uploadVideo(confirmed.file, confirmed.filename);
+    const meeting = await uploadVideo(confirmed.file, confirmed.filename);
     setSession(resetSession());
-    await afterUpload();
+    afterUpload(meeting);
   } catch (caught) {
     setSession(failSession(caught instanceof Error ? caught.message : "upload failed"));
   }
@@ -173,6 +180,38 @@ function CaptureSplitButton(props: {
   );
 }
 
+const SCREEN_CAPTURE_COMPAT_HREF =
+  "https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia#browser_compatibility";
+
+function CaptureDeviceAlert() {
+  return (
+    <Alert variant="warning">
+      <TriangleAlertIcon />
+      <AlertTitle>Limited device support</AlertTitle>
+      <AlertDescription>
+        Screen capture does not work properly on some phones, tablets, and browsers.{" "}
+        <a href={SCREEN_CAPTURE_COMPAT_HREF} target="_blank" rel="noreferrer">
+          See which devices this works on
+        </a>
+        .
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function UploadPendingAlert() {
+  return (
+    <Alert variant="info">
+      <InfoIcon />
+      <AlertTitle>Pending after upload</AlertTitle>
+      <AlertDescription>
+        {UPLOAD_PENDING_HINT.replace(/Meetings\.$/, "")}
+        <Link href="/meetings">Meetings</Link>.
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 function CaptureNameDialog(props: {
   session: CaptureSession;
   setSession: SessionSetter;
@@ -195,7 +234,7 @@ function CaptureNameDialog(props: {
         }
       }}
     >
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg md:max-w-xl">
         <DialogHeader>
           <DialogTitle>Meeting name</DialogTitle>
         </DialogHeader>
@@ -217,19 +256,27 @@ function CaptureNameDialog(props: {
             }
           }}
         />
+        {session.kind === "naming-capture" ? <CaptureDeviceAlert /> : null}
         {showDrop ? (
-          <Dropzone
-            accept={VIDEO_ACCEPT}
-            onDrop={(files) => {
-              const file = firstAcceptedVideo(files);
-              if (!file) {
-                return;
-              }
-              props.setSession((current) => applyUploadFile(current, file));
-            }}
-          >
-            {selectedFileName ?? "Drop a video or click to browse"}
-          </Dropzone>
+          <>
+            <UploadPendingAlert />
+            <Dropzone
+              accept={VIDEO_ACCEPT}
+              className="min-h-32 gap-1.5 sm:min-h-40"
+              onDrop={(files) => {
+                const file = firstAcceptedVideo(files);
+                if (!file) {
+                  return;
+                }
+                props.setSession((current) => applyUploadFile(current, file));
+              }}
+            >
+              <span className="text-foreground">
+                {selectedFileName ?? "Drop a video or click to browse"}
+              </span>
+              <span>Supported files: {VIDEO_FORMAT_LABEL}</span>
+            </Dropzone>
+          </>
         ) : null}
         <DialogFooter>
           <Button type="button" disabled={!confirmEnabled} onClick={props.onConfirm}>
@@ -242,8 +289,6 @@ function CaptureNameDialog(props: {
 }
 
 export function Capture() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const captureRef = useRef<HTMLDivElement>(null);
   const recordingRef = useRef<ScreenRecording | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -264,9 +309,15 @@ export function Capture() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [menuOpen]);
 
-  async function afterUpload() {
-    await queryClient.invalidateQueries({ queryKey: meetingsKey });
-    router.push("/meetings");
+  function afterUpload(meeting: Meeting) {
+    const id = meetingId(meeting);
+    toast(PROCESSING_NOTICE, {
+      description: (
+        <Link className="underline underline-offset-3" href={`/meetings/${id}`}>
+          View meeting
+        </Link>
+      ),
+    });
   }
 
   function onConfirm() {
@@ -286,7 +337,9 @@ export function Capture() {
 
   return (
     <div className="relative flex shrink-0 items-center gap-3">
-      {label ? <span className="hidden text-[0.85rem] text-muted md:inline">{label}</span> : null}
+      {label ? (
+        <span className="hidden text-[0.85rem] text-muted-foreground md:inline">{label}</span>
+      ) : null}
       {error ? (
         <span className="max-w-24 truncate text-[0.85rem] text-danger md:max-w-none">{error}</span>
       ) : null}

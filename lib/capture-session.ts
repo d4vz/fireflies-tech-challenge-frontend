@@ -19,6 +19,14 @@ const VIDEO_ACCEPT_TOKENS = VIDEO_ACCEPT.split(",");
 const VIDEO_MIMES = VIDEO_ACCEPT_TOKENS.filter((token) => !token.startsWith("."));
 const VIDEO_EXTS = VIDEO_ACCEPT_TOKENS.filter((token) => token.startsWith("."));
 
+export const VIDEO_FORMAT_LABEL = VIDEO_EXTS.join(", ");
+
+export const UPLOAD_PENDING_HINT =
+  "The video is uploaded and stays pending while we process it. You can view it in Meetings.";
+
+export const PROCESSING_NOTICE =
+  "This video is processing. It stays pending until transcription finishes. Open the meeting to follow progress.";
+
 export function resetSession(): Extract<CaptureSession, { kind: "idle" }> {
   return { kind: "idle" };
 }

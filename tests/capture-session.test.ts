@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
 import {
+  PROCESSING_NOTICE,
+  UPLOAD_PENDING_HINT,
+  VIDEO_ACCEPT,
+  VIDEO_FORMAT_LABEL,
   applyUploadFile,
   canConfirm,
   confirmCaptureNaming,
@@ -15,6 +19,21 @@ import {
 function video(name: string, type = "video/mp4") {
   return new File(["x"], name, { type });
 }
+
+test("UPLOAD_PENDING_HINT tells the user the meeting stays pending", () => {
+  expect(UPLOAD_PENDING_HINT).toContain("pending");
+  expect(UPLOAD_PENDING_HINT).toContain("Meetings");
+  expect(PROCESSING_NOTICE).toContain("processing");
+  expect(PROCESSING_NOTICE).toContain("pending");
+  expect(PROCESSING_NOTICE).toContain("transcription");
+});
+
+test("VIDEO_FORMAT_LABEL lists every accepted extension", () => {
+  for (const ext of [".mp4", ".webm", ".mov", ".mkv", ".m4v"]) {
+    expect(VIDEO_ACCEPT).toContain(ext);
+    expect(VIDEO_FORMAT_LABEL).toContain(ext);
+  }
+});
 
 test("capture naming starts empty and cannot confirm", () => {
   const session = startCaptureNaming();

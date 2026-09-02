@@ -43,7 +43,9 @@ export function MeetingsList(props: MeetingsListProps) {
   if (total === 0) {
     return (
       <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
-        <p className="mt-1 text-[0.85rem] text-muted">No meetings yet. Capture a video to start.</p>
+        <p className="mt-1 text-[0.85rem] text-muted-foreground">
+          No meetings yet. Capture a video to start.
+        </p>
       </main>
     );
   }
@@ -66,9 +68,9 @@ export function MeetingsList(props: MeetingsListProps) {
             Previous
           </Link>
         ) : (
-          <span className="text-muted">Previous</span>
+          <span className="text-muted-foreground">Previous</span>
         )}
-        <span className="text-muted">
+        <span className="text-muted-foreground">
           Page {page} of {pageCount}
         </span>
         {page < pageCount ? (
@@ -76,7 +78,7 @@ export function MeetingsList(props: MeetingsListProps) {
             Next
           </Link>
         ) : (
-          <span className="text-muted">Next</span>
+          <span className="text-muted-foreground">Next</span>
         )}
       </nav>
     </main>

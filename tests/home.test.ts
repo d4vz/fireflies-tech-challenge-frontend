@@ -153,29 +153,18 @@ test("toHomeModel tags busy and action-item cards with sample coverage", () => {
   });
 });
 
-test("toHomeModel omits longest-processing when no fetched meeting is busy", () => {
-  const model = toHomeModel({
-    page: pageOf([ready, failed]),
-    view: defaults,
-    now,
-    workspaceName: "Davi",
-  });
-  expect(model.insights.some((card) => card.kind === "longest-processing")).toBe(false);
-  expect(model.coverage).toEqual({ kind: "complete" });
-});
-
-test("toHomeModel picks the oldest busy meeting for longest-processing", () => {
+test("toHomeModel never adds a longest-processing insight card", () => {
   const model = toHomeModel({
     page: pageOf([queued, processing]),
     view: defaults,
     now,
     workspaceName: "Davi",
   });
-  expect(model.insights).toContainEqual({
-    kind: "longest-processing",
-    meeting: processing,
-    processingForMs: now.getTime() - Date.parse(processing.createdAt),
-  });
+  expect(model.insights.map((card) => card.kind)).toEqual([
+    "meeting-count",
+    "busy-count",
+    "action-item-count",
+  ]);
 });
 
 test("toHomeModel filters rows by tab then query on sourceId and summary", () => {

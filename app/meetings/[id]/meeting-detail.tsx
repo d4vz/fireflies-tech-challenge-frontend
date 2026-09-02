@@ -41,7 +41,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
       </div>
       <div>
         <h1 className="m-0 break-words text-[1.35rem] md:text-[1.6rem]">{meeting.sourceId}</h1>
-        <p className="mt-1 flex flex-wrap items-center gap-2 text-[0.85rem] text-muted">
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-[0.85rem] text-muted-foreground">
           <When value={meeting.createdAt} />
           <StatusLabel status={meeting.status} />
           {meeting.error ? <span className="text-danger">{meeting.error}</span> : null}
