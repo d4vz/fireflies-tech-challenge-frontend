@@ -3,6 +3,7 @@
 node_modules/
 .worktrees/
 .next/
+.next-verify/
 out/
 tsconfig.tsbuildinfo
 

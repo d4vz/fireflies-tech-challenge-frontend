@@ -1,10 +1,13 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import type { AskFredProps } from "@components/ask-fred";
 import { useQuery } from "@tanstack/react-query";
 import { ListChecks, ListVideo, Loader, Sparkles, Timer, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AskFred } from "@components/ask-fred";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingSearch } from "@components/meeting-search";
 import { HomeDashboardSkeleton } from "@components/skeleton";
@@ -34,6 +37,10 @@ export type HomeCanvasProps = {
   model: HomeModel;
   fred: FredParam;
 };
+
+const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
+  ssr: false,
+});
 
 const HOME_TABS: { tab: HomeTab; label: string }[] = [
   { tab: "all", label: "All" },
@@ -167,7 +174,7 @@ function HomeTabs(props: HomeTabsProps) {
   );
 }
 
-function AskFredPanel(props: { closeHref: string }) {
+function AskFredPanel(props: { closeHref: string } & AskFredProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
@@ -182,7 +189,12 @@ function AskFredPanel(props: { closeHref: string }) {
         </Button>
       </div>
       <div className="min-h-0 flex-1">
-        <AskFred />
+        <AskFred
+          error={props.error}
+          messages={props.messages}
+          sendMessage={props.sendMessage}
+          status={props.status}
+        />
       </div>
     </div>
   );
@@ -191,12 +203,23 @@ function AskFredPanel(props: { closeHref: string }) {
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
   const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" });
+  const { error, messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
+  });
   return (
     <WorkspaceCanvas
       rail={{
         kind: "assistant",
         chrome: assistantChrome(props.fred),
-        panel: <AskFredPanel closeHref={closeHref} />,
+        panel: (
+          <AskFredPanel
+            closeHref={closeHref}
+            error={error}
+            messages={messages}
+            sendMessage={sendMessage}
+            status={status}
+          />
+        ),
       }}
     >
       <div className="home-empty min-h-full px-4 pt-8 pb-12 md:px-8">
