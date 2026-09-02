@@ -84,8 +84,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
           ))}
         </ul>
       </section>
-      <section>
-        <h2 className="mb-1.5 text-base">Action items</h2>
+      <section aria-label="Action items">
         <TaskChecklist meetingId={meeting._id} tasks={meeting.tasks ?? []} />
       </section>
     </article>
