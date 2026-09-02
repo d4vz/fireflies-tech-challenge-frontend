@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ASK_FRED_PLACEHOLDER,
-  askFredMeetingPath,
   isAskFredBusy,
   shouldScrollFredStick,
   type FredStickSnapshot,
@@ -28,56 +27,20 @@ import { WORKSPACE_NAME } from "@lib/chrome";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { isDynamicToolUIPart, isStaticToolUIPart, type UIMessage } from "ai";
 import { CornerDownLeft } from "lucide-react";
-import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
-import type { Components } from "streamdown";
+import { useEffect, useRef, type FormEvent } from "react";
 
 const CHIPS = ["What's my day looking like?", "Pending tasks across all meetings"];
 const GREETING = `Hi ${WORKSPACE_NAME}! Get ready for your meeting.`;
-const FRED_LINK_SAFETY = { enabled: false };
-
-type FredMarkdownLinkProps = {
-  href?: string;
-  className?: string;
-  children?: ReactNode;
-};
-
-function FredMarkdownLink(props: FredMarkdownLinkProps) {
-  const href = props.href ?? "";
-  const path = askFredMeetingPath(href, window.location.origin);
-  if (path !== undefined) {
-    return (
-      <a className={props.className} href={path}>
-        {props.children}
-      </a>
-    );
-  }
-  return (
-    <a className={props.className} href={href} rel="noreferrer" target="_blank">
-      {props.children}
-    </a>
-  );
-}
-
-const FRED_MARKDOWN_COMPONENTS = {
-  // SAFETY: Streamdown types every markdown tag as Record<string, unknown>; this link only reads href, className, and children.
-  a: FredMarkdownLink as Components["a"],
-};
-
-function rewriteFredUrl(url: string) {
-  return askFredMeetingPath(url, window.location.origin) ?? url;
-}
 
 function FredMarkdown(props: { children: string; streaming?: boolean }) {
   const streaming = props.streaming === true;
   return (
     <MessageResponse
-      className="wrap-break-word"
-      components={FRED_MARKDOWN_COMPONENTS}
+      className="h-auto w-full wrap-break-word"
       isAnimating={streaming}
-      linkSafety={FRED_LINK_SAFETY}
+      linkSafety={{ enabled: false }}
       mode={streaming ? "streaming" : "static"}
       parseIncompleteMarkdown={streaming}
-      urlTransform={rewriteFredUrl}
     >
       {props.children}
     </MessageResponse>

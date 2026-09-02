@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { homeHref, parseHomeView, type AssistantChrome } from "@lib/home";
+import { assistantPanelSlot, homeHref, parseHomeView, type AssistantChrome } from "@lib/home";
 
 export type AssistantRail = {
   kind: "assistant";
@@ -34,6 +34,18 @@ function closeFredHref(params: URLSearchParams): string {
   return homeHref({ ...view, fred: "unset" });
 }
 
+const XL_QUERY = "(min-width: 1280px)";
+
+function subscribeXl(onStoreChange: () => void): () => void {
+  const mq = window.matchMedia(XL_QUERY);
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+function xlSnapshot(): boolean {
+  return window.matchMedia(XL_QUERY).matches;
+}
+
 type AssistantWorkspaceProps = {
   rail: AssistantRail;
   children: ReactNode;
@@ -43,22 +55,25 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const chrome = props.rail.chrome;
-  const dockClass = chrome.dockHidden
-    ? "grid h-full min-h-0 min-w-0 grid-cols-1"
-    : "grid h-full min-h-0 min-w-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px]";
+  const isXl = useSyncExternalStore(subscribeXl, xlSnapshot, () => true);
+  const slot = assistantPanelSlot(isXl, chrome.sheetOpen);
+  const dockClass =
+    slot === "dock"
+      ? "grid h-full min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_360px]"
+      : "grid h-full min-h-0 min-w-0 grid-cols-1";
 
   return (
     <>
       <div className={dockClass}>
         <div className="min-h-0 min-w-0 overflow-y-auto">{props.children}</div>
-        {chrome.dockHidden ? null : (
-          <aside className="hidden min-h-0 overflow-hidden border-l border-line bg-paper duration-200 ease-in-out animate-in fade-in-0 slide-in-from-right xl:flex xl:flex-col">
+        {slot === "dock" ? (
+          <aside className="flex min-h-0 flex-col overflow-hidden border-l border-line bg-paper">
             {props.rail.panel}
           </aside>
-        )}
+        ) : null}
       </div>
       <Sheet
-        open={chrome.sheetOpen}
+        open={slot === "sheet"}
         modal={false}
         onOpenChange={(open) => {
           if (open) {
@@ -70,9 +85,8 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
         <SheetContent
           side="right"
           overlayClassName="xl:hidden"
-          className="w-full p-0 sm:max-w-[360px] xl:hidden data-[side=right]:data-open:slide-in-from-right data-[side=right]:data-closed:slide-out-to-right"
+          className="w-full p-0 sm:max-w-[360px] xl:hidden"
           showCloseButton={false}
-          slideTravel="full"
           onInteractOutside={(event) => {
             event.preventDefault();
           }}
@@ -83,7 +97,9 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
           <SheetHeader className="sr-only">
             <SheetTitle>AskFred</SheetTitle>
           </SheetHeader>
-          <div className="flex h-full min-h-0 flex-col">{props.rail.panel}</div>
+          <div className="flex h-full min-h-0 flex-col">
+            {slot === "sheet" ? props.rail.panel : null}
+          </div>
         </SheetContent>
       </Sheet>
     </>

@@ -81,8 +81,12 @@ export function AppFrame(props: AppFrameProps) {
               <Menu />
             </Button>
             <PageTitle />
-            <MeetingSearch className="hidden min-w-0 flex-1 md:block" hotkey={true} view={view} />
-            <div className="min-w-0 flex-1 md:hidden" />
+            <div className="min-w-0 flex-1" />
+            <MeetingSearch
+              className="hidden min-w-0 w-full max-w-sm md:block"
+              hotkey={true}
+              view={view}
+            />
             <Link
               href={assistantOpenHref({ current: homeView })}
               aria-label="AskFred"
