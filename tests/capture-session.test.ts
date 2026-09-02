@@ -1,0 +1,123 @@
+import { expect, test } from "bun:test";
+import {
+  applyUploadFile,
+  canConfirm,
+  confirmCaptureNaming,
+  confirmUploadNaming,
+  isNameModalOpen,
+  prefillName,
+  setSessionName,
+  startCaptureNaming,
+  startPickingUpload,
+  uploadFilename,
+} from "@lib/capture-session";
+
+function video(name: string, type = "video/mp4") {
+  return new File(["x"], name, { type });
+}
+
+test("capture naming starts empty and cannot confirm", () => {
+  const session = startCaptureNaming();
+  expect(session).toEqual({ kind: "naming-capture", name: "" });
+  expect(isNameModalOpen(session)).toBe(true);
+  expect(canConfirm(session)).toBe(false);
+});
+
+test("upload picking starts with no file and cannot confirm", () => {
+  const session = startPickingUpload();
+  expect(session).toEqual({ kind: "picking-upload", name: "" });
+  expect(isNameModalOpen(session)).toBe(true);
+  expect(canConfirm(session)).toBe(false);
+});
+
+test("applyUploadFile prefills the filename stem", () => {
+  const file = video("standup.mp4");
+  const session = applyUploadFile(startPickingUpload(), file);
+  expect(session).toEqual({ kind: "naming-upload", name: "standup", file });
+  expect(canConfirm(session)).toBe(true);
+  expect(prefillName(file)).toBe("standup");
+});
+
+test("a second file does not overwrite an edited name", () => {
+  const first = video("standup.mp4");
+  const second = video("other.webm", "video/webm");
+  const named = applyUploadFile(startPickingUpload(), first);
+  if (named.kind !== "naming-upload") {
+    throw new Error("expected naming-upload");
+  }
+  const edited = setSessionName(named, "Q2 review");
+  expect(applyUploadFile(edited, second)).toEqual({
+    kind: "naming-upload",
+    name: "Q2 review",
+    file: second,
+  });
+});
+
+test("a second file overwrites the name when it still matches the previous prefill", () => {
+  const first = video("standup.mp4");
+  const second = video("interview.mov", "video/quicktime");
+  const named = applyUploadFile(startPickingUpload(), first);
+  expect(applyUploadFile(named, second)).toEqual({
+    kind: "naming-upload",
+    name: "interview",
+    file: second,
+  });
+});
+
+test("rejected non-video leaves the session unchanged", () => {
+  const picking = startPickingUpload();
+  expect(applyUploadFile(picking, new File(["x"], "notes.txt", { type: "text/plain" }))).toBe(
+    picking,
+  );
+  const named = applyUploadFile(picking, video("standup.mp4"));
+  expect(applyUploadFile(named, new File(["x"], "photo.png", { type: "image/png" }))).toBe(named);
+});
+
+test("uploadFilename appends the file extension when the display name has none", () => {
+  const webm = video("screen-recording.webm", "video/webm");
+  expect(uploadFilename("Q2 review", webm)).toBe("Q2 review.webm");
+  expect(uploadFilename("clip.mp4", video("clip.mp4"))).toBe("clip.mp4");
+  expect(uploadFilename("  clip.MP4  ", video("other.mp4"))).toBe("clip.MP4");
+});
+
+test("confirm naming is a no-op on an empty name", () => {
+  const capture = startCaptureNaming();
+  expect(confirmCaptureNaming(capture)).toBe(capture);
+  const whitespaceCapture = setSessionName(capture, "   ");
+  expect(confirmCaptureNaming(whitespaceCapture)).toBe(whitespaceCapture);
+
+  const named = applyUploadFile(startPickingUpload(), video("standup.mp4"));
+  if (named.kind !== "naming-upload") {
+    throw new Error("expected naming-upload");
+  }
+  const emptied = setSessionName(named, "   ");
+  expect(confirmUploadNaming(emptied)).toEqual({ kind: "naming-upload", session: emptied });
+});
+
+test("confirm upload with a name moves to uploading", () => {
+  const file = video("standup.mp4");
+  const named = applyUploadFile(startPickingUpload(), file);
+  if (named.kind !== "naming-upload") {
+    throw new Error("expected naming-upload");
+  }
+  expect(confirmUploadNaming(named)).toEqual({
+    kind: "uploading",
+    session: { kind: "uploading", name: "standup" },
+    file,
+    filename: "standup.mp4",
+  });
+});
+
+test("confirm capture with a name moves to recording", () => {
+  const next = confirmCaptureNaming(setSessionName(startCaptureNaming(), " Weekly "));
+  expect(next).toEqual({ kind: "recording", name: "Weekly" });
+});
+
+test("isNameModalOpen covers every naming kind", () => {
+  expect(isNameModalOpen({ kind: "idle" })).toBe(false);
+  expect(isNameModalOpen({ kind: "recording", name: "a" })).toBe(false);
+  expect(isNameModalOpen({ kind: "uploading", name: "a" })).toBe(false);
+  expect(isNameModalOpen(startCaptureNaming())).toBe(true);
+  expect(isNameModalOpen(startPickingUpload())).toBe(true);
+  expect(isNameModalOpen(applyUploadFile(startPickingUpload(), video("a.mp4")))).toBe(true);
+});

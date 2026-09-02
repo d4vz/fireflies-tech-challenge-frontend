@@ -35,8 +35,8 @@ export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
   return chunks;
 }
 
-export async function uploadVideo(file: File): Promise<Meeting> {
-  const res = await fetch(`/api/meetings/upload?filename=${encodeURIComponent(file.name)}`, {
+export async function uploadVideo(file: File, filename = file.name): Promise<Meeting> {
+  const res = await fetch(`/api/meetings/upload?filename=${encodeURIComponent(filename)}`, {
     method: "POST",
     headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,
