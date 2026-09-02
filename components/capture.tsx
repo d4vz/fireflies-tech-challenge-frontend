@@ -42,8 +42,8 @@ import {
   type NamingSession,
 } from "@lib/capture-session";
 import { subscribeCaptureIntent, type CaptureIntent } from "@lib/capture-intent";
-import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
 import { actionsKey } from "@lib/actions";
+import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
 function CameraIcon() {

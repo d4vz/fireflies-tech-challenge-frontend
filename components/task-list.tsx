@@ -5,7 +5,7 @@ import { patchTask } from "@lib/api";
 import { actionsKey } from "@lib/actions";
 import { meetingKey, meetingsKey, type MeetingTask, type TaskStatus } from "@lib/meetings";
 
-export type TaskChecklistProps = {
+type TaskChecklistProps = {
   meetingId: string;
   tasks: MeetingTask[];
 };

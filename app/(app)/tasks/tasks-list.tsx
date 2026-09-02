@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { TaskChecklist } from "@components/task-list";
 import { MeetingsListSkeleton } from "@components/skeleton";
+import { TaskChecklist } from "@components/task-list";
 import { When } from "@components/when";
 import { listActions } from "@lib/api";
 import {
@@ -23,8 +23,7 @@ function FilterLink(props: {
   current: ActionStatusFilter;
   label: string;
 }) {
-  const active = props.status === props.current;
-  if (active) {
+  if (props.status === props.current) {
     return (
       <span className="rounded-full bg-nav px-3 py-1.5 text-sm font-semibold text-ink">
         {props.label}
@@ -122,7 +121,7 @@ export function TasksList(props: TasksListProps) {
           </div>
         )}
       </div>
-      {total === 0 ? null : (
+      {total > 0 ? (
         <nav className="flex shrink-0 items-center gap-3 border-t border-line bg-wash px-4 py-3 text-[0.85rem] md:px-8">
           {props.page > 1 ? (
             <Link
@@ -148,7 +147,7 @@ export function TasksList(props: TasksListProps) {
             <span className="text-muted-foreground">Next</span>
           )}
         </nav>
-      )}
+      ) : null}
     </main>
   );
 }

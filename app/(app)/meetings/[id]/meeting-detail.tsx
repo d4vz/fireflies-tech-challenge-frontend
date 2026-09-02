@@ -6,6 +6,7 @@ import { Clip } from "@components/clip";
 import { DetailCanvas, type TranscriptView } from "@components/detail-canvas";
 import { MeetingDetailSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
+import { TaskChecklist } from "@components/task-list";
 import { When } from "@components/when";
 import {
   Breadcrumb,
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { getMeeting, getTranscripts } from "@lib/api";
 import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
-import { TaskChecklist } from "@components/task-list";
 
 type TranscriptQueryInput = {
   chunks: { text: string }[] | undefined;
