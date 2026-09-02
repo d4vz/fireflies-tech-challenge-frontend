@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { Figtree } from "next/font/google";
-import { Shell } from "@components/shell";
+import { AppFrame } from "@components/app-frame";
 import { Providers } from "@app/providers";
 import "./globals.css";
 
@@ -19,7 +20,9 @@ export default function RootLayout(props: RootLayoutProps) {
     <html lang="en" className={`${figtree.variable} ${figtree.className}`}>
       <body className="h-screen overflow-hidden bg-wash font-sans text-ink antialiased">
         <Providers>
-          <Shell>{props.children}</Shell>
+          <Suspense>
+            <AppFrame>{props.children}</AppFrame>
+          </Suspense>
         </Providers>
       </body>
     </html>
