@@ -9,4 +9,6 @@
 .pi/**
 .roo/**
 .windsurf/**
+.next/**
+out/**
 tools/oxlint/anti-slop/**

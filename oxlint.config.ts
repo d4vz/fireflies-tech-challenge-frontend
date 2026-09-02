@@ -11,6 +11,8 @@ export default {
     ".pi/**",
     ".roo/**",
     ".windsurf/**",
+    ".next/**",
+    "out/**",
     "tools/oxlint/anti-slop/**",
   ],
   jsPlugins: [{ name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" }],
