@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { formatWhen } from "@lib/meetings";
 
 type WhenProps = {
@@ -6,9 +9,13 @@ type WhenProps = {
 };
 
 export function When(props: WhenProps) {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    setLabel(formatWhen(props.value));
+  }, [props.value]);
   return (
-    <time className={props.className} dateTime={props.value} suppressHydrationWarning>
-      {formatWhen(props.value)}
+    <time className={props.className} dateTime={props.value}>
+      {label}
     </time>
   );
 }

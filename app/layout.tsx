@@ -17,7 +17,7 @@ type RootLayoutProps = {
 export default function RootLayout(props: RootLayoutProps) {
   return (
     <html lang="en" className={`${figtree.variable} ${figtree.className}`}>
-      <body className="min-h-full bg-wash font-sans text-ink antialiased">
+      <body className="h-screen overflow-hidden bg-wash font-sans text-ink antialiased">
         <Providers>
           <Shell>{props.children}</Shell>
         </Providers>

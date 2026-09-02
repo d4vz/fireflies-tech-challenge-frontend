@@ -75,7 +75,7 @@ export function formatWhen(value: string) {
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "numeric",
