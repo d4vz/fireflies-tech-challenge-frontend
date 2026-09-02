@@ -2,17 +2,30 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Clip } from "@components/clip";
-import { MeetingDetailSkeleton, TranscriptSkeleton } from "@components/skeleton";
+import { DetailCanvas, type TranscriptView } from "@components/detail-canvas";
+import { MeetingDetailSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
 import { When } from "@components/when";
 import { getMeeting, getTranscripts } from "@lib/api";
 import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
 
-function transcriptText(chunks: { text: string }[]) {
-  if (chunks.length === 0) {
-    return "(empty transcript)";
+type TranscriptQueryInput = {
+  chunks: { text: string }[] | undefined;
+  meetingFailed: boolean;
+  queryError: boolean;
+};
+
+function toTranscriptView(input: TranscriptQueryInput): TranscriptView {
+  if (input.chunks) {
+    if (input.chunks.length === 0) {
+      return { kind: "empty" };
+    }
+    return { kind: "text", value: input.chunks.map((chunk) => chunk.text).join("") };
   }
-  return chunks.map((chunk) => chunk.text).join("");
+  if (input.meetingFailed || input.queryError) {
+    return { kind: "empty" };
+  }
+  return { kind: "pending" };
 }
 
 type MeetingDetailBodyProps = {
@@ -95,30 +108,15 @@ export function MeetingDetail(props: MeetingDetailProps) {
   }
 
   const meeting = meetingQuery.data;
-  const transcript = transcriptsQuery.data
-    ? transcriptText(transcriptsQuery.data)
-    : meeting.status === "failed" || transcriptsQuery.isError
-      ? "(empty transcript)"
-      : null;
+  const transcript = toTranscriptView({
+    chunks: transcriptsQuery.data,
+    meetingFailed: meeting.status === "failed",
+    queryError: transcriptsQuery.isError,
+  });
 
   return (
-    <main className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-h-0 overflow-y-auto px-8 pt-8 pb-12">
-        <MeetingDetailBody meeting={meeting} />
-      </div>
-      <aside
-        aria-busy={transcript ? undefined : true}
-        className="min-h-0 overflow-y-auto border-l border-line bg-paper px-5 py-6"
-      >
-        <h2 className="m-0 mb-4 text-[0.95rem] font-semibold">Transcript</h2>
-        {transcript ? (
-          <div className="font-sans text-[0.9rem] leading-6 whitespace-pre-wrap text-gray-700">
-            {transcript}
-          </div>
-        ) : (
-          <TranscriptSkeleton />
-        )}
-      </aside>
-    </main>
+    <DetailCanvas meeting={meeting} transcript={transcript}>
+      <MeetingDetailBody meeting={meeting} />
+    </DetailCanvas>
   );
 }
