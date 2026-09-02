@@ -138,17 +138,17 @@ type StoredPublicBlob = {
   thumbnailUrl?: string;
 };
 
-type StoredPublicTask = {
+export type StoredPublicTask = {
   _id: string;
   text: string;
   status?: TaskStatus;
   updatedAt: string;
 };
 
-type StoredPublicMeeting = {
+export type StoredPublicMeeting = {
   _id: string;
   sourceId: string;
-  name?: string;
+  name: string;
   createdAt: string;
   status?: MeetingStatus;
   error?: string;
@@ -172,7 +172,7 @@ function parsePublicBlob(raw: StoredPublicBlob): Meeting["blob"] {
   };
 }
 
-function parsePublicTask(raw: StoredPublicTask): MeetingTask {
+export function parseMeetingTask(raw: StoredPublicTask): MeetingTask {
   return {
     _id: raw._id,
     text: raw.text,
@@ -181,52 +181,20 @@ function parsePublicTask(raw: StoredPublicTask): MeetingTask {
   };
 }
 
-const MEDIA_EXTS = [
-  ".mp4",
-  ".webm",
-  ".mov",
-  ".mkv",
-  ".m4v",
-  ".mp3",
-  ".wav",
-  ".m4a",
-  ".aac",
-  ".ogg",
-  ".flac",
-] as const;
-
-function stripMediaExt(value: string): string {
-  const lower = value.toLowerCase();
-  for (const ext of MEDIA_EXTS) {
-    if (!lower.endsWith(ext)) {
-      continue;
-    }
-    const stem = value.slice(0, -ext.length).trim();
-    if (stem !== "") {
-      return stem;
-    }
-  }
-  return value;
-}
-
-export function meetingName(sourceId: string, name?: string): string {
-  const stored = name?.trim();
-  if (stored !== undefined && stored !== "") {
-    return stripMediaExt(stored);
-  }
-  return stripMediaExt(sourceId);
-}
-
 export function parsePublicMeeting(raw: StoredPublicMeeting): Meeting {
+  const name = raw.name.trim();
+  if (name === "") {
+    throw new Error("invalid meeting");
+  }
   return {
     _id: raw._id,
     sourceId: raw.sourceId,
-    name: meetingName(raw.sourceId, raw.name),
+    name,
     createdAt: raw.createdAt,
     status: raw.status ?? "ready",
     error: raw.error,
     summary: raw.summary,
-    tasks: (raw.tasks ?? []).map(parsePublicTask),
+    tasks: (raw.tasks ?? []).map(parseMeetingTask),
     blob: parsePublicBlob(raw.blob),
   };
 }

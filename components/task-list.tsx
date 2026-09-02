@@ -5,8 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { patchTask } from "@lib/api";
-import { actionsKey } from "@lib/actions";
-import { meetingKey, meetingsKey, type MeetingTask, type TaskStatus } from "@lib/meetings";
+import { type MeetingTask, type TaskStatus } from "@lib/meetings";
+import { invalidateMeetingData } from "@lib/query-policy";
 
 type TaskChecklistProps = {
   meetingId: string;
@@ -21,11 +21,7 @@ export function TaskChecklist(props: TaskChecklistProps) {
     mutationFn: (input: { taskId: string; status: TaskStatus }) =>
       patchTask(props.meetingId, input.taskId, input.status),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: meetingsKey }),
-        queryClient.invalidateQueries({ queryKey: actionsKey }),
-        queryClient.invalidateQueries({ queryKey: meetingKey(props.meetingId) }),
-      ]);
+      await invalidateMeetingData(queryClient, props.meetingId);
     },
   });
 

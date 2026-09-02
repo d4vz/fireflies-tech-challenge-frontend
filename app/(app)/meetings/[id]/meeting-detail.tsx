@@ -17,8 +17,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getMeeting, getTranscripts } from "@lib/api";
-import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
+import { type Meeting } from "@lib/meetings";
+import { meetingQuery, transcriptsQuery } from "@lib/query-policy";
 
 type TranscriptQueryInput = {
   chunks: { text: string }[] | undefined;
@@ -117,43 +117,31 @@ type MeetingDetailProps = {
 
 export function MeetingDetail(props: MeetingDetailProps) {
   const id = props.id;
-  const meetingQuery = useQuery({
-    queryKey: meetingKey(id),
-    queryFn: () => getMeeting(id),
-    enabled: Boolean(id),
-    refetchInterval: (current) => {
-      const status = current.state.data?.status;
-      if (!status || !isBusy(status)) {
-        return false;
-      }
-      return 2000;
-    },
-  });
-  const transcriptsQuery = useQuery({
-    queryKey: transcriptsKey(id),
-    queryFn: () => getTranscripts(id),
-    enabled: meetingQuery.data?.status === "ready",
+  const meetingState = useQuery(meetingQuery(id));
+  const transcriptState = useQuery({
+    ...transcriptsQuery(id),
+    enabled: meetingState.data?.status === "ready",
   });
 
-  if (meetingQuery.error) {
+  if (meetingState.error) {
     return (
       <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
         <Alert variant="destructive">
-          <AlertDescription>{meetingQuery.error.message}</AlertDescription>
+          <AlertDescription>{meetingState.error.message}</AlertDescription>
         </Alert>
       </main>
     );
   }
 
-  if (meetingQuery.isPending || !meetingQuery.data) {
+  if (meetingState.isPending || !meetingState.data) {
     return <MeetingDetailSkeleton />;
   }
 
-  const meeting = meetingQuery.data;
+  const meeting = meetingState.data;
   const transcript = toTranscriptView({
-    chunks: transcriptsQuery.data,
+    chunks: transcriptState.data,
     meetingFailed: meeting.status === "failed",
-    queryError: transcriptsQuery.isError,
+    queryError: transcriptState.isError,
   });
 
   return (

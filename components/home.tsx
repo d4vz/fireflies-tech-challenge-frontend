@@ -12,26 +12,12 @@ import { TaskGroupCard } from "@components/task-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { handleHover } from "@lib/handle-hover";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  parseHomeViewFromSearch,
-  toHomeModel,
-  type HomeModel,
-  type HomeView,
-  type InsightCard,
-  type InsightCoverage,
-} from "@lib/home";
-import { subscribeAppUrl } from "@lib/assistant-url";
-import { listActions, listMeetings } from "@lib/api";
-import {
-  HOME_RECENT_TASK_GROUPS,
-  actionsListKey,
-  tasksHref,
-  type ActionListPage,
-} from "@lib/actions";
-import { HOME_DASHBOARD_LIMIT, isBusy, meetingsListKey, type MeetingListPage } from "@lib/meetings";
+import { toHomeModel, type HomeModel, type InsightCard } from "@lib/home";
+import { HOME_RECENT_TASK_GROUPS, tasksHref, type ActionListPage } from "@lib/actions";
+import { HOME_DASHBOARD_LIMIT, type MeetingListPage } from "@lib/meetings";
+import { actionsListQuery, meetingsListQuery } from "@lib/query-policy";
 
 export type HomeDashboardProps = {
-  view: HomeView;
   initialPage: MeetingListPage | undefined;
   initialActions: ActionListPage | undefined;
   displayName: string;
@@ -52,49 +38,6 @@ function greetingTitle(model: HomeModel): string {
     return `Good Afternoon, ${name} 👋`;
   }
   return `Good Evening, ${name} 👋`;
-}
-
-function coverageNote(coverage: InsightCoverage): string | undefined {
-  if (coverage.kind === "complete") {
-    return undefined;
-  }
-  return `From ${coverage.sampled} of ${coverage.total}`;
-}
-
-type InsightCopy = {
-  title: string;
-  body: string;
-  metric: string;
-  note?: string;
-};
-
-function insightCopy(card: InsightCard): InsightCopy {
-  switch (card.kind) {
-    case "meeting-count":
-      return {
-        title: "Meetings",
-        body: `${card.total} in the library`,
-        metric: String(card.total),
-      };
-    case "busy-count":
-      return {
-        title: "In progress",
-        body: `${card.count} processing`,
-        metric: String(card.count),
-        note: coverageNote(card.coverage),
-      };
-    case "task-count":
-      return {
-        title: "Tasks",
-        body: `${card.pending} pending · ${card.completed} completed`,
-        metric: String(card.pending),
-        note: coverageNote(card.coverage),
-      };
-    default: {
-      const _exhaustive: never = card;
-      return _exhaustive;
-    }
-  }
 }
 
 function InsightIcon(props: { kind: InsightCard["kind"]; iconRef?: Ref<IconHandle> }) {
@@ -125,28 +68,28 @@ function staggerClass(index: number): string {
 
 function InsightCardView(props: { card: InsightCard; index: number }) {
   const iconRef = useRef<IconHandle>(null);
-  const copy = insightCopy(props.card);
+  const card = props.card;
   const inner = (
     <Card
-      className={`min-w-0 bg-paper shadow-none ring-1 ring-line max-md:[--card-spacing:--spacing(2.5)]${props.card.kind === "task-count" ? " hover:bg-wash" : ""}`}
+      className={`min-w-0 bg-paper shadow-none ring-1 ring-line max-md:[--card-spacing:--spacing(2.5)]${card.kind === "task-count" ? " hover:bg-wash" : ""}`}
     >
       <CardHeader className="flex min-w-0 flex-col gap-2">
         <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-wash md:size-10">
-          <InsightIcon kind={props.card.kind} iconRef={iconRef} />
+          <InsightIcon kind={card.kind} iconRef={iconRef} />
         </span>
-        <p className="m-0 text-2xl font-semibold tabular-nums md:text-3xl">{copy.metric}</p>
-        <p className="sr-only md:hidden">{`${copy.title}: ${copy.body}`}</p>
+        <p className="m-0 text-2xl font-semibold tabular-nums md:text-3xl">{card.metric}</p>
+        <p className="sr-only md:hidden">{`${card.title}: ${card.body}`}</p>
         <div className="hidden min-w-0 md:block">
-          <CardTitle className="truncate">{copy.title}</CardTitle>
-          <CardDescription className="truncate text-muted-foreground">{copy.body}</CardDescription>
-          {copy.note ? (
-            <p className="m-0 truncate text-xs text-muted-foreground">{copy.note}</p>
+          <CardTitle className="truncate">{card.title}</CardTitle>
+          <CardDescription className="truncate text-muted-foreground">{card.body}</CardDescription>
+          {card.note ? (
+            <p className="m-0 truncate text-xs text-muted-foreground">{card.note}</p>
           ) : null}
         </div>
       </CardHeader>
     </Card>
   );
-  if (props.card.kind !== "task-count") {
+  if (card.kind !== "task-count") {
     return <div className={staggerClass(props.index)}>{inner}</div>;
   }
   return (
@@ -200,8 +143,7 @@ function RecentTasksResults(props: { page: ActionListPage }) {
 
 function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
   const query = useQuery({
-    queryKey: actionsListKey(1, HOME_RECENT_TASK_GROUPS, "pending"),
-    queryFn: () => listActions(1, HOME_RECENT_TASK_GROUPS, "pending"),
+    ...actionsListQuery(1, HOME_RECENT_TASK_GROUPS, "pending"),
     initialData: props.initialPage,
   });
   if (query.error !== null) {
@@ -278,32 +220,13 @@ export function HomeCanvas(props: HomeCanvasProps) {
 
 export function HomeDashboard(props: HomeDashboardProps) {
   const [now, setNow] = useState<Date | null>(null);
-  const [view, setView] = useState(props.view);
   const query = useQuery({
-    queryKey: meetingsListKey(1, HOME_DASHBOARD_LIMIT),
-    queryFn: () => listMeetings(1, HOME_DASHBOARD_LIMIT),
+    ...meetingsListQuery(1, HOME_DASHBOARD_LIMIT),
     initialData: props.initialPage,
-    refetchInterval: (current) => {
-      const items = current.state.data?.items;
-      if (!items) {
-        return false;
-      }
-      return items.some((meeting) => isBusy(meeting.status)) ? 2000 : false;
-    },
   });
 
   useEffect(() => {
     setNow(new Date());
-  }, []);
-
-  useEffect(() => {
-    setView(props.view);
-  }, [props.view]);
-
-  useEffect(() => {
-    return subscribeAppUrl(() => {
-      setView(parseHomeViewFromSearch(window.location.search));
-    });
   }, []);
 
   if (query.error) {
@@ -324,7 +247,6 @@ export function HomeDashboard(props: HomeDashboardProps) {
 
   const model = toHomeModel({
     page: query.data,
-    view,
     now,
     workspaceName: props.displayName,
   });

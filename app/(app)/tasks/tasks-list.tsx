@@ -8,14 +8,13 @@ import { ListPager } from "@components/list-pager";
 import { MeetingsEmpty } from "@components/meetings-empty";
 import { TaskGroupCard } from "@components/task-group";
 import { TasksListSkeleton } from "@components/skeleton";
-import { listActions } from "@lib/api";
 import {
   ACTIONS_PAGE_SIZE,
-  actionsListKey,
   tasksHref,
   type ActionListPage,
   type ActionStatusFilter,
 } from "@lib/actions";
+import { actionsListQuery } from "@lib/query-policy";
 
 type TasksListProps = {
   page: number;
@@ -77,10 +76,7 @@ function TasksResults(props: {
 }
 
 export function TasksList(props: TasksListProps) {
-  const query = useQuery({
-    queryKey: actionsListKey(props.page, ACTIONS_PAGE_SIZE, props.status),
-    queryFn: () => listActions(props.page, ACTIONS_PAGE_SIZE, props.status),
-  });
+  const query = useQuery(actionsListQuery(props.page, ACTIONS_PAGE_SIZE, props.status));
   const page = query.data;
   const pageCount = page === undefined ? 1 : Math.max(1, Math.ceil(page.total / page.limit));
 

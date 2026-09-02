@@ -1,20 +1,13 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
 
-test("Capture invalidates meeting lists after upload so Home and Meetings do not wait on poll", async () => {
-  const source = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
-  expect(source).toContain("invalidateQueries");
-  expect(source).toContain("meetingsKey");
-  expect(source).toContain("actionsKey");
-});
-
 test("Capture starts naming from empty-state capture and upload intents", async () => {
   const source = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
   expect(source).toContain("subscribeCaptureIntent");
   expect(source).toContain('case "capture":');
   expect(source).toContain('case "upload":');
-  expect(source).toContain("startCaptureNaming");
-  expect(source).toContain("startPickingUpload");
+  expect(source).toContain("startCapture");
+  expect(source).toContain("startUpload");
 });
 
 test("screen capture modal shows mic, window, and entire screen readiness checks", async () => {

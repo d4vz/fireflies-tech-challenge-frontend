@@ -19,11 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { handleHover } from "@lib/handle-hover";
-import {
-  assistantHref,
-  onAssistantPresenceClick,
-  type AssistantLocation,
-} from "@lib/assistant-url";
+import { useAssistantPresence } from "@/hooks/use-assistant-presence";
 import {
   isRouteActive,
   type AssistantNavItem,
@@ -68,7 +64,6 @@ function NavGlyph(props: { icon: NavIcon; iconRef: Ref<IconHandle> }) {
 export type NavProps = {
   items: NavItem[];
   pathname: string;
-  location: AssistantLocation;
 };
 
 function RouteLink(props: { item: RouteNavItem; pathname: string }) {
@@ -112,15 +107,16 @@ function PlaceholderItem(props: { item: PlaceholderNavItem }) {
   );
 }
 
-function AssistantLink(props: { item: AssistantNavItem; location: AssistantLocation }) {
+function AssistantLink(props: { item: AssistantNavItem }) {
   const iconRef = useRef<IconHandle>(null);
+  const assistant = useAssistantPresence();
   return (
     <Link
-      href={assistantHref(props.location, "open")}
+      href={assistant.openHref}
       className={navClass(false)}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
-      onClick={(event) => onAssistantPresenceClick(event, props.location, "open")}
+      onClick={assistant.onOpenClick}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />
       {props.item.label}
@@ -128,7 +124,7 @@ function AssistantLink(props: { item: AssistantNavItem; location: AssistantLocat
   );
 }
 
-function NavItemView(props: { item: NavItem; pathname: string; location: AssistantLocation }) {
+function NavItemView(props: { item: NavItem; pathname: string }) {
   const item = props.item;
   switch (item.kind) {
     case "route":
@@ -136,7 +132,7 @@ function NavItemView(props: { item: NavItem; pathname: string; location: Assista
     case "placeholder":
       return <PlaceholderItem item={item} />;
     case "assistant":
-      return <AssistantLink item={item} location={props.location} />;
+      return <AssistantLink item={item} />;
     default: {
       const _exhaustive: never = item;
       return _exhaustive;
@@ -153,7 +149,7 @@ export function Nav(props: NavProps) {
         return (
           <div key={`${item.kind}-${item.label}`}>
             {showSeparator ? <Separator className="my-2" /> : null}
-            <NavItemView item={item} pathname={props.pathname} location={props.location} />
+            <NavItemView item={item} pathname={props.pathname} />
           </div>
         );
       })}

@@ -48,7 +48,6 @@ test("app chrome icons come from animateicons lucide", async () => {
     "../components/list-pager.tsx",
     "../components/meetings-empty.tsx",
     "../components/clip.tsx",
-    "../components/meeting-search.tsx",
   ];
   for (const relative of files) {
     const source = await Bun.file(join(import.meta.dir, relative)).text();
