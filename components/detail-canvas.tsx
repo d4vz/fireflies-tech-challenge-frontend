@@ -5,18 +5,75 @@ import { FileText } from "@animateicons/react/lucide";
 import { TranscriptSkeleton } from "@components/skeleton";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
-import type { Meeting } from "@lib/meetings";
+import type { Meeting, TranscriptTurn } from "@lib/meetings";
+import { speakerLook, speakerLooks } from "@lib/speaker-display";
+import type { TranscriptView } from "@lib/transcript-view";
 
-export type TranscriptView =
-  | { kind: "pending" }
-  | { kind: "text"; value: string }
-  | { kind: "empty" };
+export type { TranscriptView };
 
 export type DetailCanvasProps = {
   meeting: Meeting;
   transcript: TranscriptView;
   children: ReactNode;
 };
+
+function formatTurnStart(seconds: number) {
+  const total = Math.floor(seconds);
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+function TranscriptTurns(props: { turns: TranscriptTurn[] }) {
+  const looks = speakerLooks(props.turns.map((turn) => turn.speaker));
+  return (
+    <ol className="m-0 flex list-none flex-col gap-6 p-0 font-sans">
+      {props.turns.map((turn) => {
+        const look = speakerLook(looks, turn.speaker);
+        return (
+          <li key={turn.index} className="flex gap-2.5">
+            <span
+              aria-hidden="true"
+              className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-[5px] text-[0.8rem] font-bold text-white"
+              style={{ backgroundColor: look.background }}
+            >
+              {look.initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-baseline gap-x-1.5 text-[0.85rem]">
+                <span className="font-semibold text-ink">{look.name}</span>
+                <span className="text-muted-foreground" aria-hidden="true">
+                  •
+                </span>
+                <span className="font-medium text-accent underline decoration-accent/40 underline-offset-2">
+                  {formatTurnStart(turn.start)}
+                </span>
+              </div>
+              <p className="m-0 text-[0.9rem] leading-7 text-ink/80 whitespace-pre-wrap">
+                {turn.text}
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function TranscriptBody(props: { transcript: TranscriptView }) {
+  switch (props.transcript.kind) {
+    case "pending":
+      return <TranscriptSkeleton />;
+    case "empty":
+      return <p className="m-0 font-sans text-[0.9rem]">(empty transcript)</p>;
+    case "turns":
+      return <TranscriptTurns turns={props.transcript.value} />;
+    default: {
+      const _exhaustive: never = props.transcript;
+      return _exhaustive;
+    }
+  }
+}
 
 function TranscriptPanel(props: { meeting: Meeting; transcript: TranscriptView }) {
   return (
@@ -28,15 +85,7 @@ function TranscriptPanel(props: { meeting: Meeting; transcript: TranscriptView }
         </h2>
       </div>
       <div className="px-5 py-6 leading-7 text-ink/80">
-        {props.transcript.kind === "pending" ? <TranscriptSkeleton /> : null}
-        {props.transcript.kind === "empty" ? (
-          <p className="m-0 font-sans text-[0.9rem]">(empty transcript)</p>
-        ) : null}
-        {props.transcript.kind === "text" ? (
-          <div className="font-sans text-[0.9rem] whitespace-pre-wrap">
-            {props.transcript.value}
-          </div>
-        ) : null}
+        <TranscriptBody transcript={props.transcript} />
       </div>
     </div>
   );

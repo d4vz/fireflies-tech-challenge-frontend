@@ -4,7 +4,7 @@ import type {
   MeetingListPage,
   MeetingTask,
   TaskStatus,
-  TranscriptChunk,
+  TranscriptTurn,
 } from "@lib/meetings";
 import type { ActionListPage, ActionStatusFilter } from "@lib/actions";
 
@@ -37,13 +37,13 @@ export async function getMeeting(id: string): Promise<Meeting> {
   return meeting;
 }
 
-export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
+export async function getTranscripts(id: string): Promise<TranscriptTurn[]> {
   const res = await fetch(`/api/meetings/${id}/transcripts`);
   if (!res.ok) {
     throw new Error("could not load transcript");
   }
-  const chunks: TranscriptChunk[] = await res.json();
-  return chunks;
+  const turns: TranscriptTurn[] = await res.json();
+  return turns;
 }
 
 export async function listActions(

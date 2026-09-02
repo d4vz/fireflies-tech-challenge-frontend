@@ -66,7 +66,11 @@ test("AskFred nav item kind is assistant", async () => {
   expect(source.includes("home-assistant")).toBe(false);
 });
 
-test("Tasks is a real route, not a placeholder", () => {
+test("sidebar lists only shipped destinations", () => {
+  expect(NAV_ITEMS.map((item) => item.label)).toEqual(["Home", "Meetings", "AskFred", "Tasks"]);
+});
+
+test("Tasks is a real route", () => {
   expect(NAV_ITEMS).toContainEqual({
     kind: "route",
     href: "/tasks",
@@ -74,9 +78,6 @@ test("Tasks is a real route, not a placeholder", () => {
     icon: "tasks",
     active: "exact",
   });
-  expect(NAV_ITEMS.some((item) => item.kind === "placeholder" && item.label === "Tasks")).toBe(
-    false,
-  );
 });
 
 test("exact Tasks is active only on /tasks", () => {

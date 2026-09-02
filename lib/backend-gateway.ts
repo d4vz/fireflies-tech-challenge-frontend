@@ -15,7 +15,7 @@ import {
   type StoredPublicMeeting,
   type StoredPublicTask,
   type TaskStatus,
-  type TranscriptChunk,
+  type TranscriptTurn,
 } from "@lib/meetings";
 
 export type BackendInit = RequestInit & { duplex?: "half" };
@@ -106,13 +106,19 @@ export function createBackendGateway(deps: BackendGatewayDeps) {
     return toPublicMeeting(parsePublicMeeting(meeting));
   }
 
-  async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
+  async function getTranscripts(id: string): Promise<TranscriptTurn[]> {
     const res = await request(`/meetings/${id}/transcripts`, { cache: "no-store" });
     if (!res.ok) {
       throw new Error("could not load transcript");
     }
-    const chunks: TranscriptChunk[] = await res.json();
-    return chunks.map((chunk) => ({ index: chunk.index, text: chunk.text }));
+    const turns: TranscriptTurn[] = await res.json();
+    return turns.map((turn) => ({
+      index: turn.index,
+      speaker: turn.speaker,
+      start: turn.start,
+      end: turn.end,
+      text: turn.text,
+    }));
   }
 
   async function listActions(

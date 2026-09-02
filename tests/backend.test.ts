@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { createBackendGateway, type BackendGatewayDeps } from "@lib/backend-gateway";
 import type { StoredActionGroup } from "@lib/actions";
-import type { StoredPublicMeeting, TranscriptChunk } from "@lib/meetings";
+import type { StoredPublicMeeting, TranscriptTurn } from "@lib/meetings";
 
 type FetchCall = {
   url: string;
@@ -30,7 +30,7 @@ type GatewayJson =
   | MeetingListFixture
   | ActionListFixture
   | GatewayErrorBody
-  | TranscriptChunk[];
+  | TranscriptTurn[];
 
 function jsonResponse(status: number, body: GatewayJson): Response {
   return new Response(JSON.stringify(body), {
@@ -140,8 +140,10 @@ test("getMeeting returns null on 404 and rewrites audio URLs", async () => {
 });
 
 test("getTranscripts maps chunks and failed responses", async () => {
-  const ok = recordingFetch(200, [{ index: 0, text: "hello" }]);
-  expect(await gatewayOf(ok.fetch).getTranscripts("abc")).toEqual([{ index: 0, text: "hello" }]);
+  const ok = recordingFetch(200, [{ index: 0, speaker: "A", start: 0, end: 1.5, text: "hello" }]);
+  expect(await gatewayOf(ok.fetch).getTranscripts("abc")).toEqual([
+    { index: 0, speaker: "A", start: 0, end: 1.5, text: "hello" },
+  ]);
   const bad = recordingFetch(500, { error: "nope" });
   await expect(gatewayOf(bad.fetch).getTranscripts("abc")).rejects.toThrow(
     "could not load transcript",

@@ -35,8 +35,11 @@ export type Meeting = {
       };
 };
 
-export type TranscriptChunk = {
+export type TranscriptTurn = {
   index: number;
+  speaker: string;
+  start: number;
+  end: number;
   text: string;
 };
 
