@@ -1,5 +1,14 @@
 export type MeetingStatus = "queued" | "processing" | "ready" | "failed";
 
+export type TaskStatus = "pending" | "completed";
+
+export type MeetingTask = {
+  _id: string;
+  text: string;
+  status: TaskStatus;
+  updatedAt: string;
+};
+
 export type Meeting = {
   _id: string;
   sourceId: string;
@@ -9,8 +18,8 @@ export type Meeting = {
   summary?: {
     text: string;
     takeaways: string[];
-    actionItems: string[];
   };
+  tasks?: MeetingTask[];
   blob:
     | {
         kind: "video";
@@ -97,6 +106,13 @@ type StoredPublicBlob = {
   thumbnailUrl?: string;
 };
 
+type StoredPublicTask = {
+  _id: string;
+  text: string;
+  status?: TaskStatus;
+  updatedAt: string;
+};
+
 type StoredPublicMeeting = {
   _id: string;
   sourceId: string;
@@ -104,6 +120,7 @@ type StoredPublicMeeting = {
   status?: MeetingStatus;
   error?: string;
   summary?: Meeting["summary"];
+  tasks?: StoredPublicTask[];
   blob: StoredPublicBlob;
 };
 
@@ -122,6 +139,15 @@ function parsePublicBlob(raw: StoredPublicBlob): Meeting["blob"] {
   };
 }
 
+function parsePublicTask(raw: StoredPublicTask): MeetingTask {
+  return {
+    _id: raw._id,
+    text: raw.text,
+    status: raw.status === "completed" ? "completed" : "pending",
+    updatedAt: raw.updatedAt,
+  };
+}
+
 export function parsePublicMeeting(raw: StoredPublicMeeting): Meeting {
   return {
     _id: raw._id,
@@ -130,6 +156,7 @@ export function parsePublicMeeting(raw: StoredPublicMeeting): Meeting {
     status: raw.status ?? "ready",
     error: raw.error,
     summary: raw.summary,
+    tasks: (raw.tasks ?? []).map(parsePublicTask),
     blob: parsePublicBlob(raw.blob),
   };
 }

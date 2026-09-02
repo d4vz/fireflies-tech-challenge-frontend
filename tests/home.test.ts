@@ -67,6 +67,13 @@ test("isPlainLeftClick is false for modified or non-primary clicks", () => {
   expect(isPlainLeftClick({ ...plain, ctrlKey: true })).toBe(false);
 });
 
+test("Home Tasks card links to /tasks and shows pending and completed counts", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  expect(dashboard).toContain('href="/tasks"');
+  expect(dashboard).toContain("pending · ${card.completed} completed");
+  expect(dashboard).toContain("task-count");
+});
+
 test("Home lists the last meetings in a two-column grid with view more beside the title", async () => {
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
@@ -173,21 +180,15 @@ function meeting(input: {
   createdAt: string;
   status: Meeting["status"];
   text?: string;
-  actionItems?: string[];
+  tasks?: Meeting["tasks"];
 }): Meeting {
   return {
     _id: input.id,
     sourceId: input.sourceId,
     createdAt: input.createdAt,
     status: input.status,
-    summary:
-      input.text === undefined && input.actionItems === undefined
-        ? undefined
-        : {
-            text: input.text ?? "",
-            takeaways: [],
-            actionItems: input.actionItems ?? [],
-          },
+    summary: input.text === undefined ? undefined : { text: input.text, takeaways: [] },
+    tasks: input.tasks,
     blob: { kind: "video", url: "/v", thumbnailUrl: "/t", durationInSeconds: 1 },
   };
 }
@@ -200,7 +201,20 @@ const ready = meeting({
   createdAt: "2026-09-01T04:10:00.000Z",
   status: "ready",
   text: "class recap",
-  actionItems: ["review notes"],
+  tasks: [
+    {
+      _id: "t1",
+      text: "review notes",
+      status: "pending",
+      updatedAt: "2026-09-01T04:10:00.000Z",
+    },
+    {
+      _id: "t2",
+      text: "send recap",
+      status: "completed",
+      updatedAt: "2026-09-01T04:12:00.000Z",
+    },
+  ],
 });
 
 const processing = meeting({
@@ -239,7 +253,7 @@ test("toHomeModel uses page.total for meeting-count even on a sample", () => {
   expect(model.insights[0]).toEqual({ kind: "meeting-count", total: 40 });
 });
 
-test("toHomeModel tags busy and action-item cards with sample coverage", () => {
+test("toHomeModel tags busy and task cards with sample coverage", () => {
   const model = toHomeModel({
     page: pageOf([ready, processing], 10),
     view: defaults,
@@ -252,8 +266,9 @@ test("toHomeModel tags busy and action-item cards with sample coverage", () => {
     coverage: { kind: "sample", sampled: 2, total: 10 },
   });
   expect(model.insights).toContainEqual({
-    kind: "action-item-count",
-    count: 1,
+    kind: "task-count",
+    pending: 1,
+    completed: 1,
     coverage: { kind: "sample", sampled: 2, total: 10 },
   });
 });
@@ -268,7 +283,7 @@ test("toHomeModel never adds a longest-processing insight card", () => {
   expect(model.insights.map((card) => card.kind)).toEqual([
     "meeting-count",
     "busy-count",
-    "action-item-count",
+    "task-count",
   ]);
 });
 

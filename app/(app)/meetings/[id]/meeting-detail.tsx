@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { getMeeting, getTranscripts } from "@lib/api";
 import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
+import { TaskChecklist } from "@components/task-list";
 
 type TranscriptQueryInput = {
   chunks: { text: string }[] | undefined;
@@ -85,11 +86,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
       </section>
       <section>
         <h2 className="mb-1.5 text-base">Action items</h2>
-        <ul className="m-0 pl-[1.1rem]">
-          {(meeting.summary?.actionItems ?? []).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+        <TaskChecklist meetingId={meeting._id} tasks={meeting.tasks ?? []} />
       </section>
     </article>
   );

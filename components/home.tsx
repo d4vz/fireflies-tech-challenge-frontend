@@ -72,38 +72,52 @@ type InsightCopy = {
 };
 
 function insightCopy(card: InsightCard): InsightCopy {
-  if (card.kind === "meeting-count") {
-    return { title: "Meetings", body: `${card.total} in the library`, metric: String(card.total) };
+  switch (card.kind) {
+    case "meeting-count":
+      return {
+        title: "Meetings",
+        body: `${card.total} in the library`,
+        metric: String(card.total),
+      };
+    case "busy-count":
+      return {
+        title: "In progress",
+        body: `${card.count} processing`,
+        metric: String(card.count),
+        note: coverageNote(card.coverage),
+      };
+    case "task-count":
+      return {
+        title: "Tasks",
+        body: `${card.pending} pending · ${card.completed} completed`,
+        metric: String(card.pending),
+        note: coverageNote(card.coverage),
+      };
+    default: {
+      const _exhaustive: never = card;
+      return _exhaustive;
+    }
   }
-  if (card.kind === "busy-count") {
-    return {
-      title: "In progress",
-      body: `${card.count} processing`,
-      metric: String(card.count),
-      note: coverageNote(card.coverage),
-    };
-  }
-  return {
-    title: "Tasks",
-    body: `${card.count} action items`,
-    metric: String(card.count),
-    note: coverageNote(card.coverage),
-  };
 }
 
 function InsightIcon(props: { kind: InsightCard["kind"] }) {
-  if (props.kind === "meeting-count") {
-    return <ListVideo className="size-5 text-blue-600" />;
+  switch (props.kind) {
+    case "meeting-count":
+      return <ListVideo className="size-5 text-blue-600" />;
+    case "busy-count":
+      return <Loader className="size-5 text-orange-600" />;
+    case "task-count":
+      return <ListChecks className="size-5 text-green-700" />;
+    default: {
+      const _exhaustive: never = props.kind;
+      return _exhaustive;
+    }
   }
-  if (props.kind === "busy-count") {
-    return <Loader className="size-5 text-orange-600" />;
-  }
-  return <ListChecks className="size-5 text-green-700" />;
 }
 
 function InsightCardView(props: { card: InsightCard }) {
   const copy = insightCopy(props.card);
-  return (
+  const inner = (
     <Card className="bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-line">
       <CardHeader className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-3">
         <span className="grid size-9 place-items-center rounded-xl bg-wash md:size-10">
@@ -118,6 +132,14 @@ function InsightCardView(props: { card: InsightCard }) {
         </div>
       </CardHeader>
     </Card>
+  );
+  if (props.card.kind !== "task-count") {
+    return inner;
+  }
+  return (
+    <Link className="min-w-0 text-ink no-underline" href="/tasks">
+      {inner}
+    </Link>
   );
 }
 

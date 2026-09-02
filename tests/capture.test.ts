@@ -5,6 +5,7 @@ test("Capture invalidates meeting lists after upload so Home and Meetings do not
   const source = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
   expect(source).toContain("invalidateQueries");
   expect(source).toContain("meetingsKey");
+  expect(source).toContain("actionsKey");
 });
 
 test("Capture starts naming from empty-state capture and upload intents", async () => {

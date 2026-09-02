@@ -6,8 +6,11 @@ import {
   toPublicMeeting,
   type Meeting,
   type MeetingListPage,
+  type MeetingTask,
+  type TaskStatus,
   type TranscriptChunk,
 } from "@lib/meetings";
+import type { ActionListPage, ActionStatusFilter } from "@lib/actions";
 
 type BackendInit = RequestInit & { duplex?: "half" };
 
@@ -114,6 +117,43 @@ export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
   }
   const chunks: TranscriptChunk[] = await res.json();
   return chunks;
+}
+
+export async function listActions(
+  page: number,
+  limit: number,
+  status: ActionStatusFilter,
+): Promise<ActionListPage> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status !== "all") {
+    params.set("status", status);
+  }
+  const res = await backendFetch(`/actions?${params.toString()}`, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error("could not load tasks");
+  }
+  const body: ActionListPage = await res.json();
+  return body;
+}
+
+export async function patchTask(
+  meetingId: string,
+  taskId: string,
+  status: TaskStatus,
+): Promise<MeetingTask> {
+  const res = await backendFetch(`/meetings/${meetingId}/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (res.status === 404) {
+    throw new Error("task not found");
+  }
+  if (!res.ok) {
+    throw new Error("could not update task");
+  }
+  const task: MeetingTask = await res.json();
+  return task;
 }
 
 export async function proxyStoredObject(path: string, fallbackType: string): Promise<Response> {

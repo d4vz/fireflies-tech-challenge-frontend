@@ -43,6 +43,7 @@ import {
 } from "@lib/capture-session";
 import { subscribeCaptureIntent, type CaptureIntent } from "@lib/capture-intent";
 import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
+import { actionsKey } from "@lib/actions";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
 function CameraIcon() {
@@ -391,6 +392,7 @@ export function Capture() {
 
   function afterUpload(meeting: Meeting) {
     void queryClient.invalidateQueries({ queryKey: meetingsKey });
+    void queryClient.invalidateQueries({ queryKey: actionsKey });
     const id = meetingId(meeting);
     toast(PROCESSING_NOTICE, {
       description: (
