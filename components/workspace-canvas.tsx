@@ -1,20 +1,7 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import {
-  assistantPanelSlot,
-  parseHomeViewFromSearch,
-  pushHomeUrl,
-  type AssistantChrome,
-} from "@lib/home";
-
-export type AssistantRail = {
-  kind: "assistant";
-  chrome: AssistantChrome;
-  panel: ReactNode;
-};
 
 export type TranscriptRail = {
   kind: "transcript";
@@ -23,91 +10,10 @@ export type TranscriptRail = {
   onSheetOpenChange: (open: boolean) => void;
 };
 
-export type Rail = AssistantRail | TranscriptRail;
-
 export type WorkspaceCanvasProps = {
-  rail: Rail;
+  rail: TranscriptRail;
   children: ReactNode;
 };
-
-function closeFredView() {
-  return { ...parseHomeViewFromSearch(window.location.search), fred: "closed" as const };
-}
-
-const XL_QUERY = "(min-width: 1280px)";
-
-function subscribeXl(onStoreChange: () => void): () => void {
-  const mq = window.matchMedia(XL_QUERY);
-  mq.addEventListener("change", onStoreChange);
-  return () => mq.removeEventListener("change", onStoreChange);
-}
-
-function xlSnapshot(): boolean {
-  return window.matchMedia(XL_QUERY).matches;
-}
-
-type AssistantWorkspaceProps = {
-  rail: AssistantRail;
-  children: ReactNode;
-};
-
-function AssistantWorkspace(props: AssistantWorkspaceProps) {
-  const chrome = props.rail.chrome;
-  const isXl = useSyncExternalStore(subscribeXl, xlSnapshot, () => true);
-  const slot = assistantPanelSlot(isXl, isXl ? !chrome.dockHidden : chrome.sheetOpen);
-  const dockOpen = slot === "dock";
-
-  return (
-    <>
-      <div className="grid h-full min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_auto]">
-        <div className="min-h-0 min-w-0 overflow-y-auto">{props.children}</div>
-        {isXl ? (
-          <aside
-            className={cn(
-              "hidden min-h-0 overflow-hidden transition-[width] duration-300 ease-in-out xl:block",
-              dockOpen ? "w-[420px]" : "w-0",
-            )}
-          >
-            <div className="flex h-full w-[420px] min-w-[420px] flex-col border-l border-line bg-paper">
-              {dockOpen ? props.rail.panel : null}
-            </div>
-          </aside>
-        ) : null}
-      </div>
-      <Sheet
-        open={slot === "sheet"}
-        modal={false}
-        onOpenChange={(open) => {
-          if (open) {
-            return;
-          }
-          pushHomeUrl(closeFredView());
-        }}
-      >
-        <SheetContent
-          side="right"
-          overlayClassName="xl:hidden"
-          className="w-full p-0 sm:max-w-[420px] xl:hidden data-[side=right]:data-open:slide-in-from-right data-[side=right]:data-closed:slide-out-to-right"
-          showCloseButton={false}
-          slideTravel="full"
-          onInteractOutside={(event) => {
-            event.preventDefault();
-          }}
-          onEscapeKeyDown={(event) => {
-            event.preventDefault();
-          }}
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>AskFred</SheetTitle>
-          </SheetHeader>
-          <div className="flex h-full min-h-0 flex-col">
-            {slot === "sheet" ? props.rail.panel : null}
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
-  );
-}
 
 type TranscriptWorkspaceProps = {
   rail: TranscriptRail;
@@ -136,8 +42,5 @@ function TranscriptWorkspace(props: TranscriptWorkspaceProps) {
 }
 
 export function WorkspaceCanvas(props: WorkspaceCanvasProps) {
-  if (props.rail.kind === "assistant") {
-    return <AssistantWorkspace rail={props.rail}>{props.children}</AssistantWorkspace>;
-  }
   return <TranscriptWorkspace rail={props.rail}>{props.children}</TranscriptWorkspace>;
 }

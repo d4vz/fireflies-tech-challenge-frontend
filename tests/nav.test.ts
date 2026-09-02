@@ -40,6 +40,7 @@ test("app chrome icons come from animateicons lucide", async () => {
     "../components/nav.tsx",
     "../components/app-frame.tsx",
     "../components/home.tsx",
+    "../components/assistant-host.tsx",
     "../components/ask-fred.tsx",
     "../components/capture.tsx",
     "../components/detail-canvas.tsx",
@@ -54,6 +55,16 @@ test("app chrome icons come from animateicons lucide", async () => {
     expect(source).toContain("@animateicons/react/lucide");
     expect(source.includes('from "lucide-react"')).toBe(false);
   }
+});
+
+test("AskFred nav item kind is assistant", async () => {
+  expect(NAV_ITEMS).toContainEqual({
+    kind: "assistant",
+    label: "AskFred",
+    icon: "askfred",
+  });
+  const source = await Bun.file(join(import.meta.dir, "../lib/nav.ts")).text();
+  expect(source.includes("home-assistant")).toBe(false);
 });
 
 test("Tasks is a real route, not a placeholder", () => {
@@ -86,4 +97,10 @@ test("PageTitle treats /tasks as Tasks", async () => {
   const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
   expect(nav).toContain('pathname.startsWith("/tasks")');
   expect(nav).toContain('setTitle("Tasks")');
+});
+
+test("sidebar route links prefetch on hover", async () => {
+  const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
+  expect(nav).toContain("prefetch={prefetch ? null : false}");
+  expect(nav).toContain("setPrefetch(true)");
 });

@@ -141,20 +141,6 @@ export function isNameModalOpen(session: CaptureSession): boolean {
   }
 }
 
-export function sessionLabel(session: CaptureSession): "" | "recording" {
-  switch (session.kind) {
-    case "recording":
-      return "recording";
-    case "uploading":
-    case "idle":
-    case "failed":
-    case "naming-capture":
-    case "picking-upload":
-    case "naming-upload":
-      return "";
-  }
-}
-
 function hasAllowedExtension(name: string): boolean {
   const lower = name.toLowerCase();
   return MEDIA_EXTS.some((ext) => lower.endsWith(ext));

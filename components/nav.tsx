@@ -20,15 +20,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { handleHover } from "@lib/handle-hover";
 import {
-  assistantOpenClickKind,
-  assistantOpenHref,
-  isPlainLeftClick,
-  pushHomeUrl,
-  type HomeView,
-} from "@lib/home";
+  assistantHref,
+  onAssistantPresenceClick,
+  type AssistantLocation,
+} from "@lib/assistant-url";
 import {
   isRouteActive,
-  type HomeAssistantNavItem,
+  type AssistantNavItem,
   type NavIcon,
   type NavItem,
   type PlaceholderNavItem,
@@ -70,18 +68,23 @@ function NavGlyph(props: { icon: NavIcon; iconRef: Ref<IconHandle> }) {
 export type NavProps = {
   items: NavItem[];
   pathname: string;
-  view: HomeView | null;
+  location: AssistantLocation;
 };
 
 function RouteLink(props: { item: RouteNavItem; pathname: string }) {
   const iconRef = useRef<IconHandle>(null);
+  const [prefetch, setPrefetch] = useState(false);
   const active = isRouteActive(props.item, props.pathname);
   return (
     <Link
       href={props.item.href}
+      prefetch={prefetch ? null : false}
       className={navClass(active)}
       aria-current={active ? "page" : undefined}
-      onMouseEnter={(event) => handleHover(event, iconRef)}
+      onMouseEnter={(event) => {
+        setPrefetch(true);
+        handleHover(event, iconRef);
+      }}
       onMouseLeave={(event) => handleHover(event, iconRef)}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />
@@ -109,24 +112,15 @@ function PlaceholderItem(props: { item: PlaceholderNavItem }) {
   );
 }
 
-function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | null }) {
+function AssistantLink(props: { item: AssistantNavItem; location: AssistantLocation }) {
   const iconRef = useRef<IconHandle>(null);
   return (
     <Link
-      href={assistantOpenHref({ current: props.view })}
+      href={assistantHref(props.location, "open")}
       className={navClass(false)}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
-      onClick={(event) => {
-        if (assistantOpenClickKind(props.view, isPlainLeftClick(event)) !== "push") {
-          return;
-        }
-        if (props.view === null) {
-          return;
-        }
-        event.preventDefault();
-        pushHomeUrl({ ...props.view, fred: "open" });
-      }}
+      onClick={(event) => onAssistantPresenceClick(event, props.location, "open")}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />
       {props.item.label}
@@ -134,15 +128,20 @@ function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | nul
   );
 }
 
-function NavItemView(props: { item: NavItem; pathname: string; view: HomeView | null }) {
+function NavItemView(props: { item: NavItem; pathname: string; location: AssistantLocation }) {
   const item = props.item;
-  if (item.kind === "route") {
-    return <RouteLink item={item} pathname={props.pathname} />;
+  switch (item.kind) {
+    case "route":
+      return <RouteLink item={item} pathname={props.pathname} />;
+    case "placeholder":
+      return <PlaceholderItem item={item} />;
+    case "assistant":
+      return <AssistantLink item={item} location={props.location} />;
+    default: {
+      const _exhaustive: never = item;
+      return _exhaustive;
+    }
   }
-  if (item.kind === "placeholder") {
-    return <PlaceholderItem item={item} />;
-  }
-  return <AssistantLink item={item} view={props.view} />;
 }
 
 export function Nav(props: NavProps) {
@@ -154,7 +153,7 @@ export function Nav(props: NavProps) {
         return (
           <div key={`${item.kind}-${item.label}`}>
             {showSeparator ? <Separator className="my-2" /> : null}
-            <NavItemView item={item} pathname={props.pathname} view={props.view} />
+            <NavItemView item={item} pathname={props.pathname} location={props.location} />
           </div>
         );
       })}

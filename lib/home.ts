@@ -1,14 +1,17 @@
+import {
+  applyAssistantPresence,
+  parseAssistantLocation,
+  pushAppUrl,
+  type ClickModifiers,
+} from "@lib/assistant-url";
 import { periodAt, type DayPeriod } from "@lib/chrome";
 import { isBusy, type Meeting, type MeetingListPage } from "@lib/meetings";
 
 export type HomeTab = "all" | "ready" | "busy" | "failed";
 
-export type FredParam = "unset" | "open" | "closed";
-
 export type HomeView = {
   tab: HomeTab;
   query: string;
-  fred: FredParam;
 };
 
 export type RawSearchParam = string | string[] | undefined;
@@ -17,15 +20,6 @@ export type HomeSearchParams = {
   tab?: RawSearchParam;
   q?: RawSearchParam;
   fred?: RawSearchParam;
-};
-
-export type AssistantHrefInput = {
-  current: HomeView | null;
-};
-
-export type AssistantChrome = {
-  sheetOpen: boolean;
-  dockHidden: boolean;
 };
 
 function firstString(value: RawSearchParam): string {
@@ -42,21 +36,10 @@ function parseTab(value: string): HomeTab {
   return "all";
 }
 
-function parseFred(value: string): FredParam {
-  if (value === "1") {
-    return "open";
-  }
-  if (value === "0") {
-    return "closed";
-  }
-  return "unset";
-}
-
 export function parseHomeView(params: HomeSearchParams): HomeView {
   return {
     tab: parseTab(firstString(params.tab)),
     query: firstString(params.q),
-    fred: parseFred(firstString(params.fred)),
   };
 }
 
@@ -65,41 +48,22 @@ export function parseHomeViewFromSearch(search: string): HomeView {
   return parseHomeView({
     tab: params.get("tab") ?? undefined,
     q: params.get("q") ?? undefined,
-    fred: params.get("fred") ?? undefined,
   });
 }
 
-export type ClickModifiers = {
-  button: number;
-  metaKey: boolean;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  altKey: boolean;
-};
+export type { ClickModifiers };
 
 export function isPlainLeftClick(event: ClickModifiers): boolean {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
-const HOME_URL_EVENT = "fireflies-home-url";
-
-export function subscribeHomeUrl(onChange: () => void): () => void {
-  window.addEventListener("popstate", onChange);
-  window.addEventListener(HOME_URL_EVENT, onChange);
-  return () => {
-    window.removeEventListener("popstate", onChange);
-    window.removeEventListener(HOME_URL_EVENT, onChange);
-  };
-}
-
 export function pushHomeUrl(view: HomeView): void {
-  const href = homeHref(view);
-  const current = `${window.location.pathname}${window.location.search}`;
-  if (current === href) {
-    return;
-  }
-  window.history.pushState(null, "", href);
-  window.dispatchEvent(new Event(HOME_URL_EVENT));
+  pushAppUrl(
+    applyAssistantPresence(
+      homeHref(view),
+      parseAssistantLocation(window.location.pathname, window.location.search).presence,
+    ),
+  );
 }
 
 export function homeHref(view: HomeView): string {
@@ -110,70 +74,11 @@ export function homeHref(view: HomeView): string {
   if (view.query !== "") {
     params.set("q", view.query);
   }
-  if (view.fred === "open") {
-    params.set("fred", "1");
-  }
-  if (view.fred === "closed") {
-    params.set("fred", "0");
-  }
   const query = params.toString();
   if (query === "") {
     return "/";
   }
   return `/?${query}`;
-}
-
-export function assistantOpenHref(input: AssistantHrefInput): string {
-  if (input.current === null) {
-    return "/?fred=1";
-  }
-  return homeHref({ ...input.current, fred: "open" });
-}
-
-export type AssistantOpenClickKind = "ignore" | "navigate" | "push";
-
-export function assistantOpenClickKind(
-  current: HomeView | null,
-  isPlain: boolean,
-): AssistantOpenClickKind {
-  if (!isPlain) {
-    return "ignore";
-  }
-  if (current === null) {
-    return "navigate";
-  }
-  return "push";
-}
-
-export function assistantIsOpen(fred: FredParam, isXl: boolean): boolean {
-  switch (fred) {
-    case "open":
-      return true;
-    case "closed":
-      return false;
-    case "unset":
-      return isXl;
-    default: {
-      const _exhaustive: never = fred;
-      return _exhaustive;
-    }
-  }
-}
-
-export function assistantChrome(fred: FredParam): AssistantChrome {
-  return {
-    sheetOpen: assistantIsOpen(fred, false),
-    dockHidden: !assistantIsOpen(fred, true),
-  };
-}
-
-export type AssistantPanelSlot = "dock" | "sheet" | "none";
-
-export function assistantPanelSlot(isXl: boolean, isOpen: boolean): AssistantPanelSlot {
-  if (!isOpen) {
-    return "none";
-  }
-  return isXl ? "dock" : "sheet";
 }
 
 export type InsightCoverage =

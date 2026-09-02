@@ -1,11 +1,7 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
 import {
-  assistantChrome,
-  assistantIsOpen,
-  assistantOpenClickKind,
-  assistantOpenHref,
-  assistantPanelSlot,
+  HOME_PREVIEW_COUNT,
   homeHref,
   isPlainLeftClick,
   parseHomeView,
@@ -15,7 +11,7 @@ import {
 } from "@lib/home";
 import { meetingName, type Meeting, type MeetingListPage } from "@lib/meetings";
 
-const defaults: HomeView = { tab: "all", query: "", fred: "unset" };
+const defaults: HomeView = { tab: "all", query: "" };
 
 test("parseHomeView uses defaults for empty params", () => {
   expect(parseHomeView({})).toEqual(defaults);
@@ -25,37 +21,41 @@ test("parseHomeView keeps the first string when Next passes an array", () => {
   expect(parseHomeView({ tab: ["ready", "failed"], q: ["alpha", "beta"], fred: ["1"] })).toEqual({
     tab: "ready",
     query: "alpha",
-    fred: "open",
   });
 });
 
-test("parseHomeView falls back on unknown tab and fred", () => {
+test("parseHomeView falls back on unknown tab and ignores fred", () => {
   expect(parseHomeView({ tab: "upcoming", fred: "yes", q: "eng" })).toEqual({
     tab: "all",
     query: "eng",
-    fred: "unset",
   });
 });
 
-test("parseHomeView maps fred 1 and 0", () => {
-  expect(parseHomeView({ fred: "1" }).fred).toBe("open");
-  expect(parseHomeView({ fred: "0" }).fred).toBe("closed");
+test("parseHomeView ignores fred if present", () => {
+  expect(parseHomeView({ fred: "1" })).toEqual(defaults);
+  expect(parseHomeView({ fred: "0" })).toEqual(defaults);
+  expect(parseHomeView({ fred: "open" })).toEqual(defaults);
 });
 
 test("homeHref drops default fields so home stays /", () => {
   expect(homeHref(defaults)).toBe("/");
 });
 
-test("homeHref writes only non-default fields", () => {
-  expect(homeHref({ tab: "ready", query: "eng", fred: "open" })).toBe("/?tab=ready&q=eng&fred=1");
-  expect(homeHref({ tab: "all", query: "", fred: "closed" })).toBe("/?fred=0");
+test("homeHref writes only non-default fields and never writes fred", () => {
+  expect(homeHref({ tab: "ready", query: "eng" })).toBe("/?tab=ready&q=eng");
+  expect(homeHref({ tab: "all", query: "" })).toBe("/");
+  expect(homeHref({ tab: "ready", query: "eng" }).includes("fred")).toBe(false);
+});
+
+test("HomeView has no assistantOpen", () => {
+  const view: HomeView = { tab: "all", query: "" };
+  expect("assistantOpen" in view).toBe(false);
 });
 
 test("parseHomeViewFromSearch reads the tab from the query string", () => {
   expect(parseHomeViewFromSearch("?tab=ready&q=eng")).toEqual({
     tab: "ready",
     query: "eng",
-    fred: "unset",
   });
   expect(parseHomeViewFromSearch("")).toEqual(defaults);
 });
@@ -80,7 +80,7 @@ test("Home recent tasks shows two pending meeting groups with the tasks list car
   const page = await Bun.file(join(import.meta.dir, "../app/(app)/page.tsx")).text();
   const recent = dashboard.slice(
     dashboard.indexOf("function RecentTasks("),
-    dashboard.indexOf("function AskFredPanel"),
+    dashboard.indexOf("export function HomeCanvas"),
   );
   expect(dashboard).toContain("Recent tasks");
   expect(dashboard).toContain("TaskGroupCard");
@@ -260,72 +260,77 @@ test("Home empty library prompts capture and upload instead of a blank last-meet
   expect(list).toContain("MeetingsEmpty");
 });
 
-test("AppFrame and AskFred sheet follow pushHomeUrl so tab stays in the header href", async () => {
+test("AppFrame and AskFred overlay follow pushAppUrl so tab stays in the header href", async () => {
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
-  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
-  expect(frame).toContain("subscribeHomeUrl");
-  expect(canvas).toContain("pushHomeUrl");
+  const host = await Bun.file(join(import.meta.dir, "../components/assistant-host.tsx")).text();
+  expect(frame).toContain("subscribeAppUrl");
+  expect(host).toContain("pushAppUrl");
 });
 
-test("assistantOpenHref keeps Home tab and query", () => {
-  expect(assistantOpenHref({ current: { tab: "busy", query: "eng", fred: "unset" } })).toBe(
-    "/?tab=busy&q=eng&fred=1",
+test("AssistantHost mounts from AppFrame, not the app layout", async () => {
+  const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
+  const layout = await Bun.file(join(import.meta.dir, "../app/(app)/layout.tsx")).text();
+  expect(frame).toContain("AssistantHost");
+  expect(layout.includes("AssistantHost")).toBe(false);
+  expect(frame).toContain(
+    '<div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>',
   );
 });
 
-test("assistantOpenHref is /?fred=1 off Home", () => {
-  expect(assistantOpenHref({ current: null })).toBe("/?fred=1");
-});
-
-test("AskFred on Home pushes the URL so the dock opens on the first click", () => {
-  const onHome = { tab: "all", query: "", fred: "unset" } as const;
-  expect(assistantOpenClickKind(onHome, true)).toBe("push");
-  expect(assistantOpenClickKind(null, true)).toBe("navigate");
-  expect(assistantOpenClickKind(onHome, false)).toBe("ignore");
-});
-
-test("AppFrame and sidebar AskFred intercept Home clicks like the tab strip", async () => {
+test("AppFrame and sidebar AskFred intercept clicks with onAssistantPresenceClick", async () => {
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
   const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
-  expect(frame).toContain("assistantOpenClickKind");
-  expect(frame).toContain("pushHomeUrl");
-  expect(frame).toContain("preventDefault");
-  expect(nav).toContain("assistantOpenClickKind");
-  expect(nav).toContain("pushHomeUrl");
+  expect(frame).toContain("onAssistantPresenceClick");
+  expect(frame.includes("assistantOpenClickKind")).toBe(false);
+  expect(frame.includes("assistantOpenHref")).toBe(false);
+  expect(frame.includes("preventDefault")).toBe(false);
+  expect(nav).toContain("onAssistantPresenceClick");
+  expect(nav.includes("assistantOpenClickKind")).toBe(false);
+  expect(nav.includes("assistantOpenHref")).toBe(false);
+  expect(nav.includes("preventDefault")).toBe(false);
 });
 
-test("assistantChrome maps fred without reading the viewport", () => {
-  expect(assistantChrome("unset")).toEqual({ sheetOpen: false, dockHidden: false });
-  expect(assistantChrome("open")).toEqual({ sheetOpen: true, dockHidden: false });
-  expect(assistantChrome("closed")).toEqual({ sheetOpen: false, dockHidden: true });
-});
-
-test("AskFred starts open on desktop and closed on mobile until fred is set", () => {
-  expect(assistantIsOpen("unset", true)).toBe(true);
-  expect(assistantIsOpen("unset", false)).toBe(false);
-  expect(assistantIsOpen("open", true)).toBe(true);
-  expect(assistantIsOpen("open", false)).toBe(true);
-  expect(assistantIsOpen("closed", true)).toBe(false);
-  expect(assistantIsOpen("closed", false)).toBe(false);
-});
-
-test("AskFred close writes fred=0 so the desktop dock stays closed", async () => {
+test("AskFred close lives on the host and omits fred", async () => {
+  const host = await Bun.file(join(import.meta.dir, "../components/assistant-host.tsx")).text();
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
-  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
-  expect(dashboard).toContain('fred: "closed"');
-  expect(canvas).toContain('fred: "closed" as const');
-  expect(
-    dashboard.includes(
-      'closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" })',
-    ),
-  ).toBe(false);
+  expect(host).toContain("assistantHref");
+  expect(host).toContain('"closed"');
+  expect(host).toContain("pushAppUrl");
+  expect(host).toContain("useChat");
+  expect(host.includes("assistantCloseHref")).toBe(false);
+  expect(host.includes('fred: "closed"')).toBe(false);
+  expect(dashboard.includes("AssistantOverlay")).toBe(false);
+  expect(dashboard.includes("AskFredPanel")).toBe(false);
+  expect(dashboard.includes("useChat")).toBe(false);
 });
 
-test("AskFred mounts in one slot so stick-to-bottom does not run on a hidden copy", () => {
-  expect(assistantPanelSlot(true, true)).toBe("dock");
-  expect(assistantPanelSlot(false, true)).toBe("sheet");
-  expect(assistantPanelSlot(true, false)).toBe("none");
-  expect(assistantPanelSlot(false, false)).toBe("none");
+test("AskFred sheet uses full-travel slide and Home has no dock", async () => {
+  const overlay = await Bun.file(
+    join(import.meta.dir, "../components/assistant-overlay.tsx"),
+  ).text();
+  const host = await Bun.file(join(import.meta.dir, "../components/assistant-host.tsx")).text();
+  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
+  const sheet = await Bun.file(join(import.meta.dir, "../components/ui/sheet.tsx")).text();
+  expect(overlay).toContain('slideTravel="full"');
+  expect(overlay).toContain("data-[side=right]:data-open:slide-in-from-right");
+  expect(overlay).toContain("data-[side=right]:data-closed:slide-out-to-right");
+  expect(overlay.includes("slide-in-from-right-10")).toBe(false);
+  expect(overlay.includes("transition-[width]")).toBe(false);
+  expect(overlay.includes("xl:block")).toBe(false);
+  expect(overlay.includes("dockHidden")).toBe(false);
+  expect(overlay.includes("xl:hidden")).toBe(false);
+  expect(overlay.includes("overlayClassName")).toBe(false);
+  expect(host).toContain("AssistantOverlay");
+  expect(host).toContain("open ?");
+  expect(host.includes("transition-[width]")).toBe(false);
+  expect(host.includes("xl:block")).toBe(false);
+  expect(host.includes("dockHidden")).toBe(false);
+  expect(canvas.includes("transition-[width]")).toBe(false);
+  expect(canvas.includes("xl:block")).toBe(false);
+  expect(canvas.includes("dockHidden")).toBe(false);
+  expect(overlay.includes("animate-in fade-in-0 slide-in-from-right")).toBe(false);
+  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right ");
+  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right-10");
 });
 
 function meeting(input: {
@@ -442,19 +447,20 @@ test("toHomeModel never adds a longest-processing insight card", () => {
   ]);
 });
 
-test("toHomeModel keeps the two newest rows and ignores tab", () => {
+test("toHomeModel keeps the newest preview rows and ignores tab", () => {
+  expect(HOME_PREVIEW_COUNT).toBe(3);
   const page = pageOf([ready, processing, queued, failed]);
   const model = toHomeModel({
     page,
-    view: { tab: "busy", query: "", fred: "unset" },
+    view: { tab: "busy", query: "" },
     now,
     workspaceName: "Davi",
   });
-  expect(model.rows.map((row) => row._id)).toEqual(["3", "4"]);
+  expect(model.rows.map((row) => row._id)).toEqual(["3", "4", "1"]);
 
   const search = toHomeModel({
     page,
-    view: { tab: "all", query: "class", fred: "unset" },
+    view: { tab: "all", query: "class" },
     now,
     workspaceName: "Davi",
   });
@@ -471,6 +477,24 @@ test("toHomeModel greeting uses periodAt and the workspace name", () => {
   expect(model.greeting).toEqual({ period: "afternoon", workspaceName: "Davi" });
 });
 
+test("pushHomeUrl merges live fred so Home URL edits keep AskFred open", async () => {
+  const home = await Bun.file(join(import.meta.dir, "../lib/home.ts")).text();
+  expect(home).toContain("applyAssistantPresence");
+  expect(home).toContain("parseAssistantLocation");
+  expect(home).toContain("pushAppUrl");
+  expect(home.includes("assistantOpen")).toBe(false);
+  expect(home.includes("parseAssistantOpen")).toBe(false);
+  expect(home.includes("locationHref")).toBe(false);
+  expect(home.includes("subscribeHomeUrl")).toBe(false);
+});
+
+test("MeetingSearch on Home keeps fred and off-Home jumps without it", async () => {
+  const search = await Bun.file(join(import.meta.dir, "../components/meeting-search.tsx")).text();
+  expect(search).toContain("applyAssistantPresence");
+  expect(search).toContain("homeHref");
+  expect(search).toContain('pathname === "/"');
+});
+
 test("Home RSC fetches meetings on the server and hydrates the client dashboard", async () => {
   const page = await Bun.file(join(import.meta.dir, "../app/(app)/page.tsx")).text();
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
@@ -480,21 +504,4 @@ test("Home RSC fetches meetings on the server and hydrates the client dashboard"
   expect(page).toContain("initialPage");
   expect(dashboard).toContain("initialData:");
   expect(dashboard).toContain("props.initialPage");
-});
-
-test("AskFred sheet uses full-travel slide and the dock animates width", async () => {
-  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
-  const sheet = await Bun.file(join(import.meta.dir, "../components/ui/sheet.tsx")).text();
-  expect(canvas).toContain('slideTravel="full"');
-  expect(canvas).toContain("data-[side=right]:data-open:slide-in-from-right");
-  expect(canvas).toContain("data-[side=right]:data-closed:slide-out-to-right");
-  expect(canvas.includes("slide-in-from-right-10")).toBe(false);
-  expect(canvas).toContain("transition-[width]");
-  expect(canvas).toContain("w-[420px]");
-  expect(canvas).toContain("hidden");
-  expect(canvas).toContain("xl:block");
-  expect(canvas).toContain("dockHidden");
-  expect(canvas.includes("animate-in fade-in-0 slide-in-from-right")).toBe(false);
-  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right ");
-  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right-10");
 });

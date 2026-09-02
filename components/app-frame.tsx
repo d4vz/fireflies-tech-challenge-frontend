@@ -8,27 +8,26 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Capture } from "@components/capture";
+import { AssistantHost } from "@components/assistant-host";
 import { Nav, PageTitle } from "@components/nav";
 import { Button } from "@/components/ui/button";
 import { handleHover } from "@lib/handle-hover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
-  assistantOpenClickKind,
-  assistantOpenHref,
-  isPlainLeftClick,
-  parseHomeViewFromSearch,
-  pushHomeUrl,
-  subscribeHomeUrl,
-  type HomeView,
-} from "@lib/home";
+  assistantHref,
+  onAssistantPresenceClick,
+  parseAssistantLocation,
+  subscribeAppUrl,
+  type AssistantLocation,
+} from "@lib/assistant-url";
 import { NAV_ITEMS } from "@lib/nav";
 
 export type AppFrameProps = {
   children: ReactNode;
 };
 
-function homeSearchSnapshot(): string {
+function searchSnapshot(): string {
   return window.location.search;
 }
 
@@ -69,14 +68,14 @@ function BrandMark() {
 
 type NavPaneProps = {
   pathname: string;
-  view: HomeView | null;
+  location: AssistantLocation;
 };
 
 function NavPane(props: NavPaneProps) {
   return (
     <>
       <BrandMark />
-      <Nav items={NAV_ITEMS} pathname={props.pathname} view={props.view} />
+      <Nav items={NAV_ITEMS} pathname={props.pathname} location={props.location} />
     </>
   );
 }
@@ -85,12 +84,11 @@ export function AppFrame(props: AppFrameProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const liveSearch = useSyncExternalStore(
-    subscribeHomeUrl,
-    homeSearchSnapshot,
+    subscribeAppUrl,
+    searchSnapshot,
     () => `?${searchParams.toString()}`,
   );
-  const view = parseHomeViewFromSearch(liveSearch);
-  const homeView = pathname === "/" ? view : null;
+  const location = parseAssistantLocation(pathname, liveSearch);
   const [navOpen, setNavOpen] = useState(false);
   const menuRef = useRef<IconHandle>(null);
   const askFredRef = useRef<IconHandle>(null);
@@ -103,7 +101,7 @@ export function AppFrame(props: AppFrameProps) {
     <TooltipProvider>
       <div className="grid h-screen min-w-0 overflow-hidden md:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="hidden min-h-0 flex-col gap-6 overflow-y-auto border-r border-line bg-paper px-3.5 py-[1.15rem] md:flex">
-          <NavPane pathname={pathname} view={homeView} />
+          <NavPane pathname={pathname} location={location} />
         </aside>
         <div className="grid min-h-0 min-w-0 grid-rows-[64px_minmax(0,1fr)]">
           <header className="flex min-w-0 items-center gap-2 border-b border-line bg-paper px-3 md:gap-4 md:px-6">
@@ -122,21 +120,12 @@ export function AppFrame(props: AppFrameProps) {
             <PageTitle />
             <div className="min-w-0 flex-1" />
             <Link
-              href={assistantOpenHref({ current: homeView })}
+              href={assistantHref(location, "open")}
               aria-label="AskFred"
               className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 font-semibold text-ink hover:border-accent/30 hover:bg-process-wash"
               onMouseEnter={(event) => handleHover(event, askFredRef)}
               onMouseLeave={(event) => handleHover(event, askFredRef)}
-              onClick={(event) => {
-                if (assistantOpenClickKind(homeView, isPlainLeftClick(event)) !== "push") {
-                  return;
-                }
-                if (homeView === null) {
-                  return;
-                }
-                event.preventDefault();
-                pushHomeUrl({ ...homeView, fred: "open" });
-              }}
+              onClick={(event) => onAssistantPresenceClick(event, location, "open")}
             >
               <Sparkles ref={askFredRef} className="text-accent" size={16} />
               AskFred
@@ -147,13 +136,14 @@ export function AppFrame(props: AppFrameProps) {
           <div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>
         </div>
       </div>
+      <AssistantHost />
       <Sheet open={navOpen} onOpenChange={setNavOpen}>
         <SheetContent side="left" className="w-[232px] p-0 sm:max-w-[232px]">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3.5 py-[1.15rem]">
-            <NavPane pathname={pathname} view={homeView} />
+            <NavPane pathname={pathname} location={location} />
           </div>
         </SheetContent>
       </Sheet>

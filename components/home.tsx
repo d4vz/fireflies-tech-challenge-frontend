@@ -1,18 +1,7 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import type { AskFredProps } from "@components/ask-fred";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ChevronRight,
-  LayoutList,
-  ListChecks,
-  Loader,
-  Sparkles,
-  X,
-} from "@animateicons/react/lucide";
-import dynamic from "next/dynamic";
+import { ChevronRight, LayoutList, ListChecks, Loader } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type Ref } from "react";
@@ -20,25 +9,18 @@ import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
 import { HomeDashboardSkeleton, TaskGroupBone } from "@components/skeleton";
 import { TaskGroupCard } from "@components/task-group";
-import { WorkspaceCanvas } from "@components/workspace-canvas";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { handleHover } from "@lib/handle-hover";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  assistantChrome,
-  homeHref,
-  isPlainLeftClick,
   parseHomeViewFromSearch,
-  pushHomeUrl,
-  subscribeHomeUrl,
   toHomeModel,
-  type FredParam,
   type HomeModel,
   type HomeView,
   type InsightCard,
   type InsightCoverage,
 } from "@lib/home";
+import { subscribeAppUrl } from "@lib/assistant-url";
 import { listActions, listMeetings } from "@lib/api";
 import {
   HOME_RECENT_TASK_GROUPS,
@@ -57,14 +39,9 @@ export type HomeDashboardProps = {
 
 export type HomeCanvasProps = {
   model: HomeModel;
-  fred: FredParam;
   now: Date;
   initialActions: ActionListPage | undefined;
 };
-
-const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
-  ssr: false,
-});
 
 function greetingTitle(model: HomeModel): string {
   const name = model.greeting.workspaceName;
@@ -261,102 +238,41 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
   );
 }
 
-function AskFredPanel(props: { closeHref: string } & AskFredProps) {
-  const closeRef = useRef<IconHandle>(null);
-  return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
-        <div className="flex items-center gap-2 text-[0.95rem] font-semibold text-accent">
-          <Sparkles size={16} />
-          AskFred
-        </div>
-        <Button asChild variant="ghost" size="icon-sm">
-          <Link
-            href={props.closeHref}
-            aria-label="Close AskFred"
-            onMouseEnter={(event) => handleHover(event, closeRef)}
-            onMouseLeave={(event) => handleHover(event, closeRef)}
-            onClick={(event) => {
-              if (!isPlainLeftClick(event)) {
-                return;
-              }
-              event.preventDefault();
-              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "closed" });
-            }}
-          >
-            <X ref={closeRef} size={16} />
-          </Link>
-        </Button>
-      </div>
-      <div className="min-h-0 flex-1">
-        <AskFred
-          displayName={props.displayName}
-          error={props.error}
-          messages={props.messages}
-          sendMessage={props.sendMessage}
-          status={props.status}
-        />
-      </div>
-    </div>
-  );
-}
-
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
-  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "closed" });
-  const { error, messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
-  });
   return (
-    <WorkspaceCanvas
-      rail={{
-        kind: "assistant",
-        chrome: assistantChrome(props.fred),
-        panel: (
-          <AskFredPanel
-            closeHref={closeHref}
-            displayName={model.greeting.workspaceName}
-            error={error}
-            messages={messages}
-            sendMessage={sendMessage}
-            status={status}
-          />
-        ),
-      }}
-    >
-      <div className="home-empty min-h-full w-full">
-        <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
-          <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
-            {greetingTitle(model)}
-          </h2>
-          <p className="mt-1 mb-0 text-sm text-muted-foreground">
-            {props.now.toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-          <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
-            {model.insights.map((card, index) => (
-              <InsightCardView key={card.kind} card={card} index={index} />
-            ))}
-          </div>
-          <div className="mt-8 grid gap-3">
-            <LastMeetingsHeader />
-            {model.rows.length === 0 ? (
-              <MeetingsEmpty />
-            ) : (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {model.rows.map((meeting) => (
-                  <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
-                ))}
-              </div>
-            )}
-          </div>
-          <RecentTasks initialPage={props.initialActions} />
+    <main className="home-empty h-full w-full overflow-y-auto">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
+        <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
+          {greetingTitle(model)}
+        </h2>
+        <p className="mt-1 mb-0 text-sm text-muted-foreground">
+          {props.now.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+        <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
+          {model.insights.map((card, index) => (
+            <InsightCardView key={card.kind} card={card} index={index} />
+          ))}
         </div>
+        <div className="mt-8 grid gap-3">
+          <LastMeetingsHeader />
+          {model.rows.length === 0 ? (
+            <MeetingsEmpty />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {model.rows.map((meeting) => (
+                <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
+              ))}
+            </div>
+          )}
+        </div>
+        <RecentTasks initialPage={props.initialActions} />
       </div>
-    </WorkspaceCanvas>
+    </main>
   );
 }
 
@@ -385,7 +301,7 @@ export function HomeDashboard(props: HomeDashboardProps) {
   }, [props.view]);
 
   useEffect(() => {
-    return subscribeHomeUrl(() => {
+    return subscribeAppUrl(() => {
       setView(parseHomeViewFromSearch(window.location.search));
     });
   }, []);
@@ -412,7 +328,5 @@ export function HomeDashboard(props: HomeDashboardProps) {
     now,
     workspaceName: props.displayName,
   });
-  return (
-    <HomeCanvas fred={view.fred} initialActions={props.initialActions} model={model} now={now} />
-  );
+  return <HomeCanvas initialActions={props.initialActions} model={model} now={now} />;
 }
