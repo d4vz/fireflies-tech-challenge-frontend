@@ -21,6 +21,7 @@ import {
   ASK_FRED_PLACEHOLDER,
   isAskFredBusy,
   shouldScrollFredStick,
+  shouldShowFredSuggestions,
   type FredStickSnapshot,
 } from "@lib/ask-fred";
 import { WORKSPACE_NAME } from "@lib/chrome";
@@ -172,6 +173,7 @@ function FredComposer(props: { busy: boolean; onSend: (text: string) => void }) 
 export function AskFred(props: AskFredProps) {
   const busy = isAskFredBusy(props.status);
   const last = props.messages.at(-1);
+  const showSuggestions = shouldShowFredSuggestions(props.messages);
 
   function send(text: string) {
     const trimmed = text.trim();
@@ -201,16 +203,18 @@ export function AskFred(props: AskFredProps) {
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
-      <div className="flex flex-wrap gap-2 px-4 py-2">
-        {CHIPS.map((chip) => (
-          <Suggestion
-            className="h-auto max-w-full py-1.5 text-left whitespace-normal"
-            key={chip}
-            onClick={send}
-            suggestion={chip}
-          />
-        ))}
-      </div>
+      {showSuggestions ? (
+        <div className="flex flex-wrap gap-2 px-4 py-2">
+          {CHIPS.map((chip) => (
+            <Suggestion
+              className="h-auto max-w-full py-1.5 text-left whitespace-normal"
+              key={chip}
+              onClick={send}
+              suggestion={chip}
+            />
+          ))}
+        </div>
+      ) : null}
       {props.error !== undefined ? (
         <p className="px-4 pb-2 text-[0.85rem] text-danger">{props.error.message}</p>
       ) : null}

@@ -6,6 +6,10 @@ export function isAskFredBusy(status: ChatStatus): boolean {
   return status === "submitted" || status === "streaming";
 }
 
+export function shouldShowFredSuggestions(messages: readonly { role: string }[]): boolean {
+  return !messages.some((message) => message.role === "assistant");
+}
+
 export type FredStickSnapshot = {
   force: boolean;
   isAtBottom: boolean;

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { join } from "node:path";
 import {
   PROCESSING_NOTICE,
   UPLOAD_PENDING_HINT,
@@ -139,4 +140,11 @@ test("isNameModalOpen covers every naming kind", () => {
   expect(isNameModalOpen(startCaptureNaming())).toBe(true);
   expect(isNameModalOpen(startPickingUpload())).toBe(true);
   expect(isNameModalOpen(applyUploadFile(startPickingUpload(), video("a.mp4")))).toBe(true);
+});
+
+test("upload menu item has an icon and a description", async () => {
+  const capture = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
+  expect(capture).toContain("Add a recording from your computer");
+  expect(capture).toContain("w-[min(18rem,calc(100vw-1.5rem))]");
+  expect(capture).toContain("<Upload");
 });

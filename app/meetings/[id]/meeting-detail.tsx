@@ -1,11 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { Clip } from "@components/clip";
 import { DetailCanvas, type TranscriptView } from "@components/detail-canvas";
 import { MeetingDetailSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
 import { When } from "@components/when";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { getMeeting, getTranscripts } from "@lib/api";
 import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
 
@@ -36,6 +45,21 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
   const meeting = props.meeting;
   return (
     <article className="grid gap-5">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/meetings">Meetings</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="max-w-[min(100%,24rem)] truncate">
+              {meeting.sourceId}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="overflow-hidden rounded-[14px] bg-neutral-200">
         <Clip className="block w-full" src={meeting.blob.url} poster={meeting.blob.thumbnailUrl} />
       </div>
