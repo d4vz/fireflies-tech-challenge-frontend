@@ -14,7 +14,6 @@ import { HomeDashboardSkeleton } from "@components/skeleton";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WORKSPACE_NAME } from "@lib/chrome";
 import {
   assistantChrome,
   homeHref,
@@ -36,6 +35,7 @@ import { HOME_DASHBOARD_LIMIT, isBusy, meetingsListKey, type MeetingListPage } f
 export type HomeDashboardProps = {
   view: HomeView;
   initialPage: MeetingListPage | undefined;
+  displayName: string;
 };
 
 export type HomeCanvasProps = {
@@ -188,6 +188,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
       </div>
       <div className="min-h-0 flex-1">
         <AskFred
+          displayName={props.displayName}
           error={props.error}
           messages={props.messages}
           sendMessage={props.sendMessage}
@@ -212,6 +213,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
         panel: (
           <AskFredPanel
             closeHref={closeHref}
+            displayName={model.greeting.workspaceName}
             error={error}
             messages={messages}
             sendMessage={sendMessage}
@@ -318,7 +320,7 @@ export function HomeDashboard(props: HomeDashboardProps) {
     page: query.data,
     view,
     now,
-    workspaceName: WORKSPACE_NAME,
+    workspaceName: props.displayName,
   });
   return <HomeCanvas model={model} fred={view.fred} onTabClick={onTabClick} />;
 }

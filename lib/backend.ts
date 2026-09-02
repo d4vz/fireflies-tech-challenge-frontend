@@ -1,5 +1,6 @@
 import "server-only";
 
+import { auth } from "@clerk/nextjs/server";
 import {
   parsePublicMeeting,
   toPublicMeeting,
@@ -8,15 +9,25 @@ import {
   type TranscriptChunk,
 } from "@lib/meetings";
 
-type StreamProxyInit = RequestInit & { duplex: "half" };
+type BackendInit = RequestInit & { duplex?: "half" };
 
 export function backendUrl(path: string) {
   const base = (process.env.API_URL ?? "http://localhost:3000").replace(/\/$/, "");
   return `${base}${path}`;
 }
 
+export async function backendFetch(path: string, init?: BackendInit): Promise<Response> {
+  const { getToken } = await auth();
+  const token = await getToken();
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return await fetch(backendUrl(path), { ...init, headers });
+}
+
 export async function listMeetings(page: number, limit: number): Promise<MeetingListPage> {
-  const res = await fetch(backendUrl(`/meetings?page=${page}&limit=${limit}`), {
+  const res = await backendFetch(`/meetings?page=${page}&limit=${limit}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -30,7 +41,7 @@ export async function listMeetings(page: number, limit: number): Promise<Meeting
 }
 
 export async function getMeeting(id: string): Promise<Meeting | null> {
-  const res = await fetch(backendUrl(`/meetings/${id}`), { cache: "no-store" });
+  const res = await backendFetch(`/meetings/${id}`, { cache: "no-store" });
   if (res.status === 404) {
     return null;
   }
@@ -49,16 +60,13 @@ export async function proxyUpload(request: Request): Promise<Response> {
   if (contentType) {
     headers.set("Content-Type", contentType);
   }
-  const init: StreamProxyInit = {
+  const init: BackendInit = {
     method: "POST",
     headers,
     body: request.body,
     duplex: "half",
   };
-  const res = await fetch(
-    backendUrl(`/meetings/upload?filename=${encodeURIComponent(filename)}`),
-    init,
-  );
+  const res = await backendFetch(`/meetings/upload?filename=${encodeURIComponent(filename)}`, init);
   return new Response(res.body, {
     status: res.status,
     headers: {
@@ -79,13 +87,13 @@ export async function proxyAskFred(request: Request): Promise<Response> {
   if (uiStream) {
     headers.set(UI_MESSAGE_STREAM_HEADER, uiStream);
   }
-  const init: StreamProxyInit = {
+  const init: BackendInit = {
     method: "POST",
     headers,
     body: request.body,
     duplex: "half",
   };
-  const res = await fetch(backendUrl("/ask-fred"), init);
+  const res = await backendFetch("/ask-fred", init);
   const out = new Headers();
   out.set("Content-Type", res.headers.get("Content-Type") ?? "text/event-stream");
   const responseStream = res.headers.get(UI_MESSAGE_STREAM_HEADER);
@@ -99,7 +107,7 @@ export async function proxyAskFred(request: Request): Promise<Response> {
 }
 
 export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
-  const res = await fetch(backendUrl(`/meetings/${id}/transcripts`), { cache: "no-store" });
+  const res = await backendFetch(`/meetings/${id}/transcripts`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error("could not load transcript");
   }
@@ -108,7 +116,7 @@ export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
 }
 
 export async function proxyStoredObject(path: string, fallbackType: string): Promise<Response> {
-  const res = await fetch(backendUrl(path), { cache: "no-store" });
+  const res = await backendFetch(path, { cache: "no-store" });
   return new Response(res.body, {
     status: res.status,
     headers: {

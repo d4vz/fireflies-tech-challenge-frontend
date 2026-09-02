@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { Menu, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -10,7 +11,6 @@ import { Nav, PageTitle } from "@components/nav";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { WORKSPACE_NAME } from "@lib/chrome";
 import {
   assistantOpenHref,
   parseHomeViewFromSearch,
@@ -21,19 +21,20 @@ import { NAV_ITEMS } from "@lib/nav";
 
 export type AppFrameProps = {
   children: ReactNode;
+  displayName: string;
 };
 
 function homeSearchSnapshot(): string {
   return window.location.search;
 }
 
-function WorkspaceMark() {
+function WorkspaceMark(props: { displayName: string }) {
   return (
     <div className="flex items-center gap-2.5 px-2 py-1.5 text-ink">
       <span className="grid size-7 place-items-center rounded-full bg-process-wash text-xs font-bold text-accent">
-        {WORKSPACE_NAME.slice(0, 1)}
+        {props.displayName.slice(0, 1)}
       </span>
-      <span className="text-[0.95rem] font-semibold">{WORKSPACE_NAME}</span>
+      <span className="text-[0.95rem] font-semibold">{props.displayName}</span>
     </div>
   );
 }
@@ -41,14 +42,23 @@ function WorkspaceMark() {
 type NavPaneProps = {
   pathname: string;
   view: HomeView | null;
+  displayName: string;
 };
 
 function NavPane(props: NavPaneProps) {
   return (
     <>
-      <WorkspaceMark />
+      <WorkspaceMark displayName={props.displayName} />
       <Nav items={NAV_ITEMS} pathname={props.pathname} view={props.view} />
     </>
+  );
+}
+
+function AccountControl() {
+  return (
+    <div className="mt-auto px-2 py-1">
+      <UserButton />
+    </div>
   );
 }
 
@@ -72,7 +82,8 @@ export function AppFrame(props: AppFrameProps) {
     <TooltipProvider>
       <div className="grid h-screen min-w-0 overflow-hidden md:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="hidden min-h-0 flex-col gap-6 overflow-y-auto border-r border-line bg-paper px-3.5 py-[1.15rem] md:flex">
-          <NavPane pathname={pathname} view={homeView} />
+          <NavPane displayName={props.displayName} pathname={pathname} view={homeView} />
+          <AccountControl />
         </aside>
         <div className="grid min-h-0 min-w-0 grid-rows-[64px_minmax(0,1fr)]">
           <header className="flex min-w-0 items-center gap-2 border-b border-line bg-paper px-3 md:gap-4 md:px-6">
@@ -111,8 +122,9 @@ export function AppFrame(props: AppFrameProps) {
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
-          <div className="flex min-h-0 flex-col gap-6 overflow-y-auto px-3.5 py-[1.15rem]">
-            <NavPane pathname={pathname} view={homeView} />
+          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3.5 py-[1.15rem]">
+            <NavPane displayName={props.displayName} pathname={pathname} view={homeView} />
+            <AccountControl />
           </div>
         </SheetContent>
       </Sheet>

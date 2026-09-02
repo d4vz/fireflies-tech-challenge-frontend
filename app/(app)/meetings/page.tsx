@@ -1,4 +1,4 @@
-import { MeetingsList } from "@app/meetings/meetings-list";
+import { MeetingsList } from "./meetings-list";
 import { parsePage } from "@lib/meetings";
 
 type MeetingsPageProps = {
