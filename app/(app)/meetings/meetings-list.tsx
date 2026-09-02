@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { MeetingRow } from "@components/meeting-row";
+import { MeetingsEmpty } from "@components/meetings-empty";
 import { MeetingsListSkeleton } from "@components/skeleton";
 import { listMeetings } from "@lib/api";
 import { isBusy, meetingsListKey, MEETINGS_PAGE_SIZE } from "@lib/meetings";
@@ -43,9 +44,7 @@ export function MeetingsList(props: MeetingsListProps) {
   if (total === 0) {
     return (
       <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
-        <p className="mt-1 text-[0.85rem] text-muted-foreground">
-          No meetings yet. Capture or upload a file to start.
-        </p>
+        <MeetingsEmpty />
       </main>
     );
   }

@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MeetingRow } from "@components/meeting-row";
+import { MeetingsEmpty } from "@components/meetings-empty";
 import { HomeDashboardSkeleton } from "@components/skeleton";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
@@ -203,7 +204,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
         <div className="mt-8 grid gap-3">
           <LastMeetingsHeader />
           {model.rows.length === 0 ? (
-            <p className="mt-1 text-[0.85rem] text-muted-foreground">No meetings in this view.</p>
+            <MeetingsEmpty />
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {model.rows.map((meeting) => (

@@ -7,6 +7,7 @@ import {
   useStickToBottomContext,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Suggestion } from "@/components/ai-elements/suggestion";
 import {
   Tool,
@@ -21,6 +22,7 @@ import {
   ASK_FRED_PLACEHOLDER,
   isAskFredBusy,
   shouldScrollFredStick,
+  shouldShowFredPending,
   shouldShowFredSuggestions,
   type FredStickSnapshot,
 } from "@lib/ask-fred";
@@ -52,6 +54,15 @@ function isLiveFredMessage(
   busy: boolean,
 ): boolean {
   return busy && last !== undefined && message.id === last.id && message.role === "assistant";
+}
+
+function hasVisibleFredParts(message: UIMessage): boolean {
+  return message.parts.some((part) => {
+    if (part.type === "text") {
+      return part.text.trim() !== "";
+    }
+    return isDynamicToolUIPart(part) || isStaticToolUIPart(part);
+  });
 }
 
 export type AskFredProps = Pick<
@@ -94,6 +105,9 @@ function FredMessage(props: { message: UIMessage; streaming: boolean }) {
       <MessageContent>
         {props.message.parts.map((part, index) => {
           if (part.type === "text") {
+            if (part.text.trim() === "") {
+              return null;
+            }
             return (
               <FredMarkdown key={`${props.message.id}-${index}`} streaming={props.streaming}>
                 {part.text}
@@ -193,13 +207,22 @@ export function AskFred(props: AskFredProps) {
               <FredMarkdown>{`Hi ${props.displayName}! Get ready for your meeting.`}</FredMarkdown>
             </MessageContent>
           </Message>
-          {props.messages.map((message) => (
-            <FredMessage
-              key={message.id}
-              message={message}
-              streaming={isLiveFredMessage(message, last, busy)}
-            />
-          ))}
+          {props.messages.map((message) =>
+            hasVisibleFredParts(message) ? (
+              <FredMessage
+                key={message.id}
+                message={message}
+                streaming={isLiveFredMessage(message, last, busy)}
+              />
+            ) : null,
+          )}
+          {shouldShowFredPending(props.status, last) ? (
+            <Message from="assistant">
+              <MessageContent>
+                <Shimmer>Thinking...</Shimmer>
+              </MessageContent>
+            </Message>
+          ) : null}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

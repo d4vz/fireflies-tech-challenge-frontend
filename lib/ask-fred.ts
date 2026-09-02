@@ -6,6 +6,24 @@ export function isAskFredBusy(status: ChatStatus): boolean {
   return status === "submitted" || status === "streaming";
 }
 
+export type FredPendingMessage = {
+  role: string;
+  parts: readonly { type: string; text?: string }[];
+};
+
+export function shouldShowFredPending(
+  status: ChatStatus,
+  last: FredPendingMessage | undefined,
+): boolean {
+  if (!isAskFredBusy(status)) {
+    return false;
+  }
+  if (last === undefined || last.role !== "assistant") {
+    return true;
+  }
+  return !last.parts.some((part) => part.type === "text" && (part.text ?? "").trim() !== "");
+}
+
 export function shouldShowFredSuggestions(messages: readonly { role: string }[]): boolean {
   return !messages.some((message) => message.role === "assistant");
 }

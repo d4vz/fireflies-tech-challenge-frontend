@@ -41,6 +41,7 @@ import {
   type CaptureSession,
   type NamingSession,
 } from "@lib/capture-session";
+import { subscribeCaptureIntent, type CaptureIntent } from "@lib/capture-intent";
 import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
@@ -81,6 +82,21 @@ function isNaming(session: CaptureSession): session is NamingSession {
     session.kind === "picking-upload" ||
     session.kind === "naming-upload"
   );
+}
+
+function sessionFromIntent(
+  intent: CaptureIntent,
+): Extract<CaptureSession, { kind: "naming-capture" | "picking-upload" }> {
+  switch (intent) {
+    case "capture":
+      return startCaptureNaming();
+    case "upload":
+      return startPickingUpload();
+    default: {
+      const exhaustive: never = intent;
+      return exhaustive;
+    }
+  }
 }
 
 type SessionSetter = Dispatch<SetStateAction<CaptureSession>>;
@@ -350,6 +366,13 @@ export function Capture() {
   const recordingRef = useRef<ScreenRecording | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [session, setSession] = useState<CaptureSession>(resetSession);
+
+  useEffect(() => {
+    return subscribeCaptureIntent((intent) => {
+      setMenuOpen(false);
+      setSession(sessionFromIntent(intent));
+    });
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) {

@@ -65,10 +65,10 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
           <aside
             className={cn(
               "min-h-0 overflow-hidden transition-[width] duration-300 ease-in-out",
-              dockOpen ? "w-[360px]" : "w-0",
+              dockOpen ? "w-[420px]" : "w-0",
             )}
           >
-            <div className="flex h-full w-[360px] min-w-[360px] flex-col border-l border-line bg-paper">
+            <div className="flex h-full w-[420px] min-w-[420px] flex-col border-l border-line bg-paper">
               {dockOpen ? props.rail.panel : null}
             </div>
           </aside>
@@ -87,7 +87,7 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
         <SheetContent
           side="right"
           overlayClassName="xl:hidden"
-          className="w-full p-0 sm:max-w-[360px] xl:hidden data-[side=right]:data-open:slide-in-from-right data-[side=right]:data-closed:slide-out-to-right"
+          className="w-full p-0 sm:max-w-[420px] xl:hidden data-[side=right]:data-open:slide-in-from-right data-[side=right]:data-closed:slide-out-to-right"
           showCloseButton={false}
           slideTravel="full"
           onInteractOutside={(event) => {

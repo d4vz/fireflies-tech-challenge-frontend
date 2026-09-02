@@ -20,6 +20,20 @@ function MeetingRowBone() {
   );
 }
 
+function MeetingCardBone() {
+  return (
+    <div className="grid min-w-0 gap-3">
+      <Bone className="aspect-video rounded-[14px]" />
+      <div className="grid min-w-0 gap-1.5 pt-0.5">
+        <Bone className="h-4 w-48 max-w-full rounded-md" />
+        <Bone className="h-3.5 w-full rounded-md" />
+        <Bone className="h-3.5 w-4/5 rounded-md" />
+        <Bone className="h-3 w-24 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
 export function TranscriptSkeleton() {
   return (
     <div className="grid gap-2.5">
@@ -71,8 +85,8 @@ export function HomeDashboardSkeleton() {
       <div className="mt-8 grid gap-3">
         <Bone className="h-6 w-40 max-w-full rounded-md" />
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <MeetingRowBone />
-          <MeetingRowBone />
+          <MeetingCardBone />
+          <MeetingCardBone />
         </div>
       </div>
     </div>
