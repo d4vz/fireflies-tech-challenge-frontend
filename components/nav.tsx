@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Home,
@@ -121,9 +122,9 @@ export function Nav(props: NavProps) {
 
 export function PageTitle() {
   const pathname = usePathname();
-  return (
-    <h1 className="m-0 shrink-0 text-[1.05rem] font-semibold">
-      {pathname.startsWith("/meetings") ? "Meetings" : "Home"}
-    </h1>
-  );
+  const [title, setTitle] = useState("Home");
+  useEffect(() => {
+    setTitle(pathname.startsWith("/meetings") ? "Meetings" : "Home");
+  }, [pathname]);
+  return <h1 className="m-0 shrink-0 text-[1.05rem] font-semibold">{title}</h1>;
 }
