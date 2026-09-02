@@ -26,8 +26,18 @@ test("meeting detail action items are a checkbox list from meeting.tasks", async
   expect(detail.includes("Takeaways")).toBe(false);
   expect(detail.includes(">Action items<")).toBe(false);
   expect(detail).toContain("TaskChecklist");
-  expect(detail).toContain("meeting.tasks");
+  expect(detail).toContain("toMeetingNotesView");
   expect(detail).toContain("{meeting.name}");
   expect(detail.includes("{meeting.sourceId}")).toBe(false);
   expect(detail.includes("actionItems")).toBe(false);
+});
+
+test("queued and processing meetings show summary and tasks skeletons", async () => {
+  const detail = await Bun.file(
+    join(import.meta.dir, "../app/(app)/meetings/[id]/meeting-detail.tsx"),
+  ).text();
+  expect(detail).toContain("SummarySkeleton");
+  expect(detail).toContain("MeetingTasksSkeleton");
+  expect(detail).toContain('case "pending"');
+  expect(detail).toContain("tasks.length === 0");
 });
