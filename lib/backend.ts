@@ -6,7 +6,6 @@ import {
   type MeetingListPage,
   type TranscriptChunk,
 } from "@lib/meetings";
-import { askFredAppOrigin } from "@lib/ask-fred";
 
 type StreamProxyInit = RequestInit & { duplex: "half" };
 
@@ -75,7 +74,6 @@ export async function proxyAskFred(request: Request): Promise<Response> {
   if (contentType) {
     headers.set("Content-Type", contentType);
   }
-  headers.set("x-app-origin", askFredAppOrigin(request.url));
   const uiStream = request.headers.get(UI_MESSAGE_STREAM_HEADER);
   if (uiStream) {
     headers.set(UI_MESSAGE_STREAM_HEADER, uiStream);

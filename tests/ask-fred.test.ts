@@ -1,10 +1,5 @@
 import { expect, test } from "bun:test";
-import {
-  ASK_FRED_PLACEHOLDER,
-  askFredAppOrigin,
-  isAskFredBusy,
-  shouldScrollFredStick,
-} from "@lib/ask-fred";
+import { ASK_FRED_PLACEHOLDER, isAskFredBusy, shouldScrollFredStick } from "@lib/ask-fred";
 
 const atBottom = { force: false, isAtBottom: true, key: "1:a:10" };
 const readingHistory = { force: false, isAtBottom: false, key: "1:a:10" };
@@ -12,13 +7,6 @@ const readingHistory = { force: false, isAtBottom: false, key: "1:a:10" };
 test("Ask Fred placeholder does not mention Command J", () => {
   expect(ASK_FRED_PLACEHOLDER).toBe("Ask anything here");
   expect(ASK_FRED_PLACEHOLDER.includes("⌘")).toBe(false);
-});
-
-test("Ask Fred app origin is the request origin with no path", () => {
-  expect(askFredAppOrigin("http://localhost:8080/api/ask-fred")).toBe("http://localhost:8080");
-  expect(askFredAppOrigin("https://app.example.com/api/ask-fred?fred=1")).toBe(
-    "https://app.example.com",
-  );
 });
 
 test("send is busy only while submitted or streaming", () => {
