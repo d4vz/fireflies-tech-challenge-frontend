@@ -1,6 +1,22 @@
-export const WORKSPACE_NAME = "Davi";
-
 export const NAV_DOCK_AT = "md";
+
+export function displayNameFrom(
+  firstName: string | null | undefined,
+  email: string | null | undefined,
+): string {
+  const given = firstName?.trim();
+  if (given) {
+    return given;
+  }
+  const at = email?.indexOf("@") ?? -1;
+  if (at > 0 && email) {
+    const local = email.slice(0, at).trim();
+    if (local) {
+      return local;
+    }
+  }
+  return "there";
+}
 
 export const ASSISTANT_DOCK_AT = "xl";
 

@@ -239,7 +239,7 @@ test("toHomeModel greeting uses periodAt and the workspace name", () => {
 });
 
 test("Home RSC fetches meetings on the server and hydrates the client dashboard", async () => {
-  const page = await Bun.file(join(import.meta.dir, "../app/page.tsx")).text();
+  const page = await Bun.file(join(import.meta.dir, "../app/(app)/page.tsx")).text();
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
   expect(page).toContain('from "@lib/backend"');
   expect(page).toContain("listMeetings");

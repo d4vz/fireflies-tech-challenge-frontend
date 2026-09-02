@@ -1,5 +1,7 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import { Menu, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -10,7 +12,6 @@ import { Nav, PageTitle } from "@components/nav";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { WORKSPACE_NAME } from "@lib/chrome";
 import {
   assistantOpenHref,
   parseHomeViewFromSearch,
@@ -27,14 +28,28 @@ function homeSearchSnapshot(): string {
   return window.location.search;
 }
 
-function WorkspaceMark() {
+function AccountButton() {
   return (
-    <div className="flex items-center gap-2.5 px-2 py-1.5 text-ink">
-      <span className="grid size-7 place-items-center rounded-full bg-process-wash text-xs font-bold text-accent">
-        {WORKSPACE_NAME.slice(0, 1)}
-      </span>
-      <span className="text-[0.95rem] font-semibold">{WORKSPACE_NAME}</span>
+    <div aria-label="Account" className="size-8 shrink-0">
+      <UserButton
+        appearance={{ theme: shadcn, elements: { avatarBox: "size-8" } }}
+        fallback={<span aria-hidden="true" className="block size-8 rounded-full bg-nav" />}
+      />
     </div>
+  );
+}
+
+function BrandMark() {
+  return (
+    <Link className="block px-2 py-1.5" href="/">
+      <img
+        alt="Fireflies"
+        className="h-6 w-auto"
+        height={24}
+        src="/fireflies-logo.svg"
+        width={118}
+      />
+    </Link>
   );
 }
 
@@ -46,7 +61,7 @@ type NavPaneProps = {
 function NavPane(props: NavPaneProps) {
   return (
     <>
-      <WorkspaceMark />
+      <BrandMark />
       <Nav items={NAV_ITEMS} pathname={props.pathname} view={props.view} />
     </>
   );
@@ -102,6 +117,7 @@ export function AppFrame(props: AppFrameProps) {
               AskFred
             </Link>
             <Capture />
+            <AccountButton />
           </header>
           <div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>
         </div>
@@ -111,7 +127,7 @@ export function AppFrame(props: AppFrameProps) {
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
-          <div className="flex min-h-0 flex-col gap-6 overflow-y-auto px-3.5 py-[1.15rem]">
+          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-3.5 py-[1.15rem]">
             <NavPane pathname={pathname} view={homeView} />
           </div>
         </SheetContent>

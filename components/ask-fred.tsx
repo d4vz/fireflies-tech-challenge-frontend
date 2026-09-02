@@ -24,14 +24,12 @@ import {
   shouldShowFredSuggestions,
   type FredStickSnapshot,
 } from "@lib/ask-fred";
-import { WORKSPACE_NAME } from "@lib/chrome";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { isDynamicToolUIPart, isStaticToolUIPart, type UIMessage } from "ai";
 import { CornerDownLeft } from "lucide-react";
 import { useEffect, useRef, type FormEvent } from "react";
 
 const CHIPS = ["What's my day looking like?", "Pending tasks across all meetings"];
-const GREETING = `Hi ${WORKSPACE_NAME}! Get ready for your meeting.`;
 
 function FredMarkdown(props: { children: string; streaming?: boolean }) {
   const streaming = props.streaming === true;
@@ -59,7 +57,9 @@ function isLiveFredMessage(
 export type AskFredProps = Pick<
   UseChatHelpers<UIMessage>,
   "error" | "messages" | "sendMessage" | "status"
->;
+> & {
+  displayName: string;
+};
 
 function FredToolPart(props: { part: UIMessage["parts"][number] }) {
   const part = props.part;
@@ -190,7 +190,7 @@ export function AskFred(props: AskFredProps) {
         <ConversationContent className="px-4 py-4" scrollClassName="h-full min-h-0 overflow-y-auto">
           <Message from="assistant">
             <MessageContent>
-              <FredMarkdown>{GREETING}</FredMarkdown>
+              <FredMarkdown>{`Hi ${props.displayName}! Get ready for your meeting.`}</FredMarkdown>
             </MessageContent>
           </Message>
           {props.messages.map((message) => (

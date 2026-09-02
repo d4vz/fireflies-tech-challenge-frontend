@@ -1,4 +1,4 @@
-import { MeetingDetail } from "@app/meetings/[id]/meeting-detail";
+import { MeetingDetail } from "./meeting-detail";
 
 type MeetingPageProps = {
   params: Promise<{ id: string }>;
