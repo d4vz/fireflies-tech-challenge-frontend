@@ -13,6 +13,8 @@ test("backendFetch obtains the Clerk session JWT and stamps Bearer", () => {
   expect(backend).toContain("getToken()");
   expect(backend).toContain("Authorization");
   expect(backend).toContain("Bearer ");
+  expect(backend).toContain('throw new Error("unauthorized")');
+  expect(backend.includes("if (token)")).toBe(false);
 });
 
 test("Hono helpers call backendFetch and do not take a token argument", () => {

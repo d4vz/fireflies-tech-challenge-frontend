@@ -19,10 +19,11 @@ export function backendUrl(path: string) {
 export async function backendFetch(path: string, init?: BackendInit): Promise<Response> {
   const { getToken } = await auth();
   const token = await getToken();
-  const headers = new Headers(init?.headers);
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+  if (!token) {
+    throw new Error("unauthorized");
   }
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${token}`);
   return await fetch(backendUrl(path), { ...init, headers });
 }
 
