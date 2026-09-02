@@ -28,9 +28,7 @@ function stopTracks(stream: MediaStream) {
 }
 
 function liveAudioTracks(stream: MediaStream) {
-  return stream
-    .getAudioTracks()
-    .filter((track) => track.enabled && track.readyState === "live" && !track.muted);
+  return stream.getAudioTracks().filter((track) => track.enabled && track.readyState === "live");
 }
 
 function isMac() {
@@ -80,10 +78,10 @@ async function mixAudio(display: MediaStream, mic: MediaStream | undefined) {
   if (displayAudio.length === 0 && micAudio.length === 0) {
     return { stream: display, close: () => undefined, computerAudio };
   }
-  if (displayAudio.length > 0 && micAudio.length === 0) {
+  if (micAudio.length === 0) {
     return { stream: display, close: () => undefined, computerAudio };
   }
-  if (displayAudio.length === 0 || isMac()) {
+  if (displayAudio.length === 0) {
     dropAudio(display, []);
     return {
       stream: new MediaStream([...display.getVideoTracks(), ...micAudio]),
