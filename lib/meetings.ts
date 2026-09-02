@@ -32,7 +32,7 @@ export type MeetingListPage = {
 
 export const meetingsKey = ["meetings"] as const;
 export const MEETINGS_PAGE_SIZE = 5;
-export const HOME_MEETINGS_LIMIT = 3;
+export const HOME_DASHBOARD_LIMIT = 20;
 
 export function meetingsListKey(page: number, limit: number) {
   return ["meetings", "list", page, limit] as const;
