@@ -86,13 +86,15 @@ The query client uses a one-minute stale time. Pages pass their server-loaded da
 
 You need [Bun](https://bun.sh) and a running backend. The backend setup is in the [parent README](https://github.com/d4vz/fireflies-tech-challenge) and the [backend README](https://github.com/d4vz/fireflies-tech-challenge-backend).
 
-Copy the environment template and add the Clerk keys:
+The parent repository starts this app in Docker. From the parent root, copy `.env.example` to `.env` and run `docker compose up --build`. That include file is [docker-compose.yml](docker-compose.yml). Next.js then calls Hono at `http://api:3000` on the Compose network.
+
+To run Next.js on the host, copy the environment template and add the Clerk keys:
 
 ```
 cp .env.example .env.local
 ```
 
-`API_URL` should stay `http://localhost:3000` when the backend Compose stack is running. Next.js calls that URL from the server. The browser calls the Next.js `/api/*` routes.
+`API_URL` should stay `http://localhost:3000` when the backend Compose stack is running. Next.js calls that URL from the server. The browser calls the Next.js `/api/*` routes. The frontend does not use OpenAI or AssemblyAI.
 
 ### Development
 

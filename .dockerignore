@@ -1,0 +1,15 @@
+node_modules
+.worktrees
+.git
+.husky
+.env
+.env.*
+!.env.example
+.next
+.next-verify
+*.log
+.DS_Store
+README.md
+**/*.test.ts
+tools
+.github
