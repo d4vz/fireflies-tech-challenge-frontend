@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ListChecks, ListVideo, Loader, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingSearch } from "@components/meeting-search";
 import { HomeDashboardSkeleton } from "@components/skeleton";
@@ -18,6 +18,10 @@ import { WORKSPACE_NAME } from "@lib/chrome";
 import {
   assistantChrome,
   homeHref,
+  isPlainLeftClick,
+  parseHomeViewFromSearch,
+  pushHomeUrl,
+  subscribeHomeUrl,
   toHomeModel,
   type FredParam,
   type HomeModel,
@@ -37,6 +41,7 @@ export type HomeDashboardProps = {
 export type HomeCanvasProps = {
   model: HomeModel;
   fred: FredParam;
+  onTabClick: (event: MouseEvent<HTMLAnchorElement>, tab: HomeTab) => void;
 };
 
 const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
@@ -128,6 +133,7 @@ function InsightCardView(props: { card: InsightCard }) {
 type HomeTabsProps = {
   model: HomeModel;
   fred: FredParam;
+  onTabClick: (event: MouseEvent<HTMLAnchorElement>, tab: HomeTab) => void;
 };
 
 function HomeTabs(props: HomeTabsProps) {
@@ -140,6 +146,7 @@ function HomeTabs(props: HomeTabsProps) {
             <Link
               key={item.tab}
               href={homeHref({ tab: item.tab, query: props.model.query, fred: props.fred })}
+              onClick={(event) => props.onTabClick(event, item.tab)}
               className={
                 active
                   ? "border-b-2 border-ink px-3 py-2 text-sm font-semibold text-ink"
@@ -164,7 +171,17 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
           AskFred
         </div>
         <Button asChild variant="ghost" size="icon-sm">
-          <Link href={props.closeHref} aria-label="Close AskFred">
+          <Link
+            href={props.closeHref}
+            aria-label="Close AskFred"
+            onClick={(event) => {
+              if (!isPlainLeftClick(event)) {
+                return;
+              }
+              event.preventDefault();
+              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "unset" });
+            }}
+          >
             <X />
           </Link>
         </Button>
@@ -218,7 +235,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
             hotkey={false}
             view={{ tab: model.tab, query: model.query, fred: props.fred }}
           />
-          <HomeTabs model={model} fred={props.fred} />
+          <HomeTabs model={model} fred={props.fred} onTabClick={props.onTabClick} />
           {model.rows.length === 0 ? (
             <p className="mt-1 text-[0.85rem] text-muted-foreground">
               No meetings in this view.{" "}
@@ -244,6 +261,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
 
 export function HomeDashboard(props: HomeDashboardProps) {
   const [now, setNow] = useState<Date | null>(null);
+  const [view, setView] = useState(props.view);
   const query = useQuery({
     queryKey: meetingsListKey(1, HOME_DASHBOARD_LIMIT),
     queryFn: () => listMeetings(1, HOME_DASHBOARD_LIMIT),
@@ -261,6 +279,29 @@ export function HomeDashboard(props: HomeDashboardProps) {
     setNow(new Date());
   }, []);
 
+  useEffect(() => {
+    setView(props.view);
+  }, [props.view]);
+
+  useEffect(() => {
+    return subscribeHomeUrl(() => {
+      setView(parseHomeViewFromSearch(window.location.search));
+    });
+  }, []);
+
+  function onTabClick(event: MouseEvent<HTMLAnchorElement>, tab: HomeTab) {
+    if (!isPlainLeftClick(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (view.tab === tab) {
+      return;
+    }
+    const next = { ...view, tab };
+    setView(next);
+    pushHomeUrl(next);
+  }
+
   if (query.error) {
     return (
       <main className="home-empty h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
@@ -275,9 +316,9 @@ export function HomeDashboard(props: HomeDashboardProps) {
 
   const model = toHomeModel({
     page: query.data,
-    view: props.view,
+    view,
     now,
     workspaceName: WORKSPACE_NAME,
   });
-  return <HomeCanvas model={model} fred={props.view.fred} />;
+  return <HomeCanvas model={model} fred={view.fred} onTabClick={onTabClick} />;
 }

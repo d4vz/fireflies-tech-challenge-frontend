@@ -3,7 +3,7 @@
 import { Menu, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Capture } from "@components/capture";
 import { MeetingSearch } from "@components/meeting-search";
 import { Nav, PageTitle } from "@components/nav";
@@ -11,19 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WORKSPACE_NAME } from "@lib/chrome";
-import { assistantOpenHref, parseHomeView, type HomeView } from "@lib/home";
+import {
+  assistantOpenHref,
+  parseHomeViewFromSearch,
+  subscribeHomeUrl,
+  type HomeView,
+} from "@lib/home";
 import { NAV_ITEMS } from "@lib/nav";
 
 export type AppFrameProps = {
   children: ReactNode;
 };
 
-function viewFromParams(params: URLSearchParams): HomeView {
-  return parseHomeView({
-    tab: params.get("tab") ?? undefined,
-    q: params.get("q") ?? undefined,
-    fred: params.get("fred") ?? undefined,
-  });
+function homeSearchSnapshot(): string {
+  return window.location.search;
 }
 
 function WorkspaceMark() {
@@ -54,7 +55,12 @@ function NavPane(props: NavPaneProps) {
 export function AppFrame(props: AppFrameProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const view = viewFromParams(searchParams);
+  const liveSearch = useSyncExternalStore(
+    subscribeHomeUrl,
+    homeSearchSnapshot,
+    () => `?${searchParams.toString()}`,
+  );
+  const view = parseHomeViewFromSearch(liveSearch);
   const homeView = pathname === "/" ? view : null;
   const [navOpen, setNavOpen] = useState(false);
 
