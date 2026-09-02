@@ -24,6 +24,20 @@ function ChevronIcon() {
   );
 }
 
+function Spinner() {
+  return (
+    <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1.8" />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function Capture() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -95,6 +109,8 @@ export function Capture() {
     recordingRef.current?.stop();
   }
 
+  const uploading = stage === "uploading";
+
   return (
     <div className="relative flex items-center gap-3">
       {stage ? <span className="text-[0.85rem] text-muted">{stage}</span> : null}
@@ -111,18 +127,21 @@ export function Capture() {
         <div className="relative" ref={captureRef}>
           <div className="inline-flex overflow-hidden rounded-[10px]">
             <button
-              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-3.5 py-2 font-semibold text-white hover:bg-accent-hover"
+              aria-busy={uploading}
+              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-3.5 py-2 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
+              disabled={uploading}
               type="button"
               onClick={onRecord}
             >
-              <CameraIcon />
+              {uploading ? <Spinner /> : <CameraIcon />}
               Capture
             </button>
             <button
               aria-expanded={open}
               aria-haspopup="menu"
               aria-label="Upload video"
-              className="inline-flex cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover"
+              className="inline-flex cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
+              disabled={uploading}
               type="button"
               onClick={() => setOpen((value) => !value)}
             >
@@ -150,6 +169,7 @@ export function Capture() {
         type="file"
         accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/x-m4v,.mp4,.webm,.mov,.mkv,.m4v"
         hidden
+        disabled={uploading}
         onChange={(event) => {
           onFile(event.target.files?.[0]);
           event.target.value = "";
