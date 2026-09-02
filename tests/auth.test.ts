@@ -39,16 +39,11 @@ test("app group wraps pages with AppFrame and auth routes do not", async () => {
   expect(sso).toContain("AuthenticateWithRedirectCallback");
 });
 
-test("sign-in starts Google SSO and has no email fields or SignIn widget", async () => {
+test("sign-in mounts Clerk SignIn and keeps auth routes off AppFrame", async () => {
   const signIn = await Bun.file(join(root, "app/(auth)/sign-in/[[...sign-in]]/page.tsx")).text();
-  expect(signIn).toContain("useSignIn()");
-  expect(signIn).toContain('strategy: "oauth_google"');
-  expect(signIn).toContain('redirectUrl: "/"');
-  expect(signIn).toContain('redirectCallbackUrl: "/sso-callback"');
-  expect(signIn).toContain("Google");
-  expect(signIn.includes("<SignIn")).toBe(false);
-  expect(signIn.includes('type="password"')).toBe(false);
-  expect(signIn.includes('type="email"')).toBe(false);
+  expect(signIn).toContain("<SignIn");
+  expect(signIn.includes("useSignIn()")).toBe(false);
+  expect(signIn.includes('strategy: "oauth_google"')).toBe(false);
 });
 
 test("Home RSC loads meetings through the authed backend helper", async () => {
