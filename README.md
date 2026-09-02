@@ -78,7 +78,7 @@ const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
 
 ## Data fetching
 
-[TanStack Query](https://tanstack.com/query/latest) manages client-side server state. It gives us query keys, caching, stale times, and refetching without writing the same fetch logic in every component. Meeting lists poll every two seconds while a meeting is queued or processing, then stop polling when the work is done. Queued and processing meetings show summary and task skeletons instead of empty copy. Longer recordings can stay processing for a while. That wait is OpenAI transcription, not the UI.
+[TanStack Query](https://tanstack.com/query/latest) manages client-side server state. It gives us query keys, caching, stale times, and refetching without writing the same fetch logic in every component. Meeting lists poll every two seconds while a meeting is queued or processing, then stop polling when the work is done. Queued and processing meetings show summary and task skeletons instead of empty copy.
 
 The query client uses a one-minute stale time. Pages pass their server-loaded data into the client components, while TanStack Query reuses cached results for later renders and requests.
 
