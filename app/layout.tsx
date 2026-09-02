@@ -1,13 +1,27 @@
 import type { ReactNode } from "react";
+import { Figtree } from "next/font/google";
+import { Shell } from "@components/shell";
+import { Providers } from "@app/providers";
+import "./globals.css";
+
+const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree" });
 
 export const metadata = {
   title: "Meetings",
 };
 
-export default function RootLayout(props: { children: ReactNode }) {
+type RootLayoutProps = {
+  children: ReactNode;
+};
+
+export default function RootLayout(props: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body>{props.children}</body>
+    <html lang="en" className={`${figtree.variable} ${figtree.className}`}>
+      <body className="min-h-full bg-wash font-sans text-ink antialiased">
+        <Providers>
+          <Shell>{props.children}</Shell>
+        </Providers>
+      </body>
     </html>
   );
 }

@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1b1c20;
+  --color-muted: #6d7280;
+  --color-line: #eceef3;
+  --color-wash: #f5f6fa;
+  --color-paper: #ffffff;
+  --color-accent: #6b4dff;
+  --color-accent-hover: #5a3ef0;
+  --color-nav: #f3f4f6;
+  --color-danger: #e11d48;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility home-empty {
+  min-height: calc(100vh - 64px);
+  background:
+    radial-gradient(circle at 20% 0%, #dce8ff 0%, transparent 42%),
+    radial-gradient(circle at 80% 8%, #fde6d4 0%, transparent 36%), var(--color-wash);
+}
