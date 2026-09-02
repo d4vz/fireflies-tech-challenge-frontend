@@ -16,24 +16,23 @@ import dynamic from "next/dynamic";
 import type { IconHandle } from "@animateicons/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type Ref } from "react";
+import { AssistantOverlay } from "@components/assistant-overlay";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
 import { HomeDashboardSkeleton, TaskGroupBone } from "@components/skeleton";
 import { TaskGroupCard } from "@components/task-group";
-import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { handleHover } from "@lib/handle-hover";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  assistantChrome,
+  dismissAssistantView,
   homeHref,
   isPlainLeftClick,
   parseHomeViewFromSearch,
   pushHomeUrl,
   subscribeHomeUrl,
   toHomeModel,
-  type FredParam,
   type HomeModel,
   type HomeView,
   type InsightCard,
@@ -57,7 +56,7 @@ export type HomeDashboardProps = {
 
 export type HomeCanvasProps = {
   model: HomeModel;
-  fred: FredParam;
+  assistantOpen: boolean;
   now: Date;
   initialActions: ActionListPage | undefined;
 };
@@ -261,7 +260,7 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
   );
 }
 
-function AskFredPanel(props: { closeHref: string } & AskFredProps) {
+function AskFredPanel(props: { closeHref: string; onClose: () => void } & AskFredProps) {
   const closeRef = useRef<IconHandle>(null);
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -281,7 +280,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
                 return;
               }
               event.preventDefault();
-              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "closed" });
+              props.onClose();
             }}
           >
             <X ref={closeRef} size={16} />
@@ -303,60 +302,64 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
 
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
-  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "closed" });
+  const closedView = { tab: model.tab, query: model.query, assistantOpen: false };
+  const closeHref = homeHref(closedView);
   const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
   });
+  function closeAssistant() {
+    pushHomeUrl(dismissAssistantView(parseHomeViewFromSearch(window.location.search)));
+  }
   return (
-    <WorkspaceCanvas
-      rail={{
-        kind: "assistant",
-        chrome: assistantChrome(props.fred),
-        panel: (
+    <>
+      <div className="h-full min-h-0 min-w-0 overflow-y-auto">
+        <div className="home-empty min-h-full w-full">
+          <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
+            <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
+              {greetingTitle(model)}
+            </h2>
+            <p className="mt-1 mb-0 text-sm text-muted-foreground">
+              {props.now.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+            <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
+              {model.insights.map((card, index) => (
+                <InsightCardView key={card.kind} card={card} index={index} />
+              ))}
+            </div>
+            <div className="mt-8 grid gap-3">
+              <LastMeetingsHeader />
+              {model.rows.length === 0 ? (
+                <MeetingsEmpty />
+              ) : (
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {model.rows.map((meeting) => (
+                    <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
+                  ))}
+                </div>
+              )}
+            </div>
+            <RecentTasks initialPage={props.initialActions} />
+          </div>
+        </div>
+      </div>
+      <AssistantOverlay open={props.assistantOpen} onClose={closeAssistant}>
+        {props.assistantOpen ? (
           <AskFredPanel
             closeHref={closeHref}
+            onClose={closeAssistant}
             displayName={model.greeting.workspaceName}
             error={error}
             messages={messages}
             sendMessage={sendMessage}
             status={status}
           />
-        ),
-      }}
-    >
-      <div className="home-empty min-h-full w-full">
-        <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
-          <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
-            {greetingTitle(model)}
-          </h2>
-          <p className="mt-1 mb-0 text-sm text-muted-foreground">
-            {props.now.toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-          <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
-            {model.insights.map((card, index) => (
-              <InsightCardView key={card.kind} card={card} index={index} />
-            ))}
-          </div>
-          <div className="mt-8 grid gap-3">
-            <LastMeetingsHeader />
-            {model.rows.length === 0 ? (
-              <MeetingsEmpty />
-            ) : (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {model.rows.map((meeting) => (
-                  <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
-                ))}
-              </div>
-            )}
-          </div>
-          <RecentTasks initialPage={props.initialActions} />
-        </div>
-      </div>
-    </WorkspaceCanvas>
+        ) : null}
+      </AssistantOverlay>
+    </>
   );
 }
 
@@ -413,6 +416,11 @@ export function HomeDashboard(props: HomeDashboardProps) {
     workspaceName: props.displayName,
   });
   return (
-    <HomeCanvas fred={view.fred} initialActions={props.initialActions} model={model} now={now} />
+    <HomeCanvas
+      assistantOpen={view.assistantOpen}
+      initialActions={props.initialActions}
+      model={model}
+      now={now}
+    />
   );
 }

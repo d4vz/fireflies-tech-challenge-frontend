@@ -17,6 +17,7 @@ import {
   assistantOpenClickKind,
   assistantOpenHref,
   isPlainLeftClick,
+  openAssistantView,
   parseHomeViewFromSearch,
   pushHomeUrl,
   subscribeHomeUrl,
@@ -135,7 +136,7 @@ export function AppFrame(props: AppFrameProps) {
                   return;
                 }
                 event.preventDefault();
-                pushHomeUrl({ ...homeView, fred: "open" });
+                pushHomeUrl(openAssistantView(homeView));
               }}
             >
               <Sparkles ref={askFredRef} className="text-accent" size={16} />

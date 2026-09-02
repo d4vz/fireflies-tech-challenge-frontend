@@ -23,6 +23,7 @@ import {
   assistantOpenClickKind,
   assistantOpenHref,
   isPlainLeftClick,
+  openAssistantView,
   pushHomeUrl,
   type HomeView,
 } from "@lib/home";
@@ -125,7 +126,7 @@ function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | nul
           return;
         }
         event.preventDefault();
-        pushHomeUrl({ ...props.view, fred: "open" });
+        pushHomeUrl(openAssistantView(props.view));
       }}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />

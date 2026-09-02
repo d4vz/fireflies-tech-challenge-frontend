@@ -3,12 +3,10 @@ import { isBusy, type Meeting, type MeetingListPage } from "@lib/meetings";
 
 export type HomeTab = "all" | "ready" | "busy" | "failed";
 
-export type FredParam = "unset" | "open" | "closed";
-
 export type HomeView = {
   tab: HomeTab;
   query: string;
-  fred: FredParam;
+  assistantOpen: boolean;
 };
 
 export type RawSearchParam = string | string[] | undefined;
@@ -21,11 +19,6 @@ export type HomeSearchParams = {
 
 export type AssistantHrefInput = {
   current: HomeView | null;
-};
-
-export type AssistantChrome = {
-  sheetOpen: boolean;
-  dockHidden: boolean;
 };
 
 function firstString(value: RawSearchParam): string {
@@ -42,21 +35,11 @@ function parseTab(value: string): HomeTab {
   return "all";
 }
 
-function parseFred(value: string): FredParam {
-  if (value === "1") {
-    return "open";
-  }
-  if (value === "0") {
-    return "closed";
-  }
-  return "unset";
-}
-
 export function parseHomeView(params: HomeSearchParams): HomeView {
   return {
     tab: parseTab(firstString(params.tab)),
     query: firstString(params.q),
-    fred: parseFred(firstString(params.fred)),
+    assistantOpen: firstString(params.fred) === "1",
   };
 }
 
@@ -110,11 +93,8 @@ export function homeHref(view: HomeView): string {
   if (view.query !== "") {
     params.set("q", view.query);
   }
-  if (view.fred === "open") {
+  if (view.assistantOpen) {
     params.set("fred", "1");
-  }
-  if (view.fred === "closed") {
-    params.set("fred", "0");
   }
   const query = params.toString();
   if (query === "") {
@@ -123,11 +103,19 @@ export function homeHref(view: HomeView): string {
   return `/?${query}`;
 }
 
+export function dismissAssistantView(view: HomeView): HomeView {
+  return { ...view, assistantOpen: false };
+}
+
+export function openAssistantView(view: HomeView): HomeView {
+  return { ...view, assistantOpen: true };
+}
+
 export function assistantOpenHref(input: AssistantHrefInput): string {
   if (input.current === null) {
     return "/?fred=1";
   }
-  return homeHref({ ...input.current, fred: "open" });
+  return homeHref(openAssistantView(input.current));
 }
 
 export type AssistantOpenClickKind = "ignore" | "navigate" | "push";
@@ -143,37 +131,6 @@ export function assistantOpenClickKind(
     return "navigate";
   }
   return "push";
-}
-
-export function assistantIsOpen(fred: FredParam, isXl: boolean): boolean {
-  switch (fred) {
-    case "open":
-      return true;
-    case "closed":
-      return false;
-    case "unset":
-      return isXl;
-    default: {
-      const _exhaustive: never = fred;
-      return _exhaustive;
-    }
-  }
-}
-
-export function assistantChrome(fred: FredParam): AssistantChrome {
-  return {
-    sheetOpen: assistantIsOpen(fred, false),
-    dockHidden: !assistantIsOpen(fred, true),
-  };
-}
-
-export type AssistantPanelSlot = "dock" | "sheet" | "none";
-
-export function assistantPanelSlot(isXl: boolean, isOpen: boolean): AssistantPanelSlot {
-  if (!isOpen) {
-    return "none";
-  }
-  return isXl ? "dock" : "sheet";
 }
 
 export type InsightCoverage =

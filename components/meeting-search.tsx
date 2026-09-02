@@ -36,7 +36,7 @@ export function MeetingSearch(props: MeetingSearchProps) {
     if (pathname === "/") {
       return homeHref({ ...props.view, query: nextQuery });
     }
-    return homeHref({ tab: "all", query: nextQuery, fred: "unset" });
+    return homeHref({ tab: "all", query: nextQuery, assistantOpen: false });
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
