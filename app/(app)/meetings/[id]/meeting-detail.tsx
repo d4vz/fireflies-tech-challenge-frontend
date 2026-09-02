@@ -8,6 +8,7 @@ import { MeetingDetailSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
 import { TaskChecklist } from "@components/task-list";
 import { When } from "@components/when";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,6 +47,8 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
   const meeting = props.meeting;
   const tasks = meeting.tasks ?? [];
   const completed = tasks.filter((task) => task.status === "completed").length;
+  const progress = tasks.length === 0 ? 0 : (completed / tasks.length) * 100;
+  const summary = meeting.summary?.text;
   return (
     <article className="grid gap-5">
       <Breadcrumb>
@@ -71,20 +74,35 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
         <p className="mt-1 flex flex-wrap items-center gap-2 text-[0.85rem] text-muted-foreground">
           <When value={meeting.createdAt} />
           <StatusLabel status={meeting.status} />
-          {meeting.error ? <span className="text-danger">{meeting.error}</span> : null}
         </p>
+        {meeting.error ? (
+          <Alert className="mt-3" variant="destructive">
+            <AlertDescription>{meeting.error}</AlertDescription>
+          </Alert>
+        ) : null}
       </div>
       <section>
-        <h2 className="mb-1.5 text-base">Summary</h2>
-        <p>{meeting.summary?.text || "(no summary)"}</p>
+        <h2 className="mb-1.5 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+          Summary
+        </h2>
+        {summary ? (
+          <p className="max-w-prose leading-7">{summary}</p>
+        ) : (
+          <p className="max-w-prose text-muted-foreground italic leading-7">(no summary)</p>
+        )}
       </section>
-      <section className="min-w-0 overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line">
+      <section className="surface-card min-w-0 overflow-hidden">
         <header className="flex min-w-0 items-center justify-between gap-3 px-5 py-3.5">
-          <h2 className="m-0 text-[0.95rem] font-semibold">Tasks</h2>
+          <h2 className="m-0 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+            Tasks
+          </h2>
           <span className="shrink-0 text-[0.8rem] text-muted-foreground">
             {completed}/{tasks.length}
           </span>
         </header>
+        <div className="h-0.5 bg-line" aria-hidden="true">
+          <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
+        </div>
         <div className="border-t border-line">
           <TaskChecklist inset meetingId={meeting._id} tasks={tasks} />
         </div>
@@ -120,7 +138,9 @@ export function MeetingDetail(props: MeetingDetailProps) {
   if (meetingQuery.error) {
     return (
       <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
-        <p className="text-[0.85rem] text-danger">{meetingQuery.error.message}</p>
+        <Alert variant="destructive">
+          <AlertDescription>{meetingQuery.error.message}</AlertDescription>
+        </Alert>
       </main>
     );
   }

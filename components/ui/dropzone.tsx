@@ -33,8 +33,8 @@ function Dropzone({
       data-active={dragActive ? "true" : undefined}
       data-disabled={disabled ? "true" : undefined}
       className={cn(
-        "flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-input px-4 py-6 text-center text-sm text-muted-foreground transition-colors",
-        dragActive && "border-ring ring-3 ring-ring/50",
+        "flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-muted-foreground transition-colors",
+        dragActive && "border-accent bg-process-wash",
         disabled && "pointer-events-none cursor-not-allowed opacity-50",
         className,
       )}

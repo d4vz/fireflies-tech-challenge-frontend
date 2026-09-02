@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { FileText } from "@animateicons/react/lucide";
 import { TranscriptSkeleton } from "@components/skeleton";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
@@ -19,20 +20,24 @@ export type DetailCanvasProps = {
 
 function TranscriptPanel(props: { meeting: Meeting; transcript: TranscriptView }) {
   return (
-    <div className="min-h-0 px-5 py-6">
-      <h2 className="m-0 mb-4 text-[0.95rem] font-semibold">
-        Transcript
-        <span className="sr-only">{` for ${props.meeting.name}`}</span>
-      </h2>
-      {props.transcript.kind === "pending" ? <TranscriptSkeleton /> : null}
-      {props.transcript.kind === "empty" ? (
-        <p className="m-0 font-sans text-[0.9rem] leading-6 text-gray-700">(empty transcript)</p>
-      ) : null}
-      {props.transcript.kind === "text" ? (
-        <div className="font-sans text-[0.9rem] leading-6 whitespace-pre-wrap text-gray-700">
-          {props.transcript.value}
-        </div>
-      ) : null}
+    <div className="min-h-0">
+      <div className="sticky top-0 z-10 border-b border-line bg-paper px-5 py-4">
+        <h2 className="m-0 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+          Transcript
+          <span className="sr-only">{` for ${props.meeting.name}`}</span>
+        </h2>
+      </div>
+      <div className="px-5 py-6 leading-7 text-ink/80">
+        {props.transcript.kind === "pending" ? <TranscriptSkeleton /> : null}
+        {props.transcript.kind === "empty" ? (
+          <p className="m-0 font-sans text-[0.9rem]">(empty transcript)</p>
+        ) : null}
+        {props.transcript.kind === "text" ? (
+          <div className="font-sans text-[0.9rem] whitespace-pre-wrap">
+            {props.transcript.value}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -55,6 +60,7 @@ export function DetailCanvas(props: DetailCanvasProps) {
           className="mb-4 lg:hidden"
           onClick={() => setSheetOpen(true)}
         >
+          <FileText size={16} />
           Transcript
         </Button>
         {props.children}

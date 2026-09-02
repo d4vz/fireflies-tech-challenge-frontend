@@ -12,8 +12,8 @@ export function FilterTab(props: FilterTabProps) {
       aria-current={props.active ? "page" : undefined}
       className={
         props.active
-          ? "-mb-px border-b-2 border-ink pb-2.5 text-sm font-semibold text-ink no-underline"
-          : "pb-2.5 text-sm text-muted-foreground no-underline hover:text-ink"
+          ? "-mb-px border-b-2 border-ink px-1 pb-3 text-sm font-semibold text-ink no-underline transition-colors"
+          : "px-1 pb-3 text-sm text-muted-foreground no-underline transition-colors hover:text-ink"
       }
       href={props.href}
     >

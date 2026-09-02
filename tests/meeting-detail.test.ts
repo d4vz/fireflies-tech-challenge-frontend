@@ -18,10 +18,9 @@ test("meeting detail action items are a checkbox list from meeting.tasks", async
   const detail = await Bun.file(
     join(import.meta.dir, "../app/(app)/meetings/[id]/meeting-detail.tsx"),
   ).text();
-  expect(detail).toContain(">Tasks<");
+  expect(detail).toContain("Tasks");
   expect(detail).toContain("{completed}/{tasks.length}");
-  expect(detail).toContain("bg-paper");
-  expect(detail).toContain("rounded-2xl");
+  expect(detail).toContain("surface-card");
   expect(detail).toContain("inset");
   expect(detail).toContain("Summary");
   expect(detail.includes("Takeaways")).toBe(false);

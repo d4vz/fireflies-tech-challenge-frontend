@@ -47,7 +47,7 @@ test("Tasks skeleton matches paper groups with a wide thumb", async () => {
   expect(tasks).toContain('aria-label="Loading tasks"');
   expect(tasks).toContain("aspect-video");
   expect(tasks).toContain("h-8");
-  expect(tasks).toContain("rounded-2xl");
+  expect(tasks).toContain("surface-card");
   expect(tasks.includes("MeetingRowBone")).toBe(false);
   expect(tasks.includes("lg:grid-cols-[240px")).toBe(false);
 });

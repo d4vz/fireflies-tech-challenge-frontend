@@ -4,17 +4,25 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { AskFredProps } from "@components/ask-fred";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutList, ListChecks, Loader, Sparkles, X } from "@animateicons/react/lucide";
+import {
+  ChevronRight,
+  LayoutList,
+  ListChecks,
+  Loader,
+  Sparkles,
+  X,
+} from "@animateicons/react/lucide";
 import dynamic from "next/dynamic";
 import type { IconHandle } from "@animateicons/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type Ref } from "react";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
-import { HomeDashboardSkeleton } from "@components/skeleton";
+import { HomeDashboardSkeleton, TaskGroupBone } from "@components/skeleton";
 import { TaskGroupCard } from "@components/task-group";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { handleHover } from "@lib/handle-hover";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -50,6 +58,7 @@ export type HomeDashboardProps = {
 export type HomeCanvasProps = {
   model: HomeModel;
   fred: FredParam;
+  now: Date;
   initialActions: ActionListPage | undefined;
 };
 
@@ -126,16 +135,29 @@ function InsightIcon(props: { kind: InsightCard["kind"]; iconRef?: Ref<IconHandl
   }
 }
 
-function InsightCardView(props: { card: InsightCard }) {
+function staggerClass(index: number): string {
+  switch (index) {
+    case 0:
+      return "rise-in [--stagger:0]";
+    case 1:
+      return "rise-in [--stagger:1]";
+    default:
+      return "rise-in [--stagger:2]";
+  }
+}
+
+function InsightCardView(props: { card: InsightCard; index: number }) {
   const iconRef = useRef<IconHandle>(null);
   const copy = insightCopy(props.card);
   const inner = (
-    <Card className="min-w-0 bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-line max-md:[--card-spacing:--spacing(2.5)]">
-      <CardHeader className="flex min-w-0 flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-3">
+    <Card
+      className={`min-w-0 bg-paper shadow-none ring-1 ring-line max-md:[--card-spacing:--spacing(2.5)]${props.card.kind === "task-count" ? " hover:bg-wash" : ""}`}
+    >
+      <CardHeader className="flex min-w-0 flex-col gap-2">
         <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-wash md:size-10">
           <InsightIcon kind={props.card.kind} iconRef={iconRef} />
         </span>
-        <p className="m-0 text-lg font-semibold tabular-nums md:hidden">{copy.metric}</p>
+        <p className="m-0 text-2xl font-semibold tabular-nums md:text-3xl">{copy.metric}</p>
         <p className="sr-only md:hidden">{`${copy.title}: ${copy.body}`}</p>
         <div className="hidden min-w-0 md:block">
           <CardTitle className="truncate">{copy.title}</CardTitle>
@@ -148,11 +170,11 @@ function InsightCardView(props: { card: InsightCard }) {
     </Card>
   );
   if (props.card.kind !== "task-count") {
-    return inner;
+    return <div className={staggerClass(props.index)}>{inner}</div>;
   }
   return (
     <Link
-      className="min-w-0 text-ink no-underline"
+      className={`min-w-0 text-ink no-underline ${staggerClass(props.index)}`}
       href="/tasks"
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
@@ -162,42 +184,38 @@ function InsightCardView(props: { card: InsightCard }) {
   );
 }
 
+function ViewMoreLink(props: { href: string; label?: string }) {
+  return (
+    <Link
+      aria-label={props.label}
+      className="inline-flex items-center gap-0.5 text-sm font-semibold text-accent hover:underline"
+      href={props.href}
+    >
+      view more
+      <ChevronRight size={16} />
+    </Link>
+  );
+}
+
 function LastMeetingsHeader() {
   return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex items-center justify-between gap-3">
       <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Last meetings</h3>
-      <Link className="text-sm font-semibold text-accent" href="/meetings">
-        view more
-      </Link>
+      <ViewMoreLink href="/meetings" />
     </div>
   );
 }
 
 function RecentTasksHeader() {
   return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex items-center justify-between gap-3">
       <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Recent tasks</h3>
-      <Link
-        aria-label="View more tasks"
-        className="text-sm font-semibold text-accent"
-        href={tasksHref("pending")}
-      >
-        view more
-      </Link>
+      <ViewMoreLink href={tasksHref("pending")} label="View more tasks" />
     </div>
   );
 }
 
-function RecentTasksResults(props: { error: Error | null; page: ActionListPage | undefined }) {
-  if (props.error !== null) {
-    return <p className="text-[0.85rem] text-danger">{props.error.message}</p>;
-  }
-  if (props.page === undefined) {
-    return <p className="m-0 text-[0.9rem] text-muted-foreground">Loading tasks</p>;
-  }
-  if (props.page.total === 0) {
-    return <p className="m-0 text-[0.9rem] text-muted-foreground">No pending tasks</p>;
-  }
+function RecentTasksResults(props: { page: ActionListPage }) {
   return props.page.items.map((group) => (
     <TaskGroupCard clampLines={2} key={group.meetingId} group={group} />
   ));
@@ -209,11 +227,35 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
     queryFn: () => listActions(1, HOME_RECENT_TASK_GROUPS, "pending"),
     initialData: props.initialPage,
   });
+  if (query.error !== null) {
+    return (
+      <div className="@container mt-8 grid gap-3">
+        <RecentTasksHeader />
+        <Alert variant="destructive">
+          <AlertDescription>{query.error.message}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+  if (query.data === undefined) {
+    return (
+      <div className="@container mt-8 grid gap-3">
+        <RecentTasksHeader />
+        <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+          <TaskGroupBone />
+          <TaskGroupBone />
+        </div>
+      </div>
+    );
+  }
+  if (query.data.total === 0) {
+    return null;
+  }
   return (
-    <div className="mt-8 grid gap-3">
+    <div className="@container mt-8 grid gap-3">
       <RecentTasksHeader />
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <RecentTasksResults error={query.error} page={query.data} />
+      <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+        <RecentTasksResults page={query.data} />
       </div>
     </div>
   );
@@ -239,7 +281,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
                 return;
               }
               event.preventDefault();
-              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "unset" });
+              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "closed" });
             }}
           >
             <X ref={closeRef} size={16} />
@@ -261,7 +303,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
 
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
-  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" });
+  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "closed" });
   const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
   });
@@ -287,9 +329,16 @@ export function HomeCanvas(props: HomeCanvasProps) {
           <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
             {greetingTitle(model)}
           </h2>
+          <p className="mt-1 mb-0 text-sm text-muted-foreground">
+            {props.now.toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
           <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
-            {model.insights.map((card) => (
-              <InsightCardView key={card.kind} card={card} />
+            {model.insights.map((card, index) => (
+              <InsightCardView key={card.kind} card={card} index={index} />
             ))}
           </div>
           <div className="mt-8 grid gap-3">
@@ -344,9 +393,11 @@ export function HomeDashboard(props: HomeDashboardProps) {
   if (query.error) {
     return (
       <main className="home-empty h-full w-full overflow-y-auto">
-        <p className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 text-[0.85rem] text-danger md:px-8">
-          {query.error.message}
-        </p>
+        <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
+          <Alert variant="destructive">
+            <AlertDescription>{query.error.message}</AlertDescription>
+          </Alert>
+        </div>
       </main>
     );
   }
@@ -361,5 +412,7 @@ export function HomeDashboard(props: HomeDashboardProps) {
     now,
     workspaceName: props.displayName,
   });
-  return <HomeCanvas fred={view.fred} initialActions={props.initialActions} model={model} />;
+  return (
+    <HomeCanvas fred={view.fred} initialActions={props.initialActions} model={model} now={now} />
+  );
 }
