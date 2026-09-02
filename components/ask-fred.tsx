@@ -16,8 +16,13 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  PromptInput,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  type PromptInputMessage,
+} from "@/components/ai-elements/prompt-input";
 import {
   ASK_FRED_PLACEHOLDER,
   isAskFredBusy,
@@ -30,7 +35,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { ArrowUp, ListChecks, Sparkles } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { isDynamicToolUIPart, isStaticToolUIPart, type UIMessage } from "ai";
-import { useEffect, useRef, type FormEvent } from "react";
+import { useEffect, useRef } from "react";
 import { handleHover } from "@lib/handle-hover";
 
 const CHIPS = ["What's my day looking like?", "Pending tasks across all meetings"] as const;
@@ -158,43 +163,43 @@ function FredStick(props: { messages: UIMessage[]; force: boolean }) {
   return null;
 }
 
-function FredComposer(props: { busy: boolean; onSend: (text: string) => void }) {
+function FredComposer(props: {
+  busy: boolean;
+  onSend: (text: string) => void;
+  status: AskFredProps["status"];
+}) {
   const sendRef = useRef<IconHandle>(null);
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+
+  function onSubmit(message: PromptInputMessage) {
     if (props.busy) {
       return;
     }
-    const data = new FormData(event.currentTarget);
-    props.onSend(String(data.get("message") ?? ""));
-    event.currentTarget.reset();
+    props.onSend(message.text);
   }
 
   return (
-    <form className="shrink-0 p-3" onSubmit={onSubmit}>
-      <div className="rounded-2xl border border-line bg-paper p-3">
-        <Input
-          aria-label="Ask Fred"
-          autoComplete="off"
-          className="min-h-16 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-          name="message"
-          placeholder={ASK_FRED_PLACEHOLDER}
-        />
-        <div className="flex justify-end pt-1">
-          <Button
-            aria-label="Send"
-            className="size-8 rounded-lg bg-process-wash text-accent hover:bg-process-wash hover:text-accent"
-            disabled={props.busy}
-            size="icon"
-            type="submit"
-            onMouseEnter={(event) => handleHover(event, sendRef)}
-            onMouseLeave={(event) => handleHover(event, sendRef)}
-          >
-            <ArrowUp ref={sendRef} size={16} />
-          </Button>
-        </div>
-      </div>
-    </form>
+    <PromptInput
+      className="shrink-0 p-3 [&_[data-slot=input-group]]:rounded-2xl [&_[data-slot=input-group]]:border-line [&_[data-slot=input-group]]:bg-paper"
+      onSubmit={onSubmit}
+    >
+      <PromptInputTextarea
+        aria-label="Ask Fred"
+        autoComplete="off"
+        placeholder={ASK_FRED_PLACEHOLDER}
+      />
+      <PromptInputFooter className="justify-end">
+        <PromptInputSubmit
+          aria-label="Send"
+          className="rounded-lg bg-process-wash text-accent hover:bg-process-wash hover:text-accent"
+          disabled={props.busy}
+          status={props.status}
+          onMouseEnter={(event) => handleHover(event, sendRef)}
+          onMouseLeave={(event) => handleHover(event, sendRef)}
+        >
+          <ArrowUp ref={sendRef} size={16} />
+        </PromptInputSubmit>
+      </PromptInputFooter>
+    </PromptInput>
   );
 }
 
@@ -277,7 +282,7 @@ export function AskFred(props: AskFredProps) {
       {props.error !== undefined ? (
         <p className="px-4 pb-2 text-[0.85rem] text-danger">{props.error.message}</p>
       ) : null}
-      <FredComposer busy={busy} onSend={send} />
+      <FredComposer busy={busy} onSend={send} status={props.status} />
     </div>
   );
 }

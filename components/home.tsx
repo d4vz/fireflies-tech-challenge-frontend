@@ -198,7 +198,9 @@ function RecentTasksResults(props: { error: Error | null; page: ActionListPage |
   if (props.page.total === 0) {
     return <p className="m-0 text-[0.9rem] text-muted-foreground">No pending tasks</p>;
   }
-  return props.page.items.map((group) => <TaskGroupCard key={group.meetingId} group={group} />);
+  return props.page.items.map((group) => (
+    <TaskGroupCard clampLines={2} key={group.meetingId} group={group} />
+  ));
 }
 
 function RecentTasks(props: { initialPage: ActionListPage | undefined }) {

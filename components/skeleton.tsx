@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { tasksHref } from "@lib/actions";
+
 type BoneProps = {
   className: string;
 };
@@ -6,24 +9,10 @@ function Bone(props: BoneProps) {
   return <div className={`animate-pulse bg-neutral-200 ${props.className}`} />;
 }
 
-function MeetingRowBone() {
-  return (
-    <div className="grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <Bone className="aspect-video rounded-[14px]" />
-      <div className="grid min-w-0 gap-2 pt-0.5">
-        <Bone className="h-4 w-48 max-w-full rounded-md" />
-        <Bone className="h-3.5 w-full rounded-md" />
-        <Bone className="h-3.5 w-4/5 rounded-md" />
-        <Bone className="h-3 w-24 rounded-md" />
-      </div>
-    </div>
-  );
-}
-
 function MeetingCardBone() {
   return (
     <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 md:grid-cols-1">
-      <Bone className="max-md:size-16 max-md:rounded-lg aspect-video rounded-[14px] md:size-auto" />
+      <Bone className="max-md:size-16 max-md:rounded-lg aspect-video w-full rounded-[14px]" />
       <div className="grid min-w-0 gap-1.5 pt-0.5">
         <Bone className="h-4 w-48 max-w-full rounded-md" />
         <Bone className="h-3.5 w-full max-md:hidden rounded-md" />
@@ -50,22 +39,14 @@ export function TranscriptSkeleton() {
 
 export function MeetingsListSkeleton() {
   return (
-    <main aria-busy="true" aria-label="Loading meetings" className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 md:px-8">
-        <div className="grid max-w-190 gap-3">
-          <MeetingRowBone />
-          <MeetingRowBone />
-          <MeetingRowBone />
-          <MeetingRowBone />
-          <MeetingRowBone />
-        </div>
-      </div>
-      <nav className="flex shrink-0 items-center gap-3 border-t border-line bg-wash px-4 py-3 md:px-8">
-        <Bone className="h-4 w-16 rounded-md" />
-        <Bone className="h-4 w-24 rounded-md" />
-        <Bone className="h-4 w-10 rounded-md" />
-      </nav>
-    </main>
+    <div aria-busy="true" aria-label="Loading meetings" className="grid grid-cols-3 gap-3">
+      <MeetingCardBone />
+      <MeetingCardBone />
+      <MeetingCardBone />
+      <MeetingCardBone />
+      <MeetingCardBone />
+      <MeetingCardBone />
+    </div>
   );
 }
 
@@ -84,10 +65,31 @@ export function HomeDashboardSkeleton() {
           <Bone className="h-20 rounded-xl md:h-24" />
         </div>
         <div className="mt-8 grid gap-3">
-          <Bone className="h-6 w-40 max-w-full rounded-md" />
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Last meetings</h3>
+            <Link className="text-sm font-semibold text-accent" href="/meetings">
+              view more
+            </Link>
+          </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <MeetingCardBone />
             <MeetingCardBone />
+          </div>
+        </div>
+        <div className="@container mt-8 grid gap-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Recent tasks</h3>
+            <Link
+              aria-label="View more tasks"
+              className="text-sm font-semibold text-accent"
+              href={tasksHref("pending")}
+            >
+              view more
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+            <TaskGroupBone />
+            <TaskGroupBone />
           </div>
         </div>
       </div>
@@ -128,5 +130,40 @@ export function MeetingDetailSkeleton() {
         <TranscriptSkeleton />
       </aside>
     </main>
+  );
+}
+
+export function TaskGroupBone() {
+  return (
+    <div className="overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line">
+      <div className="flex items-center gap-3 px-5 py-3.5">
+        <Bone className="h-8 aspect-video shrink-0 rounded-lg" />
+        <Bone className="h-4 w-40 max-w-full rounded-md" />
+        <Bone className="ml-auto hidden h-3 w-24 rounded-md sm:block" />
+        <Bone className="h-3 w-14 rounded-md" />
+      </div>
+      <div className="border-t border-line">
+        <div className="px-5 py-3.5">
+          <Bone className="h-4 w-3/4 rounded-md" />
+        </div>
+        <div className="border-t border-line px-5 py-3.5">
+          <Bone className="h-4 w-2/3 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function TasksListSkeleton() {
+  return (
+    <div
+      aria-busy="true"
+      aria-label="Loading tasks"
+      className="grid grid-cols-1 gap-3 md:grid-cols-2"
+    >
+      <TaskGroupBone />
+      <TaskGroupBone />
+      <TaskGroupBone />
+    </div>
   );
 }

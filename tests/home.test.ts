@@ -12,7 +12,7 @@ import {
   toHomeModel,
   type HomeView,
 } from "@lib/home";
-import type { Meeting, MeetingListPage } from "@lib/meetings";
+import { meetingName, type Meeting, type MeetingListPage } from "@lib/meetings";
 
 const defaults: HomeView = { tab: "all", query: "", fred: "unset" };
 
@@ -121,6 +121,8 @@ test("Home lists the last meetings in a two-column grid with view more beside th
   const cardClass = row.slice(row.indexOf('case "card":'), row.indexOf('case "row":'));
   expect(cardClass.includes("px-2.5")).toBe(false);
   expect(cardClass.includes("hover:bg-paper")).toBe(false);
+  expect(row).toContain("{meeting.name}");
+  expect(row.includes("{meeting.sourceId}")).toBe(false);
 });
 
 test("Home skeleton uses stacked meeting cards, not list rows", async () => {
@@ -143,12 +145,33 @@ test("Home skeleton uses stacked meeting cards, not list rows", async () => {
   expect(cardBone).toContain("max-md:hidden");
 });
 
+test("Home skeleton keeps Last meetings and Recent tasks titles", async () => {
+  const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
+  const home = skeleton.slice(
+    skeleton.indexOf("export function HomeDashboardSkeleton"),
+    skeleton.indexOf("export function MeetingDetailSkeleton"),
+  );
+  expect(home).toContain("Last meetings");
+  expect(home).toContain("Recent tasks");
+  expect(home).toContain("view more");
+  expect(home).toContain('aria-label="View more tasks"');
+  expect(home).toContain('href="/meetings"');
+  expect(home).toContain("tasksHref");
+});
+
 test("last meeting cards hide summary and status on mobile and use a compact thumb", async () => {
   const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
   expect(row).toContain('layout === "card"');
   expect(row).toContain("max-md:hidden");
   expect(row).toContain("max-md:size-16");
   expect(row).toContain("md:aspect-video");
+  expect(row).toContain("md:w-full");
+  expect(row).toContain("md:items-start");
+  expect(row).toContain("min-h-[3.75rem]");
+  expect(row.includes("md:size-auto")).toBe(false);
+  expect(row.includes("md:items-stretch")).toBe(false);
+  const summary = row.slice(row.indexOf("meeting.summary"), row.indexOf("<When"));
+  expect(summary.includes("? (")).toBe(false);
 });
 
 test("Home empty library prompts capture and upload instead of a blank last-meetings line", async () => {
@@ -226,6 +249,7 @@ function meeting(input: {
   return {
     _id: input.id,
     sourceId: input.sourceId,
+    name: meetingName(input.sourceId),
     createdAt: input.createdAt,
     status: input.status,
     summary: input.text === undefined ? undefined : { text: input.text, takeaways: [] },

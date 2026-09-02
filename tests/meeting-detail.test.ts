@@ -21,5 +21,7 @@ test("meeting detail action items are a checkbox list from meeting.tasks", async
   expect(detail).toContain("Action items");
   expect(detail).toContain("TaskChecklist");
   expect(detail).toContain("meeting.tasks");
+  expect(detail).toContain("{meeting.name}");
+  expect(detail.includes("{meeting.sourceId}")).toBe(false);
   expect(detail.includes("actionItems")).toBe(false);
 });

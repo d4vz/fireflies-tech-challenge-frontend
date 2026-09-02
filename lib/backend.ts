@@ -68,6 +68,7 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
 export async function proxyUpload(request: Request): Promise<Response> {
   const incoming = new URL(request.url);
   const filename = incoming.searchParams.get("filename") ?? "video";
+  const name = incoming.searchParams.get("name") ?? filename;
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
   if (contentType) {
@@ -79,7 +80,10 @@ export async function proxyUpload(request: Request): Promise<Response> {
     body: request.body,
     duplex: "half",
   };
-  const res = await backendFetch(`/meetings/upload?filename=${encodeURIComponent(filename)}`, init);
+  const res = await backendFetch(
+    `/meetings/upload?filename=${encodeURIComponent(filename)}&name=${encodeURIComponent(name)}`,
+    init,
+  );
   return new Response(res.body, {
     status: res.status,
     headers: {

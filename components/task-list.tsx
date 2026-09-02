@@ -11,6 +11,7 @@ type TaskChecklistProps = {
   meetingId: string;
   tasks: MeetingTask[];
   inset?: boolean;
+  clampLines?: 2;
 };
 
 export function TaskChecklist(props: TaskChecklistProps) {
@@ -54,11 +55,11 @@ export function TaskChecklist(props: TaskChecklistProps) {
                 }}
               />
               <span
-                className={
-                  completed
-                    ? "min-w-0 flex-1 text-[0.95rem] leading-6 text-muted-foreground line-through"
-                    : "min-w-0 flex-1 text-[0.95rem] leading-6 text-ink"
-                }
+                className={cn(
+                  "min-w-0 flex-1 text-[0.95rem] leading-6",
+                  completed ? "text-muted-foreground line-through" : "text-ink",
+                  props.clampLines === 2 ? "line-clamp-2" : undefined,
+                )}
               >
                 {task.text}
               </span>

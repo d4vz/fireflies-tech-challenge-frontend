@@ -239,7 +239,8 @@ function matchesQuery(meeting: Meeting, query: string): boolean {
   if (query === "") {
     return true;
   }
-  const haystack = `${meeting.sourceId} ${meeting.summary?.text ?? ""}`.toLowerCase();
+  const haystack =
+    `${meeting.name} ${meeting.sourceId} ${meeting.summary?.text ?? ""}`.toLowerCase();
   return haystack.includes(query.toLowerCase());
 }
 

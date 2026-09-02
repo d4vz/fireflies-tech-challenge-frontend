@@ -56,7 +56,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage className="max-w-[min(100%,24rem)] truncate">
-              {meeting.sourceId}
+              {meeting.name}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
@@ -65,7 +65,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
         <Clip blob={meeting.blob} className="block w-full" />
       </div>
       <div>
-        <h1 className="m-0 break-words text-[1.35rem] md:text-[1.6rem]">{meeting.sourceId}</h1>
+        <h1 className="m-0 break-words text-[1.35rem] md:text-[1.6rem]">{meeting.name}</h1>
         <p className="mt-1 flex flex-wrap items-center gap-2 text-[0.85rem] text-muted-foreground">
           <When value={meeting.createdAt} />
           <StatusLabel status={meeting.status} />

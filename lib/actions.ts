@@ -1,9 +1,10 @@
-import type { Meeting, MeetingTask, TaskStatus } from "@lib/meetings";
+import { meetingName, type Meeting, type MeetingTask, type TaskStatus } from "@lib/meetings";
 import { parsePage } from "@lib/meetings";
 
 export type ActionGroup = {
   meetingId: string;
   sourceId: string;
+  name: string;
   createdAt: string;
   href: string;
   mediaKind: Meeting["blob"]["kind"];
@@ -56,13 +57,15 @@ export function parseActionsView(status: string | undefined, page: string | unde
   };
 }
 
-type StoredActionGroup = Omit<ActionGroup, "mediaKind"> & {
+type StoredActionGroup = Omit<ActionGroup, "mediaKind" | "name"> & {
   mediaKind?: Meeting["blob"]["kind"];
+  name?: string;
 };
 
 export function parseActionGroup(raw: StoredActionGroup): ActionGroup {
   return {
     ...raw,
+    name: meetingName(raw.sourceId, raw.name),
     mediaKind: raw.mediaKind === "audio" ? "audio" : "video",
   };
 }

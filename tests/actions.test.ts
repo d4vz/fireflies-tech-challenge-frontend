@@ -58,6 +58,28 @@ test("parseActionGroup treats missing mediaKind as video", () => {
   ).toBe("video");
 });
 
+test("parseActionGroup fills name from sourceId or a stored title", () => {
+  expect(
+    parseActionGroup({
+      meetingId: "1",
+      sourceId: "notes.mp3",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      href: "/meetings/1",
+      tasks: [],
+    }).name,
+  ).toBe("notes");
+  expect(
+    parseActionGroup({
+      meetingId: "1",
+      sourceId: "clip.mp4",
+      name: "Standup",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      href: "/meetings/1",
+      tasks: [],
+    }).name,
+  ).toBe("Standup");
+});
+
 test("taskCountLabel is singular for one", () => {
   expect(taskCountLabel(1)).toBe("1 Task");
   expect(taskCountLabel(6)).toBe("6 Tasks");
