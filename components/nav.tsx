@@ -18,7 +18,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { assistantOpenHref, type HomeView } from "@lib/home";
+import {
+  assistantOpenClickKind,
+  assistantOpenHref,
+  isPlainLeftClick,
+  pushHomeUrl,
+  type HomeView,
+} from "@lib/home";
 import {
   isRouteActive,
   type HomeAssistantNavItem,
@@ -86,7 +92,20 @@ function PlaceholderItem(props: { item: PlaceholderNavItem }) {
 
 function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | null }) {
   return (
-    <Link href={assistantOpenHref({ current: props.view })} className={navClass(false)}>
+    <Link
+      href={assistantOpenHref({ current: props.view })}
+      className={navClass(false)}
+      onClick={(event) => {
+        if (assistantOpenClickKind(props.view, isPlainLeftClick(event)) !== "push") {
+          return;
+        }
+        if (props.view === null) {
+          return;
+        }
+        event.preventDefault();
+        pushHomeUrl({ ...props.view, fred: "open" });
+      }}
+    >
       <NavGlyph icon={props.item.icon} />
       {props.item.label}
     </Link>

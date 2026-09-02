@@ -13,8 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
+  assistantOpenClickKind,
   assistantOpenHref,
+  isPlainLeftClick,
   parseHomeViewFromSearch,
+  pushHomeUrl,
   subscribeHomeUrl,
   type HomeView,
 } from "@lib/home";
@@ -112,6 +115,16 @@ export function AppFrame(props: AppFrameProps) {
               href={assistantOpenHref({ current: homeView })}
               aria-label="AskFred"
               className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 py-2 font-semibold text-ink hover:bg-nav"
+              onClick={(event) => {
+                if (assistantOpenClickKind(homeView, isPlainLeftClick(event)) !== "push") {
+                  return;
+                }
+                if (homeView === null) {
+                  return;
+                }
+                event.preventDefault();
+                pushHomeUrl({ ...homeView, fred: "open" });
+              }}
             >
               <Sparkles className="size-4 text-accent" />
               AskFred

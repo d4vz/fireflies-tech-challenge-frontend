@@ -130,6 +130,21 @@ export function assistantOpenHref(input: AssistantHrefInput): string {
   return homeHref({ ...input.current, fred: "open" });
 }
 
+export type AssistantOpenClickKind = "ignore" | "navigate" | "push";
+
+export function assistantOpenClickKind(
+  current: HomeView | null,
+  isPlain: boolean,
+): AssistantOpenClickKind {
+  if (!isPlain) {
+    return "ignore";
+  }
+  if (current === null) {
+    return "navigate";
+  }
+  return "push";
+}
+
 export function assistantChrome(fred: FredParam): AssistantChrome {
   return {
     sheetOpen: fred === "open",
