@@ -272,26 +272,32 @@ test("AssistantHost mounts from AppFrame, not the app layout", async () => {
   const layout = await Bun.file(join(import.meta.dir, "../app/(app)/layout.tsx")).text();
   expect(frame).toContain("AssistantHost");
   expect(layout.includes("AssistantHost")).toBe(false);
+  expect(frame).toContain(
+    '<div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>',
+  );
 });
 
-test("AppFrame and sidebar AskFred intercept clicks with isPlainLeftClick", async () => {
+test("AppFrame and sidebar AskFred intercept clicks with onAssistantPresenceClick", async () => {
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
   const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
-  expect(frame).toContain("isPlainLeftClick");
-  expect(frame).toContain("pushAppUrl");
-  expect(frame).toContain("preventDefault");
+  expect(frame).toContain("onAssistantPresenceClick");
   expect(frame.includes("assistantOpenClickKind")).toBe(false);
-  expect(nav).toContain("isPlainLeftClick");
-  expect(nav).toContain("pushAppUrl");
+  expect(frame.includes("assistantOpenHref")).toBe(false);
+  expect(frame.includes("preventDefault")).toBe(false);
+  expect(nav).toContain("onAssistantPresenceClick");
   expect(nav.includes("assistantOpenClickKind")).toBe(false);
+  expect(nav.includes("assistantOpenHref")).toBe(false);
+  expect(nav.includes("preventDefault")).toBe(false);
 });
 
 test("AskFred close lives on the host and omits fred", async () => {
   const host = await Bun.file(join(import.meta.dir, "../components/assistant-host.tsx")).text();
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
-  expect(host).toContain("assistantCloseHref");
+  expect(host).toContain("assistantHref");
+  expect(host).toContain('"closed"');
   expect(host).toContain("pushAppUrl");
   expect(host).toContain("useChat");
+  expect(host.includes("assistantCloseHref")).toBe(false);
   expect(host.includes('fred: "closed"')).toBe(false);
   expect(dashboard.includes("AssistantOverlay")).toBe(false);
   expect(dashboard.includes("AskFredPanel")).toBe(false);
@@ -471,13 +477,22 @@ test("toHomeModel greeting uses periodAt and the workspace name", () => {
   expect(model.greeting).toEqual({ period: "afternoon", workspaceName: "Davi" });
 });
 
-test("pushHomeUrl keeps AskFred open via applyAssistantPresence", async () => {
+test("pushHomeUrl merges live fred so Home URL edits keep AskFred open", async () => {
   const home = await Bun.file(join(import.meta.dir, "../lib/home.ts")).text();
   expect(home).toContain("applyAssistantPresence");
-  expect(home).toContain("parseAssistantOpen");
+  expect(home).toContain("parseAssistantLocation");
   expect(home).toContain("pushAppUrl");
   expect(home.includes("assistantOpen")).toBe(false);
+  expect(home.includes("parseAssistantOpen")).toBe(false);
+  expect(home.includes("locationHref")).toBe(false);
   expect(home.includes("subscribeHomeUrl")).toBe(false);
+});
+
+test("MeetingSearch on Home keeps fred and off-Home jumps without it", async () => {
+  const search = await Bun.file(join(import.meta.dir, "../components/meeting-search.tsx")).text();
+  expect(search).toContain("applyAssistantPresence");
+  expect(search).toContain("homeHref");
+  expect(search).toContain('pathname === "/"');
 });
 
 test("Home RSC fetches meetings on the server and hydrates the client dashboard", async () => {

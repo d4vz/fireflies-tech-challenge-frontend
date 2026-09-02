@@ -41,7 +41,6 @@ import {
   firstAcceptedMedia,
   isNameModalOpen,
   resetSession,
-  sessionLabel,
   setSessionName,
   startCaptureNaming,
   startPickingUpload,
@@ -415,14 +414,10 @@ export function Capture() {
 
   const uploading = session.kind === "uploading";
   const recording = session.kind === "recording";
-  const label = sessionLabel(session);
   const error = session.kind === "failed" ? session.message : "";
 
   return (
     <div className="relative flex shrink-0 items-center gap-3">
-      {label ? (
-        <span className="hidden text-[0.85rem] text-muted-foreground md:inline">{label}</span>
-      ) : null}
       {error ? (
         <span className="max-w-24 truncate text-[0.85rem] text-danger md:max-w-none">{error}</span>
       ) : null}

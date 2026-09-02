@@ -15,13 +15,12 @@ import { handleHover } from "@lib/handle-hover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
-  appLocation,
-  assistantOpenHref,
-  pushAppUrl,
+  assistantHref,
+  onAssistantPresenceClick,
+  parseAssistantLocation,
   subscribeAppUrl,
-  type AppLocation,
+  type AssistantLocation,
 } from "@lib/assistant-url";
-import { isPlainLeftClick } from "@lib/home";
 import { NAV_ITEMS } from "@lib/nav";
 
 export type AppFrameProps = {
@@ -69,7 +68,7 @@ function BrandMark() {
 
 type NavPaneProps = {
   pathname: string;
-  location: AppLocation;
+  location: AssistantLocation;
 };
 
 function NavPane(props: NavPaneProps) {
@@ -89,7 +88,7 @@ export function AppFrame(props: AppFrameProps) {
     searchSnapshot,
     () => `?${searchParams.toString()}`,
   );
-  const location = appLocation(pathname, liveSearch);
+  const location = parseAssistantLocation(pathname, liveSearch);
   const [navOpen, setNavOpen] = useState(false);
   const menuRef = useRef<IconHandle>(null);
   const askFredRef = useRef<IconHandle>(null);
@@ -121,20 +120,12 @@ export function AppFrame(props: AppFrameProps) {
             <PageTitle />
             <div className="min-w-0 flex-1" />
             <Link
-              href={assistantOpenHref(location)}
+              href={assistantHref(location, "open")}
               aria-label="AskFred"
               className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 font-semibold text-ink hover:border-accent/30 hover:bg-process-wash"
               onMouseEnter={(event) => handleHover(event, askFredRef)}
               onMouseLeave={(event) => handleHover(event, askFredRef)}
-              onClick={(event) => {
-                if (!isPlainLeftClick(event)) {
-                  return;
-                }
-                event.preventDefault();
-                pushAppUrl(
-                  assistantOpenHref(appLocation(window.location.pathname, window.location.search)),
-                );
-              }}
+              onClick={(event) => onAssistantPresenceClick(event, location, "open")}
             >
               <Sparkles ref={askFredRef} className="text-accent" size={16} />
               AskFred
@@ -142,12 +133,10 @@ export function AppFrame(props: AppFrameProps) {
             <Capture />
             <AccountButton />
           </header>
-          <div className="min-h-0 min-w-0 overflow-hidden">
-            {props.children}
-            <AssistantHost />
-          </div>
+          <div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>
         </div>
       </div>
+      <AssistantHost />
       <Sheet open={navOpen} onOpenChange={setNavOpen}>
         <SheetContent side="left" className="w-[232px] p-0 sm:max-w-[232px]">
           <SheetHeader className="sr-only">

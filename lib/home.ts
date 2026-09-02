@@ -1,4 +1,9 @@
-import { applyAssistantPresence, parseAssistantOpen, pushAppUrl } from "@lib/assistant-url";
+import {
+  applyAssistantPresence,
+  parseAssistantLocation,
+  pushAppUrl,
+  type ClickModifiers,
+} from "@lib/assistant-url";
 import { periodAt, type DayPeriod } from "@lib/chrome";
 import { isBusy, type Meeting, type MeetingListPage } from "@lib/meetings";
 
@@ -46,20 +51,19 @@ export function parseHomeViewFromSearch(search: string): HomeView {
   });
 }
 
-export type ClickModifiers = {
-  button: number;
-  metaKey: boolean;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  altKey: boolean;
-};
+export type { ClickModifiers };
 
 export function isPlainLeftClick(event: ClickModifiers): boolean {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 export function pushHomeUrl(view: HomeView): void {
-  pushAppUrl(applyAssistantPresence(homeHref(view), parseAssistantOpen(window.location.search)));
+  pushAppUrl(
+    applyAssistantPresence(
+      homeHref(view),
+      parseAssistantLocation(window.location.pathname, window.location.search).presence,
+    ),
+  );
 }
 
 export function homeHref(view: HomeView): string {

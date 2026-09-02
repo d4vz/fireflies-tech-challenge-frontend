@@ -14,13 +14,13 @@ import { AssistantOverlay } from "@components/assistant-overlay";
 import { Button } from "@/components/ui/button";
 import { handleHover } from "@lib/handle-hover";
 import { displayNameFrom } from "@lib/chrome";
-import { isPlainLeftClick } from "@lib/home";
 import {
-  appLocation,
-  assistantCloseHref,
-  parseAssistantOpen,
+  assistantHref,
+  onAssistantPresenceClick,
+  parseAssistantLocation,
   pushAppUrl,
   subscribeAppUrl,
+  type AssistantLocation,
 } from "@lib/assistant-url";
 
 const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
@@ -31,7 +31,7 @@ function searchSnapshot(): string {
   return window.location.search;
 }
 
-function AskFredPanel(props: { closeHref: string; onClose: () => void } & AskFredProps) {
+function AskFredPanel(props: { location: AssistantLocation } & AskFredProps) {
   const closeRef = useRef<IconHandle>(null);
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -42,17 +42,11 @@ function AskFredPanel(props: { closeHref: string; onClose: () => void } & AskFre
         </div>
         <Button asChild variant="ghost" size="icon-sm">
           <Link
-            href={props.closeHref}
+            href={assistantHref(props.location, "closed")}
             aria-label="Close AskFred"
             onMouseEnter={(event) => handleHover(event, closeRef)}
             onMouseLeave={(event) => handleHover(event, closeRef)}
-            onClick={(event) => {
-              if (!isPlainLeftClick(event)) {
-                return;
-              }
-              event.preventDefault();
-              props.onClose();
-            }}
+            onClick={(event) => onAssistantPresenceClick(event, props.location, "closed")}
           >
             <X ref={closeRef} size={16} />
           </Link>
@@ -79,23 +73,21 @@ export function AssistantHost() {
     searchSnapshot,
     () => `?${searchParams.toString()}`,
   );
-  const location = appLocation(pathname, liveSearch);
-  const open = parseAssistantOpen(liveSearch);
+  const location = parseAssistantLocation(pathname, liveSearch);
+  const open = location.presence === "open";
   const { user } = useUser();
   const displayName = displayNameFrom(user?.firstName, user?.primaryEmailAddress?.emailAddress);
   const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
   });
-  const closeHref = assistantCloseHref(location);
   function closeAssistant() {
-    pushAppUrl(assistantCloseHref(appLocation(window.location.pathname, window.location.search)));
+    pushAppUrl(assistantHref(location, "closed"));
   }
   return (
     <AssistantOverlay open={open} onClose={closeAssistant}>
       {open ? (
         <AskFredPanel
-          closeHref={closeHref}
-          onClose={closeAssistant}
+          location={location}
           displayName={displayName}
           error={error}
           messages={messages}

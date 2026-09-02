@@ -4,7 +4,7 @@ import { Search } from "@animateicons/react/lucide";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
-import { applyAssistantPresence, parseAssistantOpen } from "@lib/assistant-url";
+import { applyAssistantPresence, parseAssistantLocation } from "@lib/assistant-url";
 import { homeHref, type HomeView } from "@lib/home";
 
 export type MeetingSearchProps = {
@@ -37,7 +37,7 @@ export function MeetingSearch(props: MeetingSearchProps) {
     if (pathname === "/") {
       return applyAssistantPresence(
         homeHref({ ...props.view, query: nextQuery }),
-        parseAssistantOpen(window.location.search),
+        parseAssistantLocation(pathname, window.location.search).presence,
       );
     }
     return homeHref({ tab: "all", query: nextQuery });

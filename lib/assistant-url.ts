@@ -1,8 +1,17 @@
-export type AssistantOpen = boolean;
+export type AssistantPresence = "open" | "closed";
 
-export type AppLocation = {
+export type AssistantLocation = {
   pathname: string;
   search: string;
+  presence: AssistantPresence;
+};
+
+export type ClickModifiers = {
+  button: number;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
 };
 
 const APP_URL_EVENT = "fireflies-app-url";
@@ -11,41 +20,89 @@ function searchParamsOf(search: string): URLSearchParams {
   return new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
 }
 
-export function parseAssistantOpen(search: string): AssistantOpen {
-  return searchParamsOf(search).get("fred") === "1";
-}
-
-export function appLocation(pathname: string, search: string): AppLocation {
-  return { pathname, search };
-}
-
-export function locationHref(location: AppLocation, open: AssistantOpen): string {
-  const params = searchParamsOf(location.search);
-  if (open) {
-    params.set("fred", "1");
-  } else {
-    params.delete("fred");
-  }
+function hrefFrom(pathname: string, params: URLSearchParams): string {
   const query = params.toString();
   if (query === "") {
-    return location.pathname;
+    return pathname;
   }
-  return `${location.pathname}?${query}`;
+  return `${pathname}?${query}`;
 }
 
-export function assistantOpenHref(location: AppLocation): string {
-  return locationHref(location, true);
+export function parseAssistantLocation(pathname: string, search: string): AssistantLocation {
+  const params = searchParamsOf(search);
+  const presence: AssistantPresence = params.get("fred") === "1" ? "open" : "closed";
+  params.delete("fred");
+  const query = params.toString();
+  return {
+    pathname,
+    search: query === "" ? "" : `?${query}`,
+    presence,
+  };
 }
 
-export function assistantCloseHref(location: AppLocation): string {
-  return locationHref(location, false);
+export function assistantHref(location: AssistantLocation, presence: AssistantPresence): string {
+  const params = searchParamsOf(location.search);
+  params.delete("fred");
+  switch (presence) {
+    case "open":
+      params.set("fred", "1");
+      break;
+    case "closed":
+      break;
+    default: {
+      const _exhaustive: never = presence;
+      return _exhaustive;
+    }
+  }
+  return hrefFrom(location.pathname, params);
 }
 
-export function applyAssistantPresence(href: string, open: AssistantOpen): string {
-  const queryAt = href.indexOf("?");
-  const pathname = queryAt === -1 ? href : href.slice(0, queryAt);
-  const search = queryAt === -1 ? "" : href.slice(queryAt);
-  return locationHref({ pathname, search }, open);
+export function applyAssistantPresence(href: string, presence: AssistantPresence): string {
+  const url = new URL(href, "http://local.invalid");
+  return assistantHref(parseAssistantLocation(url.pathname, url.search), presence);
+}
+
+let historyPatched = false;
+let notifyQueued = false;
+
+function notifyAppUrl(): void {
+  if (notifyQueued) {
+    return;
+  }
+  notifyQueued = true;
+  queueMicrotask(() => {
+    notifyQueued = false;
+    window.dispatchEvent(new Event(APP_URL_EVENT));
+  });
+}
+
+function patchHistory(): void {
+  if (historyPatched) {
+    return;
+  }
+  historyPatched = true;
+  const push = history.pushState.bind(history);
+  const replace = history.replaceState.bind(history);
+  history.pushState = (data, unused, url) => {
+    push(data, unused, url);
+    notifyAppUrl();
+  };
+  history.replaceState = (data, unused, url) => {
+    replace(data, unused, url);
+    notifyAppUrl();
+  };
+}
+
+export function onAssistantPresenceClick(
+  event: ClickModifiers & { preventDefault(): void },
+  location: AssistantLocation,
+  presence: AssistantPresence,
+): void {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+  event.preventDefault();
+  pushAppUrl(assistantHref(location, presence));
 }
 
 export function pushAppUrl(href: string): void {
@@ -58,6 +115,7 @@ export function pushAppUrl(href: string): void {
 }
 
 export function subscribeAppUrl(onChange: () => void): () => void {
+  patchHistory();
   window.addEventListener("popstate", onChange);
   window.addEventListener(APP_URL_EVENT, onChange);
   return () => {

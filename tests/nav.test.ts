@@ -98,3 +98,9 @@ test("PageTitle treats /tasks as Tasks", async () => {
   expect(nav).toContain('pathname.startsWith("/tasks")');
   expect(nav).toContain('setTitle("Tasks")');
 });
+
+test("sidebar route links prefetch on hover", async () => {
+  const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
+  expect(nav).toContain("prefetch={prefetch ? null : false}");
+  expect(nav).toContain("setPrefetch(true)");
+});

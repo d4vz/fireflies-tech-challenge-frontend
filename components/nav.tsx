@@ -19,8 +19,11 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { handleHover } from "@lib/handle-hover";
-import { appLocation, assistantOpenHref, pushAppUrl, type AppLocation } from "@lib/assistant-url";
-import { isPlainLeftClick } from "@lib/home";
+import {
+  assistantHref,
+  onAssistantPresenceClick,
+  type AssistantLocation,
+} from "@lib/assistant-url";
 import {
   isRouteActive,
   type AssistantNavItem,
@@ -65,18 +68,23 @@ function NavGlyph(props: { icon: NavIcon; iconRef: Ref<IconHandle> }) {
 export type NavProps = {
   items: NavItem[];
   pathname: string;
-  location: AppLocation;
+  location: AssistantLocation;
 };
 
 function RouteLink(props: { item: RouteNavItem; pathname: string }) {
   const iconRef = useRef<IconHandle>(null);
+  const [prefetch, setPrefetch] = useState(false);
   const active = isRouteActive(props.item, props.pathname);
   return (
     <Link
       href={props.item.href}
+      prefetch={prefetch ? null : false}
       className={navClass(active)}
       aria-current={active ? "page" : undefined}
-      onMouseEnter={(event) => handleHover(event, iconRef)}
+      onMouseEnter={(event) => {
+        setPrefetch(true);
+        handleHover(event, iconRef);
+      }}
       onMouseLeave={(event) => handleHover(event, iconRef)}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />
@@ -104,23 +112,15 @@ function PlaceholderItem(props: { item: PlaceholderNavItem }) {
   );
 }
 
-function AssistantLink(props: { item: AssistantNavItem; location: AppLocation }) {
+function AssistantLink(props: { item: AssistantNavItem; location: AssistantLocation }) {
   const iconRef = useRef<IconHandle>(null);
   return (
     <Link
-      href={assistantOpenHref(props.location)}
+      href={assistantHref(props.location, "open")}
       className={navClass(false)}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
-      onClick={(event) => {
-        if (!isPlainLeftClick(event)) {
-          return;
-        }
-        event.preventDefault();
-        pushAppUrl(
-          assistantOpenHref(appLocation(window.location.pathname, window.location.search)),
-        );
-      }}
+      onClick={(event) => onAssistantPresenceClick(event, props.location, "open")}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />
       {props.item.label}
@@ -128,7 +128,7 @@ function AssistantLink(props: { item: AssistantNavItem; location: AppLocation })
   );
 }
 
-function NavItemView(props: { item: NavItem; pathname: string; location: AppLocation }) {
+function NavItemView(props: { item: NavItem; pathname: string; location: AssistantLocation }) {
   const item = props.item;
   switch (item.kind) {
     case "route":

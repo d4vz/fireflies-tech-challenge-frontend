@@ -12,7 +12,6 @@ import {
   firstAcceptedMedia,
   isNameModalOpen,
   prefillName,
-  sessionLabel,
   setSessionName,
   startCaptureNaming,
   startPickingUpload,
@@ -179,8 +178,10 @@ test("upload menu item has an icon and a description", async () => {
   expect(capture).toContain("<Upload");
 });
 
-test("sessionLabel stays empty while uploading so Capture has no status text", () => {
-  expect(sessionLabel({ kind: "uploading", name: "standup" })).toBe("");
-  expect(sessionLabel({ kind: "recording", name: "standup" })).toBe("recording");
-  expect(sessionLabel({ kind: "idle" })).toBe("");
+test("Capture has no recording status text beside the button", async () => {
+  const capture = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
+  const session = await Bun.file(join(import.meta.dir, "../lib/capture-session.ts")).text();
+  expect(capture.includes("sessionLabel")).toBe(false);
+  expect(session.includes("sessionLabel")).toBe(false);
+  expect(capture.includes("text-muted-foreground md:inline")).toBe(false);
 });
