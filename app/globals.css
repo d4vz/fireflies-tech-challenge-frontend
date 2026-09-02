@@ -22,6 +22,8 @@
   --color-process-wash: #efeaff;
   --color-failed-wash: #fff1f2;
   --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @utility home-empty {

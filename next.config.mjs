@@ -4,6 +4,7 @@ const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
   experimental: {
     proxyClientMaxBodySize: "5gb",
+    optimizePackageImports: ["lucide-react"],
   },
 };
 

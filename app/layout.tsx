@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { Figtree } from "next/font/google";
+import { Figtree, Geist_Mono } from "next/font/google";
 import { AppFrame } from "@components/app-frame";
 import { Providers } from "@app/providers";
 import "./globals.css";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata = {
   title: "Meetings",
@@ -29,7 +30,7 @@ function AppFrameFallback(props: { children: ReactNode }) {
 
 export default function RootLayout(props: RootLayoutProps) {
   return (
-    <html lang="en" className={`${figtree.variable} ${figtree.className}`}>
+    <html lang="en" className={`${figtree.variable} ${geistMono.variable} ${figtree.className}`}>
       <body className="h-screen overflow-hidden bg-wash font-sans text-ink antialiased">
         <Providers>
           <Suspense fallback={<AppFrameFallback>{props.children}</AppFrameFallback>}>

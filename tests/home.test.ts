@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { join } from "node:path";
 import {
   assistantChrome,
   assistantOpenHref,
@@ -205,4 +206,15 @@ test("toHomeModel greeting uses periodAt and the workspace name", () => {
     workspaceName: "Davi",
   });
   expect(model.greeting).toEqual({ period: "afternoon", workspaceName: "Davi" });
+});
+
+test("Home RSC fetches meetings on the server and hydrates the client dashboard", async () => {
+  const page = await Bun.file(join(import.meta.dir, "../app/page.tsx")).text();
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  expect(page).toContain('from "@lib/backend"');
+  expect(page).toContain("listMeetings");
+  expect(page).toContain("Promise.all");
+  expect(page).toContain("initialPage");
+  expect(dashboard).toContain("initialData:");
+  expect(dashboard).toContain("props.initialPage");
 });

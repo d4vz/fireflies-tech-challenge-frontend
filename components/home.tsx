@@ -27,10 +27,11 @@ import {
   type InsightCoverage,
 } from "@lib/home";
 import { listMeetings } from "@lib/api";
-import { HOME_DASHBOARD_LIMIT, isBusy, meetingsListKey } from "@lib/meetings";
+import { HOME_DASHBOARD_LIMIT, isBusy, meetingsListKey, type MeetingListPage } from "@lib/meetings";
 
 export type HomeDashboardProps = {
   view: HomeView;
+  initialPage: MeetingListPage | undefined;
 };
 
 export type HomeCanvasProps = {
@@ -269,6 +270,7 @@ export function HomeDashboard(props: HomeDashboardProps) {
   const query = useQuery({
     queryKey: meetingsListKey(1, HOME_DASHBOARD_LIMIT),
     queryFn: () => listMeetings(1, HOME_DASHBOARD_LIMIT),
+    initialData: props.initialPage,
     refetchInterval: (current) => {
       const items = current.state.data?.items;
       if (!items) {
