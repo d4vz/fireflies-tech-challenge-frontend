@@ -21,7 +21,7 @@ test("Meetings list uses underline status tabs and keeps them while rows skeleto
   expect(bones.includes("mb-px")).toBe(false);
 });
 
-test("Meetings list is a three-column card grid", async () => {
+test("Meetings list is a one-column card grid on mobile", async () => {
   const list = await Bun.file(
     join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
   ).text();
@@ -30,11 +30,14 @@ test("Meetings list is a three-column card grid", async () => {
     skeleton.indexOf("export function MeetingsListSkeleton"),
     skeleton.indexOf("export function HomeDashboardSkeleton"),
   );
-  expect(list).toContain("grid-cols-3");
+  expect(list).toContain("grid-cols-1");
+  expect(list).toContain("md:grid-cols-2");
+  expect(list).toContain("xl:grid-cols-3");
   expect(list).toContain('layout="card"');
   expect(list.includes('layout="aside"')).toBe(false);
   expect(bones).toContain("MeetingCardBone");
-  expect(bones).toContain("grid-cols-3");
+  expect(bones).toContain("grid-cols-1");
+  expect(bones).toContain("xl:grid-cols-3");
   expect(bones.includes("MeetingAsideBone")).toBe(false);
 });
 

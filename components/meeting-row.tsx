@@ -42,7 +42,7 @@ function MeetingPreview(props: { blob: Meeting["blob"] }) {
     case "audio":
       return (
         <div className="flex size-full items-center justify-center text-muted-foreground">
-          <Mic aria-hidden="true" size={20} />
+          <Mic aria-hidden="true" className="size-8 md:size-12" size={32} />
           <span className="sr-only">Audio recording</span>
         </div>
       );
@@ -84,9 +84,7 @@ export function MeetingRow(props: MeetingRowProps) {
             <StatusLabel status={meeting.status} />
           </span>
         </div>
-        <p
-          className={`m-0 min-h-[3.75rem] line-clamp-3 text-[0.85rem] leading-5 text-muted-foreground${compactMobile ? " max-md:hidden" : ""}`}
-        >
+        <p className="m-0 line-clamp-2 text-[0.85rem] leading-5 text-muted-foreground md:min-h-[3.75rem] md:line-clamp-3">
           {meeting.summary?.text ?? ""}
         </p>
         <When className="text-[0.8rem] text-muted-foreground" value={meeting.createdAt} />

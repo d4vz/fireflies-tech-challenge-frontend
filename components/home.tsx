@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type Ref } from "react";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
-import { HomeDashboardSkeleton } from "@components/skeleton";
+import { HomeDashboardSkeleton, TaskGroupBone } from "@components/skeleton";
 import { TaskGroupCard } from "@components/task-group";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
@@ -131,7 +131,7 @@ function InsightCardView(props: { card: InsightCard }) {
   const copy = insightCopy(props.card);
   const inner = (
     <Card className="min-w-0 bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-line max-md:[--card-spacing:--spacing(2.5)]">
-      <CardHeader className="flex min-w-0 flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-3">
+      <CardHeader className="flex min-w-0 flex-row items-center justify-center gap-2 md:justify-start md:gap-3">
         <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-wash md:size-10">
           <InsightIcon kind={props.card.kind} iconRef={iconRef} />
         </span>
@@ -188,16 +188,7 @@ function RecentTasksHeader() {
   );
 }
 
-function RecentTasksResults(props: { error: Error | null; page: ActionListPage | undefined }) {
-  if (props.error !== null) {
-    return <p className="text-[0.85rem] text-danger">{props.error.message}</p>;
-  }
-  if (props.page === undefined) {
-    return <p className="m-0 text-[0.9rem] text-muted-foreground">Loading tasks</p>;
-  }
-  if (props.page.total === 0) {
-    return <p className="m-0 text-[0.9rem] text-muted-foreground">No pending tasks</p>;
-  }
+function RecentTasksResults(props: { page: ActionListPage }) {
   return props.page.items.map((group) => (
     <TaskGroupCard clampLines={2} key={group.meetingId} group={group} />
   ));
@@ -209,11 +200,33 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
     queryFn: () => listActions(1, HOME_RECENT_TASK_GROUPS, "pending"),
     initialData: props.initialPage,
   });
+  if (query.error !== null) {
+    return (
+      <div className="@container mt-8 grid gap-3">
+        <RecentTasksHeader />
+        <p className="text-[0.85rem] text-danger">{query.error.message}</p>
+      </div>
+    );
+  }
+  if (query.data === undefined) {
+    return (
+      <div className="@container mt-8 grid gap-3">
+        <RecentTasksHeader />
+        <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+          <TaskGroupBone />
+          <TaskGroupBone />
+        </div>
+      </div>
+    );
+  }
+  if (query.data.total === 0) {
+    return null;
+  }
   return (
-    <div className="mt-8 grid gap-3">
+    <div className="@container mt-8 grid gap-3">
       <RecentTasksHeader />
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <RecentTasksResults error={query.error} page={query.data} />
+      <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+        <RecentTasksResults page={query.data} />
       </div>
     </div>
   );
@@ -239,7 +252,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
                 return;
               }
               event.preventDefault();
-              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "unset" });
+              pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "closed" });
             }}
           >
             <X ref={closeRef} size={16} />
@@ -261,7 +274,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
 
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
-  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" });
+  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "closed" });
   const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
   });

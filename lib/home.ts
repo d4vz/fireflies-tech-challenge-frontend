@@ -145,10 +145,25 @@ export function assistantOpenClickKind(
   return "push";
 }
 
+export function assistantIsOpen(fred: FredParam, isXl: boolean): boolean {
+  switch (fred) {
+    case "open":
+      return true;
+    case "closed":
+      return false;
+    case "unset":
+      return isXl;
+    default: {
+      const _exhaustive: never = fred;
+      return _exhaustive;
+    }
+  }
+}
+
 export function assistantChrome(fred: FredParam): AssistantChrome {
   return {
-    sheetOpen: fred === "open",
-    dockHidden: fred !== "open",
+    sheetOpen: assistantIsOpen(fred, false),
+    dockHidden: !assistantIsOpen(fred, true),
   };
 }
 

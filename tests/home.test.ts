@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { join } from "node:path";
 import {
   assistantChrome,
+  assistantIsOpen,
   assistantOpenClickKind,
   assistantOpenHref,
   assistantPanelSlot,
@@ -88,11 +89,27 @@ test("Home recent tasks shows two pending meeting groups with the tasks list car
   expect(dashboard).toContain('tasksHref("pending")');
   expect(dashboard).toContain('aria-label="View more tasks"');
   expect(dashboard).toContain("initialActions");
+  expect(recent).toContain("@container");
   expect(recent).toContain("grid-cols-1");
-  expect(recent).toContain("md:grid-cols-2");
+  expect(recent).toContain("@4xl:grid-cols-2");
+  expect(recent.includes("md:grid-cols-2")).toBe(false);
+  expect(recent).toContain("query.data.total === 0");
+  expect(recent).toContain("return null");
+  expect(dashboard.includes("No pending tasks")).toBe(false);
   expect(page).toContain("listActions");
   expect(page).toContain("HOME_RECENT_TASK_GROUPS");
   expect(page).toContain("initialActions");
+});
+
+test("Home insight cards put the metric beside the icon on mobile", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const card = dashboard.slice(
+    dashboard.indexOf("function InsightCardView"),
+    dashboard.indexOf("function LastMeetingsHeader"),
+  );
+  expect(card).toContain("flex-row items-center justify-center");
+  expect(card).toContain("md:justify-start");
+  expect(card.includes("flex-col items-center")).toBe(false);
 });
 
 test("Home content is centered with a max width", async () => {
@@ -125,9 +142,20 @@ test("Home lists the last meetings in a two-column grid with view more beside th
   expect(row.includes("{meeting.sourceId}")).toBe(false);
 });
 
+test("meeting title clamps to one line beside the status label", async () => {
+  const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
+  const heading = row.slice(row.indexOf("<h2"), row.indexOf("</h2>"));
+  expect(row.includes("flex-wrap")).toBe(false);
+  expect(heading).toContain("min-w-0 flex-1");
+  expect(heading).toContain("line-clamp-1");
+});
+
 test("Home skeleton uses stacked meeting cards, not list rows", async () => {
   const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
-  const home = skeleton.slice(skeleton.indexOf("export function HomeDashboardSkeleton"));
+  const home = skeleton.slice(
+    skeleton.indexOf("export function HomeDashboardSkeleton"),
+    skeleton.indexOf("export function MeetingDetailSkeleton"),
+  );
   const list = skeleton.slice(
     skeleton.indexOf("export function MeetingsListSkeleton"),
     skeleton.indexOf("export function HomeDashboardSkeleton"),
@@ -135,7 +163,9 @@ test("Home skeleton uses stacked meeting cards, not list rows", async () => {
   expect(home).toContain("MeetingCardBone");
   expect(home.includes("MeetingRowBone")).toBe(false);
   expect(home).toContain("md:grid-cols-2");
-  expect(list).toContain("MeetingRowBone");
+  expect(home.includes("TaskGroupBone")).toBe(false);
+  expect(home.includes("Recent tasks")).toBe(false);
+  expect(list).toContain("MeetingCardBone");
   const cardBone = skeleton.slice(
     skeleton.indexOf("function MeetingCardBone"),
     skeleton.indexOf("export function TranscriptSkeleton"),
@@ -145,21 +175,20 @@ test("Home skeleton uses stacked meeting cards, not list rows", async () => {
   expect(cardBone).toContain("max-md:hidden");
 });
 
-test("Home skeleton keeps Last meetings and Recent tasks titles", async () => {
+test("Home skeleton keeps Last meetings and omits Recent tasks", async () => {
   const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
   const home = skeleton.slice(
     skeleton.indexOf("export function HomeDashboardSkeleton"),
     skeleton.indexOf("export function MeetingDetailSkeleton"),
   );
   expect(home).toContain("Last meetings");
-  expect(home).toContain("Recent tasks");
+  expect(home.includes("Recent tasks")).toBe(false);
   expect(home).toContain("view more");
-  expect(home).toContain('aria-label="View more tasks"');
   expect(home).toContain('href="/meetings"');
-  expect(home).toContain("tasksHref");
+  expect(home.includes("tasksHref")).toBe(false);
 });
 
-test("last meeting cards hide summary and status on mobile and use a compact thumb", async () => {
+test("last meeting cards show summary on mobile, hide status, and use a compact thumb", async () => {
   const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
   expect(row).toContain('layout === "card"');
   expect(row).toContain("max-md:hidden");
@@ -167,11 +196,26 @@ test("last meeting cards hide summary and status on mobile and use a compact thu
   expect(row).toContain("md:aspect-video");
   expect(row).toContain("md:w-full");
   expect(row).toContain("md:items-start");
-  expect(row).toContain("min-h-[3.75rem]");
+  expect(row).toContain("md:min-h-[3.75rem]");
+  expect(row).toContain("line-clamp-2");
+  expect(row).toContain("md:line-clamp-3");
   expect(row.includes("md:size-auto")).toBe(false);
   expect(row.includes("md:items-stretch")).toBe(false);
-  const summary = row.slice(row.indexOf("meeting.summary"), row.indexOf("<When"));
+  const summary = row.slice(row.indexOf("<p className="), row.indexOf("<When"));
+  expect(summary.includes("max-md:hidden")).toBe(false);
   expect(summary.includes("? (")).toBe(false);
+});
+
+test("audio meeting preview uses a larger mic on mobile", async () => {
+  const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
+  const preview = row.slice(
+    row.indexOf("function MeetingPreview"),
+    row.indexOf("export function MeetingRow"),
+  );
+  expect(preview).toContain("size={32}");
+  expect(preview).toContain("size-8");
+  expect(preview).toContain("md:size-12");
+  expect(preview.includes("size={20}")).toBe(false);
 });
 
 test("Home empty library prompts capture and upload instead of a blank last-meetings line", async () => {
@@ -226,9 +270,30 @@ test("AppFrame and sidebar AskFred intercept Home clicks like the tab strip", as
 });
 
 test("assistantChrome maps fred without reading the viewport", () => {
-  expect(assistantChrome("unset")).toEqual({ sheetOpen: false, dockHidden: true });
+  expect(assistantChrome("unset")).toEqual({ sheetOpen: false, dockHidden: false });
   expect(assistantChrome("open")).toEqual({ sheetOpen: true, dockHidden: false });
   expect(assistantChrome("closed")).toEqual({ sheetOpen: false, dockHidden: true });
+});
+
+test("AskFred starts open on desktop and closed on mobile until fred is set", () => {
+  expect(assistantIsOpen("unset", true)).toBe(true);
+  expect(assistantIsOpen("unset", false)).toBe(false);
+  expect(assistantIsOpen("open", true)).toBe(true);
+  expect(assistantIsOpen("open", false)).toBe(true);
+  expect(assistantIsOpen("closed", true)).toBe(false);
+  expect(assistantIsOpen("closed", false)).toBe(false);
+});
+
+test("AskFred close writes fred=0 so the desktop dock stays closed", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
+  expect(dashboard).toContain('fred: "closed"');
+  expect(canvas).toContain('fred: "closed" as const');
+  expect(
+    dashboard.includes(
+      'closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" })',
+    ),
+  ).toBe(false);
 });
 
 test("AskFred mounts in one slot so stick-to-bottom does not run on a hidden copy", () => {
@@ -401,6 +466,9 @@ test("AskFred sheet uses full-travel slide and the dock animates width", async (
   expect(canvas.includes("slide-in-from-right-10")).toBe(false);
   expect(canvas).toContain("transition-[width]");
   expect(canvas).toContain("w-[420px]");
+  expect(canvas).toContain("hidden");
+  expect(canvas).toContain("xl:block");
+  expect(canvas).toContain("dockHidden");
   expect(canvas.includes("animate-in fade-in-0 slide-in-from-right")).toBe(false);
   expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right ");
   expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right-10");

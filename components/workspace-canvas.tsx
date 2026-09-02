@@ -31,7 +31,7 @@ export type WorkspaceCanvasProps = {
 };
 
 function closeFredView() {
-  return { ...parseHomeViewFromSearch(window.location.search), fred: "unset" as const };
+  return { ...parseHomeViewFromSearch(window.location.search), fred: "closed" as const };
 }
 
 const XL_QUERY = "(min-width: 1280px)";
@@ -54,7 +54,7 @@ type AssistantWorkspaceProps = {
 function AssistantWorkspace(props: AssistantWorkspaceProps) {
   const chrome = props.rail.chrome;
   const isXl = useSyncExternalStore(subscribeXl, xlSnapshot, () => true);
-  const slot = assistantPanelSlot(isXl, chrome.sheetOpen);
+  const slot = assistantPanelSlot(isXl, isXl ? !chrome.dockHidden : chrome.sheetOpen);
   const dockOpen = slot === "dock";
 
   return (
@@ -64,7 +64,7 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
         {isXl ? (
           <aside
             className={cn(
-              "min-h-0 overflow-hidden transition-[width] duration-300 ease-in-out",
+              "hidden min-h-0 overflow-hidden transition-[width] duration-300 ease-in-out xl:block",
               dockOpen ? "w-[420px]" : "w-0",
             )}
           >

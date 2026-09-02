@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { tasksHref } from "@lib/actions";
 
 type BoneProps = {
   className: string;
@@ -15,7 +14,7 @@ function MeetingCardBone() {
       <Bone className="max-md:size-16 max-md:rounded-lg aspect-video w-full rounded-[14px]" />
       <div className="grid min-w-0 gap-1.5 pt-0.5">
         <Bone className="h-4 w-48 max-w-full rounded-md" />
-        <Bone className="h-3.5 w-full max-md:hidden rounded-md" />
+        <Bone className="h-3.5 w-full rounded-md" />
         <Bone className="h-3.5 w-4/5 max-md:hidden rounded-md" />
         <Bone className="h-3 w-24 rounded-md" />
       </div>
@@ -39,7 +38,11 @@ export function TranscriptSkeleton() {
 
 export function MeetingsListSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading meetings" className="grid grid-cols-3 gap-3">
+    <div
+      aria-busy="true"
+      aria-label="Loading meetings"
+      className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
+    >
       <MeetingCardBone />
       <MeetingCardBone />
       <MeetingCardBone />
@@ -74,22 +77,6 @@ export function HomeDashboardSkeleton() {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <MeetingCardBone />
             <MeetingCardBone />
-          </div>
-        </div>
-        <div className="@container mt-8 grid gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Recent tasks</h3>
-            <Link
-              aria-label="View more tasks"
-              className="text-sm font-semibold text-accent"
-              href={tasksHref("pending")}
-            >
-              view more
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
-            <TaskGroupBone />
-            <TaskGroupBone />
           </div>
         </div>
       </div>

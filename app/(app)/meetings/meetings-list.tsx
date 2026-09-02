@@ -74,7 +74,7 @@ function MeetingsResults(props: {
     );
   }
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {props.page.items.map((meeting) => (
         <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
       ))}
