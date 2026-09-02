@@ -47,6 +47,39 @@ export function TranscriptSkeleton() {
   );
 }
 
+export function SummarySkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading summary" className="grid max-w-prose gap-2.5">
+      <Bone className="h-3.5 w-full rounded-md" />
+      <Bone className="h-3.5 w-11/12 rounded-md" />
+      <Bone className="h-3.5 w-4/5 rounded-md" />
+    </div>
+  );
+}
+
+export function MeetingTasksSkeleton() {
+  return (
+    <section
+      aria-busy="true"
+      aria-label="Loading tasks"
+      className="surface-card min-w-0 overflow-hidden"
+    >
+      <header className="flex min-w-0 items-center justify-between gap-3 px-5 py-3.5">
+        <h2 className="m-0 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+          Tasks
+        </h2>
+        <Bone className="h-3 w-10 rounded-md" />
+      </header>
+      <div className="h-0.5 bg-line" aria-hidden="true" />
+      <div className="grid gap-3 border-t border-line px-5 py-3.5">
+        <Bone className="h-4 w-3/4 rounded-md" />
+        <Bone className="h-4 w-2/3 rounded-md" />
+        <Bone className="h-4 w-3/5 rounded-md" />
+      </div>
+    </section>
+  );
+}
+
 export function MeetingsListSkeleton() {
   return (
     <div

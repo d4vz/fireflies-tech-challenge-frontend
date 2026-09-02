@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Clip } from "@components/clip";
 import { DetailCanvas } from "@components/detail-canvas";
-import { MeetingDetailSkeleton } from "@components/skeleton";
+import { MeetingDetailSkeleton, MeetingTasksSkeleton, SummarySkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
 import { TaskChecklist } from "@components/task-list";
 import { When } from "@components/when";
@@ -17,7 +17,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { type Meeting } from "@lib/meetings";
+import { type Meeting, type MeetingTask } from "@lib/meetings";
+import { toMeetingNotesView, type MeetingNotesView } from "@lib/meeting-notes-view";
 import { meetingQuery, transcriptsQuery } from "@lib/query-policy";
 import { toTranscriptView } from "@lib/transcript-view";
 
@@ -27,10 +28,7 @@ type MeetingDetailBodyProps = {
 
 function MeetingDetailBody(props: MeetingDetailBodyProps) {
   const meeting = props.meeting;
-  const tasks = meeting.tasks ?? [];
-  const completed = tasks.filter((task) => task.status === "completed").length;
-  const progress = tasks.length === 0 ? 0 : (completed / tasks.length) * 100;
-  const summary = meeting.summary?.text;
+  const notes = toMeetingNotesView(meeting);
   return (
     <article className="grid gap-5">
       <Breadcrumb>
@@ -63,33 +61,72 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
           </Alert>
         ) : null}
       </div>
-      <section>
-        <h2 className="mb-1.5 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
-          Summary
-        </h2>
-        {summary ? (
-          <p className="max-w-prose leading-7">{summary}</p>
-        ) : (
-          <p className="max-w-prose text-muted-foreground italic leading-7">(no summary)</p>
-        )}
-      </section>
-      <section className="surface-card min-w-0 overflow-hidden">
-        <header className="flex min-w-0 items-center justify-between gap-3 px-5 py-3.5">
-          <h2 className="m-0 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
-            Tasks
-          </h2>
-          <span className="shrink-0 text-[0.8rem] text-muted-foreground">
-            {completed}/{tasks.length}
-          </span>
-        </header>
-        <div className="h-0.5 bg-line" aria-hidden="true">
-          <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="border-t border-line">
-          <TaskChecklist inset meetingId={meeting._id} tasks={tasks} />
-        </div>
-      </section>
+      <NotesBlock meetingId={meeting._id} notes={notes} />
     </article>
+  );
+}
+
+function NotesBlock(props: { meetingId: string; notes: MeetingNotesView }) {
+  switch (props.notes.kind) {
+    case "pending":
+      return (
+        <>
+          <section>
+            <h2 className="mb-1.5 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+              Summary
+            </h2>
+            <SummarySkeleton />
+          </section>
+          <MeetingTasksSkeleton />
+        </>
+      );
+    case "ready":
+      return (
+        <>
+          <section>
+            <h2 className="mb-1.5 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+              Summary
+            </h2>
+            {props.notes.summaryText ? (
+              <p className="max-w-prose leading-7">{props.notes.summaryText}</p>
+            ) : (
+              <p className="max-w-prose text-muted-foreground italic leading-7">(no summary)</p>
+            )}
+          </section>
+          <ReadyTasks meetingId={props.meetingId} tasks={props.notes.tasks} />
+        </>
+      );
+    default: {
+      const _exhaustive: never = props.notes;
+      return _exhaustive;
+    }
+  }
+}
+
+function ReadyTasks(props: { meetingId: string; tasks: MeetingTask[] }) {
+  const tasks = props.tasks;
+  if (tasks.length === 0) {
+    return null;
+  }
+  const completed = tasks.filter((task) => task.status === "completed").length;
+  const progress = (completed / tasks.length) * 100;
+  return (
+    <section className="surface-card min-w-0 overflow-hidden">
+      <header className="flex min-w-0 items-center justify-between gap-3 px-5 py-3.5">
+        <h2 className="m-0 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+          Tasks
+        </h2>
+        <span className="shrink-0 text-[0.8rem] text-muted-foreground">
+          {completed}/{tasks.length}
+        </span>
+      </header>
+      <div className="h-0.5 bg-line" aria-hidden="true">
+        <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="border-t border-line">
+        <TaskChecklist inset meetingId={props.meetingId} tasks={tasks} />
+      </div>
+    </section>
   );
 }
 
