@@ -1,5 +1,4 @@
-import { meetingName, type Meeting, type MeetingTask, type TaskStatus } from "@lib/meetings";
-import { parsePage } from "@lib/meetings";
+import { parsePage, type Meeting, type MeetingTask, type TaskStatus } from "@lib/meetings";
 
 export type ActionGroup = {
   meetingId: string;
@@ -57,15 +56,19 @@ export function parseActionsView(status: string | undefined, page: string | unde
   };
 }
 
-type StoredActionGroup = Omit<ActionGroup, "mediaKind" | "name"> & {
+export type StoredActionGroup = Omit<ActionGroup, "mediaKind" | "name"> & {
   mediaKind?: Meeting["blob"]["kind"];
-  name?: string;
+  name: string;
 };
 
 export function parseActionGroup(raw: StoredActionGroup): ActionGroup {
+  const name = raw.name.trim();
+  if (name === "") {
+    throw new Error("invalid action group");
+  }
   return {
     ...raw,
-    name: meetingName(raw.sourceId, raw.name),
+    name,
     mediaKind: raw.mediaKind === "audio" ? "audio" : "video",
   };
 }

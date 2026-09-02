@@ -8,15 +8,13 @@ import { ListPager } from "@components/list-pager";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
 import { MeetingsListSkeleton } from "@components/skeleton";
-import { listMeetings } from "@lib/api";
 import {
-  isBusy,
   meetingsHref,
-  meetingsListKey,
   MEETINGS_PAGE_SIZE,
   type MeetingListFilter,
   type MeetingListPage,
 } from "@lib/meetings";
+import { meetingsListQuery } from "@lib/query-policy";
 
 type MeetingsListProps = {
   page: number;
@@ -83,15 +81,7 @@ function MeetingsResults(props: {
 
 export function MeetingsList(props: MeetingsListProps) {
   const query = useQuery({
-    queryKey: meetingsListKey(props.page, MEETINGS_PAGE_SIZE, props.status),
-    queryFn: () => listMeetings(props.page, MEETINGS_PAGE_SIZE, props.status),
-    refetchInterval: (current) => {
-      const items = current.state.data?.items;
-      if (!items) {
-        return false;
-      }
-      return items.some((meeting) => isBusy(meeting.status)) ? 2000 : false;
-    },
+    ...meetingsListQuery(props.page, MEETINGS_PAGE_SIZE, props.status),
   });
   const page = query.data;
   const pageCount = page === undefined ? 1 : Math.max(1, Math.ceil(page.total / page.limit));

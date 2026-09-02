@@ -38,6 +38,7 @@ test("parseActionGroup keeps audio mediaKind", () => {
     parseActionGroup({
       meetingId: "1",
       sourceId: "notes.mp3",
+      name: "notes",
       createdAt: "2026-09-01T00:00:00.000Z",
       href: "/meetings/1",
       mediaKind: "audio",
@@ -51,6 +52,7 @@ test("parseActionGroup treats missing mediaKind as video", () => {
     parseActionGroup({
       meetingId: "1",
       sourceId: "clip.mp4",
+      name: "clip",
       createdAt: "2026-09-01T00:00:00.000Z",
       href: "/meetings/1",
       tasks: [],
@@ -58,16 +60,7 @@ test("parseActionGroup treats missing mediaKind as video", () => {
   ).toBe("video");
 });
 
-test("parseActionGroup fills name from sourceId or a stored title", () => {
-  expect(
-    parseActionGroup({
-      meetingId: "1",
-      sourceId: "notes.mp3",
-      createdAt: "2026-09-01T00:00:00.000Z",
-      href: "/meetings/1",
-      tasks: [],
-    }).name,
-  ).toBe("notes");
+test("parseActionGroup trusts the stored name and rejects a blank one", () => {
   expect(
     parseActionGroup({
       meetingId: "1",
@@ -78,6 +71,16 @@ test("parseActionGroup fills name from sourceId or a stored title", () => {
       tasks: [],
     }).name,
   ).toBe("Standup");
+  expect(() =>
+    parseActionGroup({
+      meetingId: "1",
+      sourceId: "clip.mp4",
+      name: "  ",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      href: "/meetings/1",
+      tasks: [],
+    }),
+  ).toThrow("invalid action group");
 });
 
 test("taskCountLabel is singular for one", () => {

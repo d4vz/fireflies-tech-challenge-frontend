@@ -1,14 +1,12 @@
-import {
-  parsePublicMeeting,
-  toPublicMeeting,
-  type Meeting,
-  type MeetingListFilter,
-  type MeetingListPage,
-  type MeetingTask,
-  type TaskStatus,
-  type TranscriptChunk,
+import type {
+  Meeting,
+  MeetingListFilter,
+  MeetingListPage,
+  MeetingTask,
+  TaskStatus,
+  TranscriptChunk,
 } from "@lib/meetings";
-import { parseActionGroup, type ActionListPage, type ActionStatusFilter } from "@lib/actions";
+import type { ActionListPage, ActionStatusFilter } from "@lib/actions";
 
 export async function listMeetings(
   page: number,
@@ -62,10 +60,7 @@ export async function listActions(
     throw new Error("could not load tasks");
   }
   const body: ActionListPage = await res.json();
-  return {
-    ...body,
-    items: body.items.map(parseActionGroup),
-  };
+  return body;
 }
 
 export async function patchTask(
@@ -103,5 +98,5 @@ export async function uploadVideo(
   if (!res.ok) {
     throw new Error(body.error || "upload failed");
   }
-  return toPublicMeeting(parsePublicMeeting(body));
+  return body;
 }

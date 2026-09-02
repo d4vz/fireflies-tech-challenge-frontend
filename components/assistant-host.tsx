@@ -8,30 +8,23 @@ import dynamic from "next/dynamic";
 import type { IconHandle } from "@animateicons/react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
 import { AssistantOverlay } from "@components/assistant-overlay";
 import { Button } from "@/components/ui/button";
 import { handleHover } from "@lib/handle-hover";
 import { displayNameFrom } from "@lib/chrome";
-import {
-  assistantHref,
-  onAssistantPresenceClick,
-  parseAssistantLocation,
-  pushAppUrl,
-  subscribeAppUrl,
-  type AssistantLocation,
-} from "@lib/assistant-url";
+import { useAssistantPresence, type AssistantPresenceClick } from "@/hooks/use-assistant-presence";
 
 const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
   ssr: false,
 });
 
-function searchSnapshot(): string {
-  return window.location.search;
-}
-
-function AskFredPanel(props: { location: AssistantLocation } & AskFredProps) {
+function AskFredPanel(
+  props: {
+    closeHref: string;
+    onCloseClick: (event: AssistantPresenceClick) => void;
+  } & AskFredProps,
+) {
   const closeRef = useRef<IconHandle>(null);
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -42,11 +35,11 @@ function AskFredPanel(props: { location: AssistantLocation } & AskFredProps) {
         </div>
         <Button asChild variant="ghost" size="icon-sm">
           <Link
-            href={assistantHref(props.location, "closed")}
+            href={props.closeHref}
             aria-label="Close AskFred"
             onMouseEnter={(event) => handleHover(event, closeRef)}
             onMouseLeave={(event) => handleHover(event, closeRef)}
-            onClick={(event) => onAssistantPresenceClick(event, props.location, "closed")}
+            onClick={props.onCloseClick}
           >
             <X ref={closeRef} size={16} />
           </Link>
@@ -66,28 +59,18 @@ function AskFredPanel(props: { location: AssistantLocation } & AskFredProps) {
 }
 
 export function AssistantHost() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const liveSearch = useSyncExternalStore(
-    subscribeAppUrl,
-    searchSnapshot,
-    () => `?${searchParams.toString()}`,
-  );
-  const location = parseAssistantLocation(pathname, liveSearch);
-  const open = location.presence === "open";
+  const assistant = useAssistantPresence();
   const { user } = useUser();
   const displayName = displayNameFrom(user?.firstName, user?.primaryEmailAddress?.emailAddress);
   const { error, messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: "/api/ask-fred" }),
   });
-  function closeAssistant() {
-    pushAppUrl(assistantHref(location, "closed"));
-  }
   return (
-    <AssistantOverlay open={open} onClose={closeAssistant}>
-      {open ? (
+    <AssistantOverlay open={assistant.open} onClose={assistant.close}>
+      {assistant.open ? (
         <AskFredPanel
-          location={location}
+          closeHref={assistant.closeHref}
+          onCloseClick={assistant.onCloseClick}
           displayName={displayName}
           error={error}
           messages={messages}

@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
 import {
-  meetingName,
   parsePublicMeeting,
   toPublicMeeting,
   parseMeetingStatus,
@@ -51,6 +50,7 @@ test("parsePublicMeeting maps tasks and defaults missing status to pending", () 
   const meeting = parsePublicMeeting({
     _id: "abc",
     sourceId: "clip.mp4",
+    name: "clip",
     createdAt: "2026-09-01T00:00:00.000Z",
     status: "ready",
     tasks: [
@@ -93,6 +93,7 @@ test("parsePublicMeeting treats audio even when thumbnailUrl is present", () => 
   const meeting = parsePublicMeeting({
     _id: "abc",
     sourceId: "talk.mp3",
+    name: "talk",
     createdAt: "2026-09-01T00:00:00.000Z",
     status: "ready",
     blob: {
@@ -105,18 +106,11 @@ test("parsePublicMeeting treats audio even when thumbnailUrl is present", () => 
   expect(meeting.blob).toEqual({ kind: "audio", url: "/v", durationInSeconds: 3 });
 });
 
-test("meetingName strips a media suffix and prefers a stored name", () => {
-  expect(meetingName("Kevin Kelly The Inevitable Video.mp4")).toBe(
-    "Kevin Kelly The Inevitable Video",
-  );
-  expect(meetingName("clip.mp4", "Standup")).toBe("Standup");
-  expect(meetingName("clip.mp4", "clip.mp4")).toBe("clip");
-});
-
-test("parsePublicMeeting fills name from sourceId when the API omits it", () => {
+test("parsePublicMeeting trusts the stored name and rejects a blank one", () => {
   const meeting = parsePublicMeeting({
     _id: "abc",
     sourceId: "Kevin Kelly The Inevitable Video.mp4",
+    name: "Kevin Kelly The Inevitable Video",
     createdAt: "2026-09-01T00:00:00.000Z",
     status: "ready",
     blob: {
@@ -127,7 +121,21 @@ test("parsePublicMeeting fills name from sourceId when the API omits it", () => 
     },
   });
   expect(meeting.name).toBe("Kevin Kelly The Inevitable Video");
-  expect(meeting.sourceId).toBe("Kevin Kelly The Inevitable Video.mp4");
+  expect(() =>
+    parsePublicMeeting({
+      _id: "abc",
+      sourceId: "clip.mp4",
+      name: "  ",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      status: "ready",
+      blob: {
+        kind: "video",
+        url: "/v",
+        durationInSeconds: 12,
+        thumbnailUrl: "/t",
+      },
+    }),
+  ).toThrow("invalid meeting");
 });
 
 test("parseMeetingStatus keeps ready processing failed and queued", () => {

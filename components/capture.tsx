@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Camera,
   ChevronDown,
@@ -28,110 +28,39 @@ import { Input } from "@/components/ui/input";
 import { useCaptureReadiness } from "@/hooks/use-capture-readiness";
 import type { CaptureReadinessItem, CaptureReadinessStatus } from "@lib/capture-readiness";
 import { uploadVideo } from "@lib/api";
+import { createCaptureFlow } from "@lib/capture-flow";
 import {
   PROCESSING_NOTICE,
   UPLOAD_PENDING_HINT,
   MEDIA_ACCEPT,
   MEDIA_FORMAT_LABEL,
-  applyUploadFile,
   canConfirm,
-  confirmCaptureNaming,
-  confirmUploadNaming,
-  failSession,
   firstAcceptedMedia,
   isNameModalOpen,
   resetSession,
-  setSessionName,
-  startCaptureNaming,
-  startPickingUpload,
-  uploadFilename,
   type CaptureSession,
-  type NamingSession,
 } from "@lib/capture-session";
-import { subscribeCaptureIntent, type CaptureIntent } from "@lib/capture-intent";
+import { subscribeCaptureIntent } from "@lib/capture-intent";
 import { handleHover } from "@lib/handle-hover";
-import { actionsKey } from "@lib/actions";
-import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
-import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
+import { meetingId, type Meeting } from "@lib/meetings";
+import { invalidateMeetingData } from "@lib/query-policy";
+import { startScreenRecording } from "@lib/screen-record";
 
 function Spinner() {
   return <Loader aria-hidden="true" size={16} />;
 }
 
-function isNaming(session: CaptureSession): session is NamingSession {
+function isNaming(
+  session: CaptureSession,
+): session is Extract<
+  CaptureSession,
+  { kind: "naming-capture" | "picking-upload" | "naming-upload" }
+> {
   return (
     session.kind === "naming-capture" ||
     session.kind === "picking-upload" ||
     session.kind === "naming-upload"
   );
-}
-
-function sessionFromIntent(
-  intent: CaptureIntent,
-): Extract<CaptureSession, { kind: "naming-capture" | "picking-upload" }> {
-  switch (intent) {
-    case "capture":
-      return startCaptureNaming();
-    case "upload":
-      return startPickingUpload();
-    default: {
-      const exhaustive: never = intent;
-      return exhaustive;
-    }
-  }
-}
-
-type SessionSetter = Dispatch<SetStateAction<CaptureSession>>;
-
-type AfterUpload = (meeting: Meeting) => void;
-
-async function recordThenUpload(
-  current: Extract<CaptureSession, { kind: "naming-capture" }>,
-  recordingRef: { current: ScreenRecording | null },
-  setSession: SessionSetter,
-  afterUpload: AfterUpload,
-) {
-  const next = confirmCaptureNaming(current);
-  setSession(next);
-  if (next.kind !== "recording") {
-    return;
-  }
-  try {
-    const handle = await startScreenRecording();
-    recordingRef.current = handle;
-    const file = await handle.done;
-    recordingRef.current = null;
-    setSession({ kind: "uploading", name: next.name });
-    const meeting = await uploadVideo(file, uploadFilename(next.name, file), next.name);
-    setSession(resetSession());
-    afterUpload(meeting);
-  } catch (caught) {
-    recordingRef.current = null;
-    if (caught instanceof DOMException && caught.name === "NotAllowedError") {
-      setSession(resetSession());
-      return;
-    }
-    setSession(failSession(caught instanceof Error ? caught.message : "recording failed"));
-  }
-}
-
-async function uploadNamedFile(
-  current: Extract<CaptureSession, { kind: "naming-upload" }>,
-  setSession: SessionSetter,
-  afterUpload: AfterUpload,
-) {
-  const confirmed = confirmUploadNaming(current);
-  if (confirmed.kind !== "uploading") {
-    return;
-  }
-  setSession(confirmed.session);
-  try {
-    const meeting = await uploadVideo(confirmed.file, confirmed.filename, confirmed.session.name);
-    setSession(resetSession());
-    afterUpload(meeting);
-  } catch (caught) {
-    setSession(failSession(caught instanceof Error ? caught.message : "upload failed"));
-  }
 }
 
 function CaptureSplitButton(props: {
@@ -276,7 +205,9 @@ function CaptureReadinessChecks(props: CaptureReadinessChecksProps) {
 
 function CaptureNameDialog(props: {
   session: CaptureSession;
-  setSession: SessionSetter;
+  onNameChange: (name: string) => void;
+  onCancel: () => void;
+  onFile: (file: File) => void;
   onConfirm: () => void;
 }) {
   const session = props.session;
@@ -293,7 +224,7 @@ function CaptureNameDialog(props: {
       open={namingOpen}
       onOpenChange={(open) => {
         if (!open) {
-          props.setSession((current) => (isNameModalOpen(current) ? resetSession() : current));
+          props.onCancel();
         }
       }}
     >
@@ -307,10 +238,7 @@ function CaptureNameDialog(props: {
           autoFocus
           placeholder="Create a meeting"
           onChange={(event) => {
-            const nextName = event.target.value;
-            props.setSession((current) =>
-              isNaming(current) ? setSessionName(current, nextName) : current,
-            );
+            props.onNameChange(event.target.value);
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -337,7 +265,7 @@ function CaptureNameDialog(props: {
                 if (!file) {
                   return;
                 }
-                props.setSession((current) => applyUploadFile(current, file));
+                props.onFile(file);
               }}
             >
               <span className="text-foreground">
@@ -348,7 +276,7 @@ function CaptureNameDialog(props: {
           </>
         ) : null}
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => props.setSession(resetSession())}>
+          <Button type="button" variant="outline" onClick={props.onCancel}>
             Cancel
           </Button>
           <Button type="button" disabled={!confirmEnabled} onClick={props.onConfirm}>
@@ -363,16 +291,48 @@ function CaptureNameDialog(props: {
 export function Capture() {
   const queryClient = useQueryClient();
   const captureRef = useRef<HTMLDivElement>(null);
-  const recordingRef = useRef<ScreenRecording | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [session, setSession] = useState<CaptureSession>(resetSession);
+  const uploadedRef = useRef<(meeting: Meeting) => void>(() => {});
+  uploadedRef.current = (meeting) => {
+    void invalidateMeetingData(queryClient);
+    const id = meetingId(meeting);
+    toast(PROCESSING_NOTICE, {
+      description: (
+        <Link className="underline underline-offset-3" href={`/meetings/${id}`}>
+          View meeting
+        </Link>
+      ),
+    });
+  };
+  const flow = useMemo(
+    () =>
+      createCaptureFlow({
+        record: startScreenRecording,
+        upload: uploadVideo,
+        onChange: setSession,
+        onUploaded: (meeting) => uploadedRef.current(meeting),
+      }),
+    [],
+  );
 
   useEffect(() => {
     return subscribeCaptureIntent((intent) => {
       setMenuOpen(false);
-      setSession(sessionFromIntent(intent));
+      switch (intent) {
+        case "capture":
+          flow.startCapture();
+          return;
+        case "upload":
+          flow.startUpload();
+          return;
+        default: {
+          const exhaustive: never = intent;
+          return exhaustive;
+        }
+      }
     });
-  }, []);
+  }, [flow]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -389,29 +349,6 @@ export function Capture() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [menuOpen]);
 
-  function afterUpload(meeting: Meeting) {
-    void queryClient.invalidateQueries({ queryKey: meetingsKey });
-    void queryClient.invalidateQueries({ queryKey: actionsKey });
-    const id = meetingId(meeting);
-    toast(PROCESSING_NOTICE, {
-      description: (
-        <Link className="underline underline-offset-3" href={`/meetings/${id}`}>
-          View meeting
-        </Link>
-      ),
-    });
-  }
-
-  function onConfirm() {
-    if (session.kind === "naming-capture") {
-      void recordThenUpload(session, recordingRef, setSession, afterUpload);
-      return;
-    }
-    if (session.kind === "naming-upload") {
-      void uploadNamedFile(session, setSession, afterUpload);
-    }
-  }
-
   const uploading = session.kind === "uploading";
   const recording = session.kind === "recording";
   const error = session.kind === "failed" ? session.message : "";
@@ -425,7 +362,7 @@ export function Capture() {
         <button
           className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-danger px-3.5 font-semibold text-white"
           type="button"
-          onClick={() => recordingRef.current?.stop()}
+          onClick={() => flow.stopRecording()}
         >
           <span
             aria-hidden="true"
@@ -440,16 +377,22 @@ export function Capture() {
           captureRef={captureRef}
           onCapture={() => {
             setMenuOpen(false);
-            setSession(startCaptureNaming());
+            flow.startCapture();
           }}
           onToggleMenu={() => setMenuOpen((value) => !value)}
           onUploadVideo={() => {
             setMenuOpen(false);
-            setSession(startPickingUpload());
+            flow.startUpload();
           }}
         />
       )}
-      <CaptureNameDialog session={session} setSession={setSession} onConfirm={onConfirm} />
+      <CaptureNameDialog
+        session={session}
+        onNameChange={(name) => flow.setName(name)}
+        onCancel={() => flow.cancel()}
+        onFile={(file) => flow.applyFile(file)}
+        onConfirm={() => void flow.confirm()}
+      />
     </div>
   );
 }
