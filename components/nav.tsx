@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { assistantOpenHref, type HomeView } from "@lib/home";
 import {
   isRouteActive,
@@ -48,7 +49,7 @@ function navClass(active: boolean) {
 
 function NavGlyph(props: { icon: NavIcon }) {
   const Icon = NAV_ICONS[props.icon];
-  return <Icon className="size-4.5 shrink-0" />;
+  return <Icon className={cn("size-4.5 shrink-0", props.icon === "askfred" && "text-accent")} />;
 }
 
 export type NavProps = {

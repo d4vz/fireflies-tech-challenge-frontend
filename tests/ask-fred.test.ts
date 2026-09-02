@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test";
-import { ASK_FRED_PLACEHOLDER, isAskFredBusy, shouldScrollFredStick } from "@lib/ask-fred";
+import {
+  ASK_FRED_PLACEHOLDER,
+  isAskFredBusy,
+  shouldScrollFredStick,
+  shouldShowFredSuggestions,
+} from "@lib/ask-fred";
 
 const atBottom = { force: false, isAtBottom: true, key: "1:a:10" };
 const readingHistory = { force: false, isAtBottom: false, key: "1:a:10" };
@@ -98,4 +103,11 @@ test("escaped while still near the bottom does not follow new tokens", () => {
       { force: false, isAtBottom: false, key: "1:a:40" },
     ),
   ).toBe(false);
+});
+
+test("suggestion chips stay until the first assistant reply", () => {
+  expect(shouldShowFredSuggestions([])).toBe(true);
+  expect(shouldShowFredSuggestions([{ role: "user" }])).toBe(true);
+  expect(shouldShowFredSuggestions([{ role: "user" }, { role: "assistant" }])).toBe(false);
+  expect(shouldShowFredSuggestions([{ role: "assistant" }])).toBe(false);
 });

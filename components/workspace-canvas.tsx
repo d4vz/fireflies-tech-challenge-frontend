@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import {
   assistantPanelSlot,
   parseHomeViewFromSearch,
@@ -54,18 +55,22 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
   const chrome = props.rail.chrome;
   const isXl = useSyncExternalStore(subscribeXl, xlSnapshot, () => true);
   const slot = assistantPanelSlot(isXl, chrome.sheetOpen);
-  const dockClass =
-    slot === "dock"
-      ? "grid h-full min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_360px]"
-      : "grid h-full min-h-0 min-w-0 grid-cols-1";
+  const dockOpen = slot === "dock";
 
   return (
     <>
-      <div className={dockClass}>
+      <div className="grid h-full min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-h-0 min-w-0 overflow-y-auto">{props.children}</div>
-        {slot === "dock" ? (
-          <aside className="flex min-h-0 flex-col overflow-hidden border-l border-line bg-paper">
-            {props.rail.panel}
+        {isXl ? (
+          <aside
+            className={cn(
+              "min-h-0 overflow-hidden transition-[width] duration-300 ease-in-out",
+              dockOpen ? "w-[360px]" : "w-0",
+            )}
+          >
+            <div className="flex h-full w-[360px] min-w-[360px] flex-col border-l border-line bg-paper">
+              {dockOpen ? props.rail.panel : null}
+            </div>
           </aside>
         ) : null}
       </div>
@@ -82,8 +87,9 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
         <SheetContent
           side="right"
           overlayClassName="xl:hidden"
-          className="w-full p-0 sm:max-w-[360px] xl:hidden"
+          className="w-full p-0 sm:max-w-[360px] xl:hidden data-[side=right]:data-open:slide-in-from-right data-[side=right]:data-closed:slide-out-to-right"
           showCloseButton={false}
+          slideTravel="full"
           onInteractOutside={(event) => {
             event.preventDefault();
           }}
