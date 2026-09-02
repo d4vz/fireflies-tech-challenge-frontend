@@ -44,6 +44,8 @@ type MeetingDetailBodyProps = {
 
 function MeetingDetailBody(props: MeetingDetailBodyProps) {
   const meeting = props.meeting;
+  const tasks = meeting.tasks ?? [];
+  const completed = tasks.filter((task) => task.status === "completed").length;
   return (
     <article className="grid gap-5">
       <Breadcrumb>
@@ -76,16 +78,16 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
         <h2 className="mb-1.5 text-base">Summary</h2>
         <p>{meeting.summary?.text || "(no summary)"}</p>
       </section>
-      <section>
-        <h2 className="mb-1.5 text-base">Takeaways</h2>
-        <ul className="m-0 pl-[1.1rem]">
-          {(meeting.summary?.takeaways ?? []).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </section>
-      <section aria-label="Action items">
-        <TaskChecklist meetingId={meeting._id} tasks={meeting.tasks ?? []} />
+      <section className="min-w-0 overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line">
+        <header className="flex min-w-0 items-center justify-between gap-3 px-5 py-3.5">
+          <h2 className="m-0 text-[0.95rem] font-semibold">Tasks</h2>
+          <span className="shrink-0 text-[0.8rem] text-muted-foreground">
+            {completed}/{tasks.length}
+          </span>
+        </header>
+        <div className="border-t border-line">
+          <TaskChecklist inset meetingId={meeting._id} tasks={tasks} />
+        </div>
       </section>
     </article>
   );
