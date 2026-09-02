@@ -112,9 +112,11 @@ export function Capture() {
   const uploading = stage === "uploading";
 
   return (
-    <div className="relative flex items-center gap-3">
-      {stage ? <span className="text-[0.85rem] text-muted">{stage}</span> : null}
-      {error ? <span className="text-[0.85rem] text-danger">{error}</span> : null}
+    <div className="relative flex shrink-0 items-center gap-3">
+      {stage ? <span className="hidden text-[0.85rem] text-muted md:inline">{stage}</span> : null}
+      {error ? (
+        <span className="max-w-24 truncate text-[0.85rem] text-danger md:max-w-none">{error}</span>
+      ) : null}
       {recording ? (
         <button
           className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-danger px-3.5 py-2 font-semibold text-white"
@@ -128,13 +130,13 @@ export function Capture() {
           <div className="inline-flex overflow-hidden rounded-[10px]">
             <button
               aria-busy={uploading}
-              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-3.5 py-2 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
+              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-2.5 py-2 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent md:px-3.5"
               disabled={uploading}
               type="button"
               onClick={onRecord}
             >
               {uploading ? <Spinner /> : <CameraIcon />}
-              Capture
+              <span className="max-md:sr-only">Capture</span>
             </button>
             <button
               aria-expanded={open}

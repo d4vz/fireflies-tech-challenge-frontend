@@ -27,7 +27,7 @@ export function MeetingsList(props: MeetingsListProps) {
 
   if (query.error) {
     return (
-      <main className="h-full overflow-y-auto px-8 pt-8 pb-12">
+      <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
         <p className="text-[0.85rem] text-danger">{query.error.message}</p>
       </main>
     );
@@ -42,7 +42,7 @@ export function MeetingsList(props: MeetingsListProps) {
 
   if (total === 0) {
     return (
-      <main className="h-full overflow-y-auto px-8 pt-8 pb-12">
+      <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
         <p className="mt-1 text-[0.85rem] text-muted">No meetings yet. Capture a video to start.</p>
       </main>
     );
@@ -50,14 +50,14 @@ export function MeetingsList(props: MeetingsListProps) {
 
   return (
     <main className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-8">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 md:px-8">
         <div className="grid max-w-190 gap-3">
           {items.map((meeting) => (
             <MeetingRow key={meeting._id} meeting={meeting} />
           ))}
         </div>
       </div>
-      <nav className="flex shrink-0 items-center gap-3 border-t border-line bg-wash px-8 py-3 text-[0.85rem]">
+      <nav className="flex shrink-0 items-center gap-3 border-t border-line bg-wash px-4 py-3 text-[0.85rem] md:px-8">
         {page > 1 ? (
           <Link
             className="font-semibold text-accent"

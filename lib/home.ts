@@ -91,7 +91,7 @@ export function assistantOpenHref(input: AssistantHrefInput): string {
 export function assistantChrome(fred: FredParam): AssistantChrome {
   return {
     sheetOpen: fred === "open",
-    dockHidden: fred === "closed",
+    dockHidden: fred !== "open",
   };
 }
 

@@ -40,7 +40,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
         <Clip className="block w-full" src={meeting.blob.url} poster={meeting.blob.thumbnailUrl} />
       </div>
       <div>
-        <h1 className="m-0 text-[1.6rem]">{meeting.sourceId}</h1>
+        <h1 className="m-0 break-words text-[1.35rem] md:text-[1.6rem]">{meeting.sourceId}</h1>
         <p className="mt-1 flex flex-wrap items-center gap-2 text-[0.85rem] text-muted">
           <When value={meeting.createdAt} />
           <StatusLabel status={meeting.status} />
@@ -97,7 +97,7 @@ export function MeetingDetail(props: MeetingDetailProps) {
 
   if (meetingQuery.error) {
     return (
-      <main className="h-full overflow-y-auto px-8 pt-8 pb-12">
+      <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
         <p className="text-[0.85rem] text-danger">{meetingQuery.error.message}</p>
       </main>
     );

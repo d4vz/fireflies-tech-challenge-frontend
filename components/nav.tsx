@@ -126,5 +126,9 @@ export function PageTitle() {
   useEffect(() => {
     setTitle(pathname.startsWith("/meetings") ? "Meetings" : "Home");
   }, [pathname]);
-  return <h1 className="m-0 shrink-0 text-[1.05rem] font-semibold">{title}</h1>;
+  return (
+    <h1 className="m-0 hidden min-w-0 shrink-0 truncate text-[1.05rem] font-semibold md:block">
+      {title}
+    </h1>
+  );
 }

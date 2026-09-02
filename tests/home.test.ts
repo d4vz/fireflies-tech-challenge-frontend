@@ -56,7 +56,7 @@ test("assistantOpenHref is /?fred=1 off Home", () => {
 });
 
 test("assistantChrome maps fred without reading the viewport", () => {
-  expect(assistantChrome("unset")).toEqual({ sheetOpen: false, dockHidden: false });
+  expect(assistantChrome("unset")).toEqual({ sheetOpen: false, dockHidden: true });
   expect(assistantChrome("open")).toEqual({ sheetOpen: true, dockHidden: false });
   expect(assistantChrome("closed")).toEqual({ sheetOpen: false, dockHidden: true });
 });

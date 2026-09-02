@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AskFred } from "@components/ask-fred";
 import { MeetingRow } from "@components/meeting-row";
+import { MeetingSearch } from "@components/meeting-search";
 import { HomeDashboardSkeleton } from "@components/skeleton";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
@@ -70,17 +71,19 @@ function formatDuration(ms: number): string {
 type InsightCopy = {
   title: string;
   body: string;
+  metric: string;
   note?: string;
 };
 
 function insightCopy(card: InsightCard): InsightCopy {
   if (card.kind === "meeting-count") {
-    return { title: "Meetings", body: `${card.total} in the library` };
+    return { title: "Meetings", body: `${card.total} in the library`, metric: String(card.total) };
   }
   if (card.kind === "busy-count") {
     return {
       title: "In progress",
       body: `${card.count} processing`,
+      metric: String(card.count),
       note: coverageNote(card.coverage),
     };
   }
@@ -88,12 +91,14 @@ function insightCopy(card: InsightCard): InsightCopy {
     return {
       title: "Tasks",
       body: `${card.count} action items`,
+      metric: String(card.count),
       note: coverageNote(card.coverage),
     };
   }
   return {
     title: card.meeting.sourceId,
     body: `Processing for ${formatDuration(card.processingForMs)}`,
+    metric: formatDuration(card.processingForMs),
   };
 }
 
@@ -114,11 +119,13 @@ function InsightCardView(props: { card: InsightCard }) {
   const copy = insightCopy(props.card);
   return (
     <Card className="bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-line">
-      <CardHeader className="flex-row items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-xl bg-wash">
+      <CardHeader className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-3">
+        <span className="grid size-9 place-items-center rounded-xl bg-wash md:size-10">
           <InsightIcon kind={props.card.kind} />
         </span>
-        <div className="min-w-0">
+        <p className="m-0 text-lg font-semibold tabular-nums md:hidden">{copy.metric}</p>
+        <p className="sr-only md:hidden">{`${copy.title}: ${copy.body}`}</p>
+        <div className="hidden min-w-0 md:block">
           <CardTitle className="truncate">{copy.title}</CardTitle>
           <CardDescription className="text-muted">{copy.body}</CardDescription>
           {copy.note ? <p className="m-0 text-xs text-muted">{copy.note}</p> : null}
@@ -183,7 +190,7 @@ function AskFredPanel(props: { closeHref: string }) {
 
 export function HomeCanvas(props: HomeCanvasProps) {
   const model = props.model;
-  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "closed" });
+  const closeHref = homeHref({ tab: model.tab, query: model.query, fred: "unset" });
   return (
     <WorkspaceCanvas
       rail={{
@@ -192,9 +199,11 @@ export function HomeCanvas(props: HomeCanvasProps) {
         panel: <AskFredPanel closeHref={closeHref} />,
       }}
     >
-      <div className="home-empty min-h-full px-6 pt-8 pb-12 md:px-8">
-        <h2 className="m-0 text-[1.75rem] font-semibold tracking-tight">{greetingTitle(model)}</h2>
-        <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="home-empty min-h-full px-4 pt-8 pb-12 md:px-8">
+        <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
+          {greetingTitle(model)}
+        </h2>
+        <div className="mt-6 grid grid-cols-3 gap-3">
           {model.insights.map((card) => (
             <InsightCardView
               key={card.kind === "longest-processing" ? card.meeting._id : card.kind}
@@ -203,6 +212,11 @@ export function HomeCanvas(props: HomeCanvasProps) {
           ))}
         </div>
         <div className="mt-8 grid gap-3">
+          <MeetingSearch
+            className="md:hidden"
+            hotkey={false}
+            view={{ tab: model.tab, query: model.query, fred: props.fred }}
+          />
           <HomeTabs model={model} fred={props.fred} />
           {model.rows.length === 0 ? (
             <p className="mt-1 text-[0.85rem] text-muted">
@@ -247,7 +261,7 @@ export function HomeDashboard(props: HomeDashboardProps) {
 
   if (query.error) {
     return (
-      <main className="home-empty h-full overflow-y-auto px-8 pt-8 pb-12">
+      <main className="home-empty h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
         <p className="text-[0.85rem] text-danger">{query.error.message}</p>
       </main>
     );

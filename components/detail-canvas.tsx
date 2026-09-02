@@ -48,7 +48,7 @@ export function DetailCanvas(props: DetailCanvasProps) {
         onSheetOpenChange: setSheetOpen,
       }}
     >
-      <div className="px-8 pt-8 pb-12">
+      <div className="px-4 pt-8 pb-12 md:px-8">
         <Button
           type="button"
           variant="outline"

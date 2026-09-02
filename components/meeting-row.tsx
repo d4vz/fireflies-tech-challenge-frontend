@@ -16,10 +16,10 @@ export function MeetingRow(props: MeetingRowProps) {
   const id = meetingId(meeting);
   return (
     <Link
-      className="grid items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-md:grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)_auto]"
+      className="grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_auto]"
       href={`/meetings/${id}`}
     >
-      <div className="aspect-video overflow-hidden rounded-[14px] bg-neutral-200">
+      <div className="aspect-video min-w-0 overflow-hidden rounded-[14px] bg-neutral-200">
         <Thumb
           className="pointer-events-none size-full object-cover"
           src={meeting.blob.thumbnailUrl}
@@ -37,7 +37,7 @@ export function MeetingRow(props: MeetingRowProps) {
         ) : null}
         <When className="text-[0.8rem] text-muted" value={meeting.createdAt} />
       </div>
-      <ChevronRight className="hidden size-5 shrink-0 self-center text-muted md:block" />
+      <ChevronRight className="hidden size-5 shrink-0 self-center text-muted lg:block" />
     </Link>
   );
 }
