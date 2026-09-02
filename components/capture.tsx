@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { InfoIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
@@ -37,7 +38,7 @@ import {
   type CaptureSession,
   type NamingSession,
 } from "@lib/capture-session";
-import { meetingId, type Meeting } from "@lib/meetings";
+import { meetingId, meetingsKey, type Meeting } from "@lib/meetings";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
 function CameraIcon() {
@@ -289,6 +290,7 @@ function CaptureNameDialog(props: {
 }
 
 export function Capture() {
+  const queryClient = useQueryClient();
   const captureRef = useRef<HTMLDivElement>(null);
   const recordingRef = useRef<ScreenRecording | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -310,6 +312,7 @@ export function Capture() {
   }, [menuOpen]);
 
   function afterUpload(meeting: Meeting) {
+    void queryClient.invalidateQueries({ queryKey: meetingsKey });
     const id = meetingId(meeting);
     toast(PROCESSING_NOTICE, {
       description: (
