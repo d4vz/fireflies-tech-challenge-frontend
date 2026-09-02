@@ -9,6 +9,7 @@
     "fmt:check": "oxfmt --check",
     "typecheck": "tsc --noEmit",
     "check": "bun run lint && bun run fmt:check && bun run typecheck && bun run test",
+    "dev": "bunx serve . -p 8080",
     "prepare": "husky"
   },
   "devDependencies": {

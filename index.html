@@ -2,10 +2,276 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Fireflies Challenge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meetings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,650&family=Outfit:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #16140f;
+        --paper: #f3ead8;
+        --line: #3a3428;
+        --gold: #e4b44c;
+        --muted: #9a8f78;
+        --fail: #e07a5f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 12% 8%, #3a2f14 0%, transparent 28%), var(--ink);
+        color: var(--paper);
+        font-family: Outfit, sans-serif;
+      }
+
+      main {
+        display: grid;
+        gap: 2rem;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 4rem;
+      }
+
+      @media (min-width: 880px) {
+        main {
+          grid-template-columns: 280px 1fr;
+          align-items: start;
+        }
+      }
+
+      h1 {
+        font-family: Newsreader, serif;
+        font-size: 2.4rem;
+        font-weight: 650;
+        letter-spacing: -0.03em;
+        margin: 0 0 0.25rem;
+      }
+
+      .lede {
+        color: var(--muted);
+        margin: 0 0 1.5rem;
+      }
+
+      label.pick {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        cursor: pointer;
+        background: #1d1a14;
+      }
+
+      label.pick input {
+        display: none;
+      }
+
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: var(--gold);
+        border: 0;
+        border-radius: 999px;
+        padding: 0.7rem 1.1rem;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .stages {
+        display: grid;
+        gap: 0.55rem;
+        margin: 0 0 1.5rem;
+      }
+
+      .stages[hidden] {
+        display: none;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .stage.active {
+        color: var(--gold);
+      }
+
+      .stage.done {
+        color: var(--paper);
+      }
+
+      .bar {
+        height: 8px;
+        grid-column: 1 / -1;
+        background: #2a281f;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--gold);
+        transition: width 220ms ease;
+      }
+
+      .fail {
+        color: var(--fail);
+        min-height: 1.4em;
+      }
+
+      aside {
+        border-right: 1px solid var(--line);
+        padding-right: 1.25rem;
+      }
+
+      aside h2,
+      article h2 {
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 0.8rem;
+      }
+
+      .meetings {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .meetings button {
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        color: var(--paper);
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 0.7rem 0.8rem;
+      }
+
+      .meetings button:hover,
+      .meetings button[aria-current="true"] {
+        border-color: var(--line);
+        background: #1d1a14;
+      }
+
+      .meetings small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      article {
+        min-height: 12rem;
+      }
+
+      .empty {
+        color: var(--muted);
+      }
+
+      .shot {
+        width: min(100%, 420px);
+        border-radius: 12px;
+        display: block;
+        margin: 0 0 1rem;
+        background: #111;
+      }
+
+      pre {
+        font-family: "IBM Plex Mono", monospace;
+        white-space: pre-wrap;
+        line-height: 1.55;
+        margin: 0;
+        color: #efe6d2;
+      }
+    </style>
   </head>
   <body>
-    <h1>Fireflies Challenge</h1>
-    <p>Frontend placeholder.</p>
+    <main>
+      <aside>
+        <h2>Meetings</h2>
+        <ul class="meetings" id="list"></ul>
+      </aside>
+      <section>
+        <h1>Upload a meeting</h1>
+        <p class="lede">
+          The bar follows the real server stages: store, transcribe, summarize, save.
+        </p>
+        <form id="form">
+          <div class="row">
+            <label class="pick">
+              <input
+                id="file"
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.mkv,.m4v"
+                required
+              />
+              <span id="filename">Choose a video</span>
+            </label>
+            <button type="submit" id="send">Upload</button>
+          </div>
+        </form>
+        <div class="stages" id="stages" hidden>
+          <div class="stage" data-stage="uploading">
+            Uploading
+            <span></span>
+            <div class="bar"><span></span></div>
+          </div>
+          <div class="stage" data-stage="storing">
+            Storing video
+            <span></span>
+            <div class="bar"><span></span></div>
+          </div>
+          <div class="stage" data-stage="transcribing">
+            Generating transcript
+            <span></span>
+            <div class="bar"><span></span></div>
+          </div>
+          <div class="stage" data-stage="summarizing">
+            Summary and action items
+            <span></span>
+            <div class="bar"><span></span></div>
+          </div>
+          <div class="stage" data-stage="saving">
+            Saving
+            <span></span>
+            <div class="bar"><span></span></div>
+          </div>
+        </div>
+        <p class="fail" id="error"></p>
+        <article id="detail">
+          <p class="empty">Pick a meeting or upload a clip to read the transcript.</p>
+        </article>
+      </section>
+    </main>
+    <script src="./app.js"></script>
   </body>
 </html>
