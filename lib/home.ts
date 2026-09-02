@@ -1,3 +1,4 @@
+import { appLocation, locationHref, parseAssistantOpen, pushAppUrl } from "@lib/assistant-url";
 import { periodAt, type DayPeriod } from "@lib/chrome";
 import { isBusy, type Meeting, type MeetingListPage } from "@lib/meetings";
 
@@ -6,7 +7,6 @@ export type HomeTab = "all" | "ready" | "busy" | "failed";
 export type HomeView = {
   tab: HomeTab;
   query: string;
-  assistantOpen: boolean;
 };
 
 export type RawSearchParam = string | string[] | undefined;
@@ -15,10 +15,6 @@ export type HomeSearchParams = {
   tab?: RawSearchParam;
   q?: RawSearchParam;
   fred?: RawSearchParam;
-};
-
-export type AssistantHrefInput = {
-  current: HomeView | null;
 };
 
 function firstString(value: RawSearchParam): string {
@@ -39,7 +35,6 @@ export function parseHomeView(params: HomeSearchParams): HomeView {
   return {
     tab: parseTab(firstString(params.tab)),
     query: firstString(params.q),
-    assistantOpen: firstString(params.fred) === "1",
   };
 }
 
@@ -48,7 +43,6 @@ export function parseHomeViewFromSearch(search: string): HomeView {
   return parseHomeView({
     tab: params.get("tab") ?? undefined,
     q: params.get("q") ?? undefined,
-    fred: params.get("fred") ?? undefined,
   });
 }
 
@@ -64,25 +58,10 @@ export function isPlainLeftClick(event: ClickModifiers): boolean {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
-const HOME_URL_EVENT = "fireflies-home-url";
-
-export function subscribeHomeUrl(onChange: () => void): () => void {
-  window.addEventListener("popstate", onChange);
-  window.addEventListener(HOME_URL_EVENT, onChange);
-  return () => {
-    window.removeEventListener("popstate", onChange);
-    window.removeEventListener(HOME_URL_EVENT, onChange);
-  };
-}
-
 export function pushHomeUrl(view: HomeView): void {
-  const href = homeHref(view);
-  const current = `${window.location.pathname}${window.location.search}`;
-  if (current === href) {
-    return;
-  }
-  window.history.pushState(null, "", href);
-  window.dispatchEvent(new Event(HOME_URL_EVENT));
+  const home = homeHref(view);
+  const search = home.includes("?") ? home.slice(home.indexOf("?")) : "";
+  pushAppUrl(locationHref(appLocation("/", search), parseAssistantOpen(window.location.search)));
 }
 
 export function homeHref(view: HomeView): string {
@@ -93,44 +72,11 @@ export function homeHref(view: HomeView): string {
   if (view.query !== "") {
     params.set("q", view.query);
   }
-  if (view.assistantOpen) {
-    params.set("fred", "1");
-  }
   const query = params.toString();
   if (query === "") {
     return "/";
   }
   return `/?${query}`;
-}
-
-export function dismissAssistantView(view: HomeView): HomeView {
-  return { ...view, assistantOpen: false };
-}
-
-export function openAssistantView(view: HomeView): HomeView {
-  return { ...view, assistantOpen: true };
-}
-
-export function assistantOpenHref(input: AssistantHrefInput): string {
-  if (input.current === null) {
-    return "/?fred=1";
-  }
-  return homeHref(openAssistantView(input.current));
-}
-
-export type AssistantOpenClickKind = "ignore" | "navigate" | "push";
-
-export function assistantOpenClickKind(
-  current: HomeView | null,
-  isPlain: boolean,
-): AssistantOpenClickKind {
-  if (!isPlain) {
-    return "ignore";
-  }
-  if (current === null) {
-    return "navigate";
-  }
-  return "push";
 }
 
 export type InsightCoverage =

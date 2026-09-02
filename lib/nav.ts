@@ -25,13 +25,13 @@ export type PlaceholderNavItem = {
   icon: NavIcon;
 };
 
-export type HomeAssistantNavItem = {
-  kind: "home-assistant";
+export type AssistantNavItem = {
+  kind: "assistant";
   label: "AskFred";
   icon: "askfred";
 };
 
-export type NavItem = RouteNavItem | PlaceholderNavItem | HomeAssistantNavItem;
+export type NavItem = RouteNavItem | PlaceholderNavItem | AssistantNavItem;
 
 export const NAV_ITEMS: NavItem[] = [
   { kind: "route", href: "/", label: "Home", icon: "home", active: "exact" },
@@ -42,7 +42,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "meetings",
     active: "meetings-tree",
   },
-  { kind: "home-assistant", label: "AskFred", icon: "askfred" },
+  { kind: "assistant", label: "AskFred", icon: "askfred" },
   { kind: "route", href: "/tasks", label: "Tasks", icon: "tasks", active: "exact" },
   { kind: "placeholder", label: "AI Apps", icon: "skills" },
   { kind: "placeholder", label: "Analytics", icon: "analytics" },

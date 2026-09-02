@@ -22,14 +22,13 @@ import { handleHover } from "@lib/handle-hover";
 import {
   assistantOpenClickKind,
   assistantOpenHref,
-  isPlainLeftClick,
-  openAssistantView,
-  pushHomeUrl,
-  type HomeView,
-} from "@lib/home";
+  pushAppUrl,
+  type AppLocation,
+} from "@lib/assistant-url";
+import { isPlainLeftClick } from "@lib/home";
 import {
   isRouteActive,
-  type HomeAssistantNavItem,
+  type AssistantNavItem,
   type NavIcon,
   type NavItem,
   type PlaceholderNavItem,
@@ -71,7 +70,7 @@ function NavGlyph(props: { icon: NavIcon; iconRef: Ref<IconHandle> }) {
 export type NavProps = {
   items: NavItem[];
   pathname: string;
-  view: HomeView | null;
+  location: AppLocation;
 };
 
 function RouteLink(props: { item: RouteNavItem; pathname: string }) {
@@ -110,23 +109,20 @@ function PlaceholderItem(props: { item: PlaceholderNavItem }) {
   );
 }
 
-function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | null }) {
+function AssistantLink(props: { item: AssistantNavItem; location: AppLocation }) {
   const iconRef = useRef<IconHandle>(null);
   return (
     <Link
-      href={assistantOpenHref({ current: props.view })}
+      href={assistantOpenHref(props.location)}
       className={navClass(false)}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
       onClick={(event) => {
-        if (assistantOpenClickKind(props.view, isPlainLeftClick(event)) !== "push") {
-          return;
-        }
-        if (props.view === null) {
+        if (assistantOpenClickKind(isPlainLeftClick(event)) !== "push") {
           return;
         }
         event.preventDefault();
-        pushHomeUrl(openAssistantView(props.view));
+        pushAppUrl(assistantOpenHref(props.location));
       }}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />
@@ -135,15 +131,20 @@ function AssistantLink(props: { item: HomeAssistantNavItem; view: HomeView | nul
   );
 }
 
-function NavItemView(props: { item: NavItem; pathname: string; view: HomeView | null }) {
+function NavItemView(props: { item: NavItem; pathname: string; location: AppLocation }) {
   const item = props.item;
-  if (item.kind === "route") {
-    return <RouteLink item={item} pathname={props.pathname} />;
+  switch (item.kind) {
+    case "route":
+      return <RouteLink item={item} pathname={props.pathname} />;
+    case "placeholder":
+      return <PlaceholderItem item={item} />;
+    case "assistant":
+      return <AssistantLink item={item} location={props.location} />;
+    default: {
+      const _exhaustive: never = item;
+      return _exhaustive;
+    }
   }
-  if (item.kind === "placeholder") {
-    return <PlaceholderItem item={item} />;
-  }
-  return <AssistantLink item={item} view={props.view} />;
 }
 
 export function Nav(props: NavProps) {
@@ -155,7 +156,7 @@ export function Nav(props: NavProps) {
         return (
           <div key={`${item.kind}-${item.label}`}>
             {showSeparator ? <Separator className="my-2" /> : null}
-            <NavItemView item={item} pathname={props.pathname} view={props.view} />
+            <NavItemView item={item} pathname={props.pathname} location={props.location} />
           </div>
         );
       })}
