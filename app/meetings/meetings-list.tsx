@@ -44,7 +44,7 @@ export function MeetingsList(props: MeetingsListProps) {
     return (
       <main className="h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
         <p className="mt-1 text-[0.85rem] text-muted-foreground">
-          No meetings yet. Capture a video to start.
+          No meetings yet. Capture or upload a file to start.
         </p>
       </main>
     );

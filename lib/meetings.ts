@@ -11,11 +11,18 @@ export type Meeting = {
     takeaways: string[];
     actionItems: string[];
   };
-  blob: {
-    url: string;
-    thumbnailUrl: string;
-    durationInSeconds: number;
-  };
+  blob:
+    | {
+        kind: "video";
+        url: string;
+        thumbnailUrl: string;
+        durationInSeconds: number;
+      }
+    | {
+        kind: "audio";
+        url: string;
+        durationInSeconds: number;
+      };
 };
 
 export type TranscriptChunk = {
@@ -83,15 +90,74 @@ export function formatWhen(value: string) {
   });
 }
 
+type StoredPublicBlob = {
+  kind?: "video" | "audio";
+  url: string;
+  durationInSeconds: number;
+  thumbnailUrl?: string;
+};
+
+type StoredPublicMeeting = {
+  _id: string;
+  sourceId: string;
+  createdAt: string;
+  status?: MeetingStatus;
+  error?: string;
+  summary?: Meeting["summary"];
+  blob: StoredPublicBlob;
+};
+
+function parsePublicBlob(raw: StoredPublicBlob): Meeting["blob"] {
+  if (raw.kind === "audio") {
+    return { kind: "audio", url: raw.url, durationInSeconds: raw.durationInSeconds };
+  }
+  if (raw.thumbnailUrl === undefined) {
+    throw new Error("invalid meeting blob");
+  }
+  return {
+    kind: "video",
+    url: raw.url,
+    thumbnailUrl: raw.thumbnailUrl,
+    durationInSeconds: raw.durationInSeconds,
+  };
+}
+
+export function parsePublicMeeting(raw: StoredPublicMeeting): Meeting {
+  return {
+    _id: raw._id,
+    sourceId: raw.sourceId,
+    createdAt: raw.createdAt,
+    status: raw.status ?? "ready",
+    error: raw.error,
+    summary: raw.summary,
+    blob: parsePublicBlob(raw.blob),
+  };
+}
+
 export function toPublicMeeting(meeting: Meeting): Meeting {
   const id = meetingId(meeting);
-  return {
-    ...meeting,
-    status: meeting.status ?? "ready",
-    blob: {
-      ...meeting.blob,
-      url: `/api/meetings/${id}/video`,
-      thumbnailUrl: `/api/meetings/${id}/thumbnail`,
-    },
-  };
+  const url = `/api/meetings/${id}/video`;
+  switch (meeting.blob.kind) {
+    case "video":
+      return {
+        ...meeting,
+        blob: {
+          ...meeting.blob,
+          url,
+          thumbnailUrl: `/api/meetings/${id}/thumbnail`,
+        },
+      };
+    case "audio":
+      return {
+        ...meeting,
+        blob: {
+          ...meeting.blob,
+          url,
+        },
+      };
+    default: {
+      const _exhaustive: never = meeting.blob;
+      return _exhaustive;
+    }
+  }
 }

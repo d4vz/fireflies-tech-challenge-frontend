@@ -3,12 +3,13 @@ import { join } from "node:path";
 import {
   PROCESSING_NOTICE,
   UPLOAD_PENDING_HINT,
-  VIDEO_ACCEPT,
-  VIDEO_FORMAT_LABEL,
+  MEDIA_ACCEPT,
+  MEDIA_FORMAT_LABEL,
   applyUploadFile,
   canConfirm,
   confirmCaptureNaming,
   confirmUploadNaming,
+  firstAcceptedMedia,
   isNameModalOpen,
   prefillName,
   setSessionName,
@@ -21,6 +22,10 @@ function video(name: string, type = "video/mp4") {
   return new File(["x"], name, { type });
 }
 
+function audio(name: string, type = "audio/mpeg") {
+  return new File(["x"], name, { type });
+}
+
 test("UPLOAD_PENDING_HINT tells the user the meeting stays pending", () => {
   expect(UPLOAD_PENDING_HINT).toContain("pending");
   expect(UPLOAD_PENDING_HINT).toContain("Meetings");
@@ -29,10 +34,22 @@ test("UPLOAD_PENDING_HINT tells the user the meeting stays pending", () => {
   expect(PROCESSING_NOTICE).toContain("transcription");
 });
 
-test("VIDEO_FORMAT_LABEL lists every accepted extension", () => {
-  for (const ext of [".mp4", ".webm", ".mov", ".mkv", ".m4v"]) {
-    expect(VIDEO_ACCEPT).toContain(ext);
-    expect(VIDEO_FORMAT_LABEL).toContain(ext);
+test("MEDIA_FORMAT_LABEL lists every accepted extension", () => {
+  for (const ext of [
+    ".mp4",
+    ".webm",
+    ".mov",
+    ".mkv",
+    ".m4v",
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".aac",
+    ".ogg",
+    ".flac",
+  ]) {
+    expect(MEDIA_ACCEPT).toContain(ext);
+    expect(MEDIA_FORMAT_LABEL).toContain(ext);
   }
 });
 
@@ -91,6 +108,18 @@ test("rejected non-video leaves the session unchanged", () => {
   );
   const named = applyUploadFile(picking, video("standup.mp4"));
   expect(applyUploadFile(named, new File(["x"], "photo.png", { type: "image/png" }))).toBe(named);
+});
+
+test("firstAcceptedMedia keeps mp3 and rejects txt", () => {
+  const mp3 = audio("talk.mp3");
+  expect(firstAcceptedMedia([mp3])).toBe(mp3);
+  expect(
+    firstAcceptedMedia([new File(["x"], "notes.txt", { type: "text/plain" })]),
+  ).toBeUndefined();
+});
+
+test("uploadFilename appends mp3 when the display name has no extension", () => {
+  expect(uploadFilename("talk", audio("talk.mp3"))).toBe("talk.mp3");
 });
 
 test("uploadFilename appends the file extension when the display name has none", () => {

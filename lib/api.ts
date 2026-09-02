@@ -1,4 +1,5 @@
 import {
+  parsePublicMeeting,
   toPublicMeeting,
   type Meeting,
   type MeetingListPage,
@@ -45,5 +46,5 @@ export async function uploadVideo(file: File, filename = file.name): Promise<Mee
   if (!res.ok) {
     throw new Error(body.error || "upload failed");
   }
-  return toPublicMeeting(body);
+  return toPublicMeeting(parsePublicMeeting(body));
 }

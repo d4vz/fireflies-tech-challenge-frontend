@@ -12,20 +12,20 @@ export type NamingSession = Extract<
   { kind: "naming-capture" | "picking-upload" | "naming-upload" }
 >;
 
-export const VIDEO_ACCEPT =
-  "video/mp4,video/webm,video/quicktime,video/x-matroska,video/x-m4v,.mp4,.webm,.mov,.mkv,.m4v";
+export const MEDIA_ACCEPT =
+  "video/mp4,video/webm,video/quicktime,video/x-matroska,video/x-m4v,.mp4,.webm,.mov,.mkv,.m4v,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/aac,audio/ogg,audio/flac,audio/webm,.mp3,.wav,.m4a,.aac,.ogg,.flac";
 
-const VIDEO_ACCEPT_TOKENS = VIDEO_ACCEPT.split(",");
-const VIDEO_MIMES = VIDEO_ACCEPT_TOKENS.filter((token) => !token.startsWith("."));
-const VIDEO_EXTS = VIDEO_ACCEPT_TOKENS.filter((token) => token.startsWith("."));
+const MEDIA_ACCEPT_TOKENS = MEDIA_ACCEPT.split(",");
+const MEDIA_MIMES = MEDIA_ACCEPT_TOKENS.filter((token) => !token.startsWith("."));
+const MEDIA_EXTS = MEDIA_ACCEPT_TOKENS.filter((token) => token.startsWith("."));
 
-export const VIDEO_FORMAT_LABEL = VIDEO_EXTS.join(", ");
+export const MEDIA_FORMAT_LABEL = MEDIA_EXTS.join(", ");
 
 export const UPLOAD_PENDING_HINT =
-  "The video is uploaded and stays pending while we process it. You can view it in Meetings.";
+  "The file is uploaded and stays pending while we process it. You can view it in Meetings.";
 
 export const PROCESSING_NOTICE =
-  "This video is processing. It stays pending until transcription finishes. Open the meeting to follow progress.";
+  "This recording is processing. It stays pending until transcription finishes. Open the meeting to follow progress.";
 
 export function resetSession(): Extract<CaptureSession, { kind: "idle" }> {
   return { kind: "idle" };
@@ -47,17 +47,17 @@ export function setSessionName<T extends NamingSession>(session: T, name: string
   return { ...session, name };
 }
 
-function isAcceptedVideo(file: File): boolean {
+function isAcceptedMedia(file: File): boolean {
   const mime = file.type.split(";")[0]?.trim() ?? "";
-  if (mime !== "" && VIDEO_MIMES.includes(mime)) {
+  if (mime !== "" && MEDIA_MIMES.includes(mime)) {
     return true;
   }
   const lower = file.name.toLowerCase();
-  return VIDEO_EXTS.some((ext) => lower.endsWith(ext));
+  return MEDIA_EXTS.some((ext) => lower.endsWith(ext));
 }
 
-export function firstAcceptedVideo(files: ArrayLike<File>): File | undefined {
-  return Array.from(files).find(isAcceptedVideo);
+export function firstAcceptedMedia(files: ArrayLike<File>): File | undefined {
+  return Array.from(files).find(isAcceptedMedia);
 }
 
 export function prefillName(file: File): string {
@@ -70,7 +70,7 @@ export function prefillName(file: File): string {
 
 export function applyUploadFile(session: CaptureSession, file: File): CaptureSession {
   if (
-    !isAcceptedVideo(file) ||
+    !isAcceptedMedia(file) ||
     (session.kind !== "picking-upload" && session.kind !== "naming-upload")
   ) {
     return session;
@@ -156,9 +156,9 @@ export function sessionLabel(session: CaptureSession): "" | "recording" | "uploa
   }
 }
 
-function hasAllowedVideoExtension(name: string): boolean {
+function hasAllowedExtension(name: string): boolean {
   const lower = name.toLowerCase();
-  return VIDEO_EXTS.some((ext) => lower.endsWith(ext));
+  return MEDIA_EXTS.some((ext) => lower.endsWith(ext));
 }
 
 function fileExtension(name: string): string | undefined {
@@ -172,11 +172,11 @@ function fileExtension(name: string): string | undefined {
 /**
  * Query `filename` / stored `sourceId`. Does not copy File bytes or change File.type.
  * Recordings use codec-suffixed MIME that fails the MIME allowlist, so a name
- * with no video extension must gain the file's extension here.
+ * with no allowed extension must gain the file's extension here.
  */
 export function uploadFilename(displayName: string, file: File): string {
   const trimmed = displayName.trim();
-  if (hasAllowedVideoExtension(trimmed)) {
+  if (hasAllowedExtension(trimmed)) {
     return trimmed;
   }
   const ext = fileExtension(file.name);
