@@ -52,18 +52,18 @@ export function MeetingSearch(props: MeetingSearchProps) {
 
   return (
     <form className={`relative ${props.className}`} onSubmit={onSubmit}>
-      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
+      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted" />
       <Input
         ref={inputRef}
         key={props.view.query}
         name="q"
         defaultValue={props.view.query}
         placeholder="Search by title or keyword"
-        className="h-9 rounded-full border-line bg-wash pr-3 pl-9 md:pr-14"
+        className="h-7 rounded-full border-line bg-wash pr-2 pl-8 text-sm md:pr-12 md:text-[0.8rem]"
         aria-label="Search meetings"
       />
       {props.hotkey ? (
-        <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-md border border-line bg-paper px-1.5 text-[0.7rem] text-muted md:inline">
+        <kbd className="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 rounded-md border border-line bg-paper px-1 text-[0.65rem] text-muted md:inline">
           ⌘K
         </kbd>
       ) : null}
