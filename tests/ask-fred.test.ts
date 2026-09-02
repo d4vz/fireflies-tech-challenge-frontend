@@ -142,3 +142,15 @@ test("Ask Fred empty state is a greeting, stacked chips, and inset send control"
   expect(source).toContain("ArrowUp");
   expect(source.includes("Type @ to mention")).toBe(false);
 });
+
+test("Ask Fred composer is the AI Elements prompt input, not a mid-box Input", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/ask-fred.tsx")).text();
+  expect(source).toContain('from "@/components/ai-elements/prompt-input"');
+  expect(source).toContain("PromptInput");
+  expect(source).toContain("PromptInputTextarea");
+  expect(source).toContain("PromptInputFooter");
+  expect(source).toContain("PromptInputSubmit");
+  expect(source).toContain("ASK_FRED_PLACEHOLDER");
+  expect(source).toContain('aria-label="Ask Fred"');
+  expect(source.includes('from "@/components/ui/input"')).toBe(false);
+});

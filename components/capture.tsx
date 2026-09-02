@@ -103,7 +103,7 @@ async function recordThenUpload(
     const file = await handle.done;
     recordingRef.current = null;
     setSession({ kind: "uploading", name: next.name });
-    const meeting = await uploadVideo(file, uploadFilename(next.name, file));
+    const meeting = await uploadVideo(file, uploadFilename(next.name, file), next.name);
     setSession(resetSession());
     afterUpload(meeting);
   } catch (caught) {
@@ -127,7 +127,7 @@ async function uploadNamedFile(
   }
   setSession(confirmed.session);
   try {
-    const meeting = await uploadVideo(confirmed.file, confirmed.filename);
+    const meeting = await uploadVideo(confirmed.file, confirmed.filename, confirmed.session.name);
     setSession(resetSession());
     afterUpload(meeting);
   } catch (caught) {

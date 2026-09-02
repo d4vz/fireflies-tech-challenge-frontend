@@ -38,7 +38,7 @@ function GroupPreview(props: { group: ActionGroup }) {
   );
 }
 
-export function TaskGroupCard(props: { group: ActionGroup }) {
+export function TaskGroupCard(props: { group: ActionGroup; clampLines?: 2 }) {
   const group = props.group;
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-1 ring-line">
@@ -46,7 +46,7 @@ export function TaskGroupCard(props: { group: ActionGroup }) {
         <GroupPreview group={group} />
         <h2 className="m-0 min-w-0 flex-1 truncate text-[0.95rem] font-semibold">
           <Link className="text-ink no-underline hover:text-accent" href={group.href}>
-            {group.sourceId}
+            {group.name}
           </Link>
         </h2>
         <When
@@ -58,7 +58,12 @@ export function TaskGroupCard(props: { group: ActionGroup }) {
         </span>
       </header>
       <div className="border-t border-line">
-        <TaskChecklist inset meetingId={group.meetingId} tasks={group.tasks} />
+        <TaskChecklist
+          clampLines={props.clampLines}
+          inset
+          meetingId={group.meetingId}
+          tasks={group.tasks}
+        />
       </div>
     </section>
   );

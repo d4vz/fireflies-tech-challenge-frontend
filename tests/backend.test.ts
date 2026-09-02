@@ -31,7 +31,9 @@ test("Hono helpers call backendFetch and do not take a token argument", () => {
   expect(backend.includes("token,")).toBe(false);
   expect(backend).toContain("backendFetch(`/meetings?${params.toString()}`");
   expect(backend).toContain("backendFetch(`/meetings/${id}`");
-  expect(backend).toContain("`/meetings/upload?filename=${encodeURIComponent(filename)}`");
+  expect(backend).toContain(
+    "`/meetings/upload?filename=${encodeURIComponent(filename)}&name=${encodeURIComponent(name)}`",
+  );
   expect(backend).toContain('backendFetch("/ask-fred"');
   expect(backend).toContain("backendFetch(`/meetings/${id}/transcripts`");
   expect(backend).toContain("backendFetch(`/actions?${params.toString()}`");

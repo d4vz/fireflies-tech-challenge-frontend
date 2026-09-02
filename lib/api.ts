@@ -88,8 +88,13 @@ export async function patchTask(
   return task;
 }
 
-export async function uploadVideo(file: File, filename = file.name): Promise<Meeting> {
-  const res = await fetch(`/api/meetings/upload?filename=${encodeURIComponent(filename)}`, {
+export async function uploadVideo(
+  file: File,
+  filename = file.name,
+  name = filename,
+): Promise<Meeting> {
+  const params = new URLSearchParams({ filename, name });
+  const res = await fetch(`/api/meetings/upload?${params.toString()}`, {
     method: "POST",
     headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,

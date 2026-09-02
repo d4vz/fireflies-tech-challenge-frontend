@@ -12,6 +12,7 @@ export type MeetingTask = {
 export type Meeting = {
   _id: string;
   sourceId: string;
+  name: string;
   createdAt: string;
   status: MeetingStatus;
   error?: string;
@@ -147,6 +148,7 @@ type StoredPublicTask = {
 type StoredPublicMeeting = {
   _id: string;
   sourceId: string;
+  name?: string;
   createdAt: string;
   status?: MeetingStatus;
   error?: string;
@@ -179,10 +181,47 @@ function parsePublicTask(raw: StoredPublicTask): MeetingTask {
   };
 }
 
+const MEDIA_EXTS = [
+  ".mp4",
+  ".webm",
+  ".mov",
+  ".mkv",
+  ".m4v",
+  ".mp3",
+  ".wav",
+  ".m4a",
+  ".aac",
+  ".ogg",
+  ".flac",
+] as const;
+
+function stripMediaExt(value: string): string {
+  const lower = value.toLowerCase();
+  for (const ext of MEDIA_EXTS) {
+    if (!lower.endsWith(ext)) {
+      continue;
+    }
+    const stem = value.slice(0, -ext.length).trim();
+    if (stem !== "") {
+      return stem;
+    }
+  }
+  return value;
+}
+
+export function meetingName(sourceId: string, name?: string): string {
+  const stored = name?.trim();
+  if (stored !== undefined && stored !== "") {
+    return stripMediaExt(stored);
+  }
+  return stripMediaExt(sourceId);
+}
+
 export function parsePublicMeeting(raw: StoredPublicMeeting): Meeting {
   return {
     _id: raw._id,
     sourceId: raw.sourceId,
+    name: meetingName(raw.sourceId, raw.name),
     createdAt: raw.createdAt,
     status: raw.status ?? "ready",
     error: raw.error,

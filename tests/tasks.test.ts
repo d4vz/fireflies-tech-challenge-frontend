@@ -24,6 +24,22 @@ test("Tasks list reuses TaskGroupCard for each meeting group", async () => {
   expect(list.includes("function GroupPreview")).toBe(false);
 });
 
+test("Tasks page is one column on mobile and two on desktop", async () => {
+  const list = await Bun.file(join(import.meta.dir, "../app/(app)/tasks/tasks-list.tsx")).text();
+  const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
+  const results = list.slice(
+    list.indexOf("function TasksResults"),
+    list.indexOf("export function TasksList"),
+  );
+  const bones = skeleton.slice(skeleton.indexOf("export function TasksListSkeleton"));
+  expect(results).toContain("grid-cols-1");
+  expect(results).toContain("md:grid-cols-2");
+  expect(results.includes("max-w-190")).toBe(false);
+  expect(bones).toContain("grid-cols-1");
+  expect(bones).toContain("md:grid-cols-2");
+  expect(bones.includes("max-w-190")).toBe(false);
+});
+
 test("Tasks skeleton matches paper groups with a wide thumb", async () => {
   const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
   const tasks = skeleton.slice(skeleton.indexOf("function TaskGroupBone"));

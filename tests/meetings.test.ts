@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import {
+  meetingName,
   parsePublicMeeting,
   toPublicMeeting,
   parseMeetingStatus,
@@ -11,6 +12,7 @@ test("toPublicMeeting rewrites video urls and thumbnail", () => {
   const meeting = toPublicMeeting({
     _id: "abc",
     sourceId: "clip.mp4",
+    name: "clip",
     createdAt: "2026-09-01T00:00:00.000Z",
     status: "ready",
     blob: {
@@ -32,6 +34,7 @@ test("toPublicMeeting rewrites audio url and does not add thumbnailUrl", () => {
   const meeting = toPublicMeeting({
     _id: "abc",
     sourceId: "talk.mp3",
+    name: "talk",
     createdAt: "2026-09-01T00:00:00.000Z",
     status: "ready",
     blob: { kind: "audio", url: "http://blob/video", durationInSeconds: 12 },
@@ -100,6 +103,31 @@ test("parsePublicMeeting treats audio even when thumbnailUrl is present", () => 
     },
   });
   expect(meeting.blob).toEqual({ kind: "audio", url: "/v", durationInSeconds: 3 });
+});
+
+test("meetingName strips a media suffix and prefers a stored name", () => {
+  expect(meetingName("Kevin Kelly The Inevitable Video.mp4")).toBe(
+    "Kevin Kelly The Inevitable Video",
+  );
+  expect(meetingName("clip.mp4", "Standup")).toBe("Standup");
+  expect(meetingName("clip.mp4", "clip.mp4")).toBe("clip");
+});
+
+test("parsePublicMeeting fills name from sourceId when the API omits it", () => {
+  const meeting = parsePublicMeeting({
+    _id: "abc",
+    sourceId: "Kevin Kelly The Inevitable Video.mp4",
+    createdAt: "2026-09-01T00:00:00.000Z",
+    status: "ready",
+    blob: {
+      kind: "video",
+      url: "/v",
+      durationInSeconds: 12,
+      thumbnailUrl: "/t",
+    },
+  });
+  expect(meeting.name).toBe("Kevin Kelly The Inevitable Video");
+  expect(meeting.sourceId).toBe("Kevin Kelly The Inevitable Video.mp4");
 });
 
 test("parseMeetingStatus keeps ready processing failed and queued", () => {

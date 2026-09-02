@@ -22,7 +22,7 @@ function TranscriptPanel(props: { meeting: Meeting; transcript: TranscriptView }
     <div className="min-h-0 px-5 py-6">
       <h2 className="m-0 mb-4 text-[0.95rem] font-semibold">
         Transcript
-        <span className="sr-only">{` for ${props.meeting.sourceId}`}</span>
+        <span className="sr-only">{` for ${props.meeting.name}`}</span>
       </h2>
       {props.transcript.kind === "pending" ? <TranscriptSkeleton /> : null}
       {props.transcript.kind === "empty" ? (
