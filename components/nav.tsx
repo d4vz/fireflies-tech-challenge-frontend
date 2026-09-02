@@ -3,20 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type Ref } from "react";
-import {
-  ChartBar,
-  House,
-  LayoutGrid,
-  ListChecks,
-  Mic,
-  Settings,
-  Sparkles,
-  Star,
-  Video,
-} from "@animateicons/react/lucide";
+import { House, ListChecks, Sparkles, Video } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { handleHover } from "@lib/handle-hover";
 import { useAssistantPresence } from "@/hooks/use-assistant-presence";
@@ -25,7 +13,6 @@ import {
   type AssistantNavItem,
   type NavIcon,
   type NavItem,
-  type PlaceholderNavItem,
   type RouteNavItem,
 } from "@lib/nav";
 
@@ -36,11 +23,6 @@ const NAV_ICONS = {
   meetings: Video,
   askfred: Sparkles,
   tasks: ListChecks,
-  skills: Star,
-  analytics: ChartBar,
-  voice: Mic,
-  integrations: LayoutGrid,
-  settings: Settings,
 } as const satisfies Record<NavIcon, NavGlyphIcon>;
 
 function navClass(active: boolean) {
@@ -88,25 +70,6 @@ function RouteLink(props: { item: RouteNavItem; pathname: string }) {
   );
 }
 
-function PlaceholderItem(props: { item: PlaceholderNavItem }) {
-  const iconRef = useRef<IconHandle>(null);
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        type="button"
-        className={navClass(false)}
-        aria-disabled="true"
-        onMouseEnter={(event) => handleHover(event, iconRef)}
-        onMouseLeave={(event) => handleHover(event, iconRef)}
-      >
-        <NavGlyph icon={props.item.icon} iconRef={iconRef} />
-        {props.item.label}
-      </TooltipTrigger>
-      <TooltipContent side="right">Coming soon</TooltipContent>
-    </Tooltip>
-  );
-}
-
 function AssistantLink(props: { item: AssistantNavItem }) {
   const iconRef = useRef<IconHandle>(null);
   const assistant = useAssistantPresence();
@@ -129,8 +92,6 @@ function NavItemView(props: { item: NavItem; pathname: string }) {
   switch (item.kind) {
     case "route":
       return <RouteLink item={item} pathname={props.pathname} />;
-    case "placeholder":
-      return <PlaceholderItem item={item} />;
     case "assistant":
       return <AssistantLink item={item} />;
     default: {
@@ -143,16 +104,9 @@ function NavItemView(props: { item: NavItem; pathname: string }) {
 export function Nav(props: NavProps) {
   return (
     <nav className="grid gap-0.5">
-      {props.items.map((item, index) => {
-        const previous = index === 0 ? undefined : props.items[index - 1];
-        const showSeparator = item.icon === "integrations" && previous?.icon !== "integrations";
-        return (
-          <div key={`${item.kind}-${item.label}`}>
-            {showSeparator ? <Separator className="my-2" /> : null}
-            <NavItemView item={item} pathname={props.pathname} />
-          </div>
-        );
-      })}
+      {props.items.map((item) => (
+        <NavItemView key={`${item.kind}-${item.label}`} item={item} pathname={props.pathname} />
+      ))}
     </nav>
   );
 }
