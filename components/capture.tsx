@@ -6,6 +6,7 @@ import { InfoIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Dropzone } from "@/components/ui/dropzone";
 import { Input } from "@/components/ui/input";
+import { useCaptureReadiness } from "@/hooks/use-capture-readiness";
+import type { CaptureReadinessItem, CaptureReadinessStatus } from "@lib/capture-readiness";
 import { uploadVideo } from "@lib/api";
 import {
   PROCESSING_NOTICE,
@@ -184,6 +187,9 @@ function CaptureSplitButton(props: {
 const SCREEN_CAPTURE_COMPAT_HREF =
   "https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia#browser_compatibility";
 
+const SCREEN_CAPTURE_PERMISSION_HINT =
+  "If Window or Entire screen is empty, reload the app. You may also need to enable Screen Recording in system settings.";
+
 function CaptureDeviceAlert() {
   return (
     <Alert variant="warning">
@@ -213,6 +219,48 @@ function UploadPendingAlert() {
   );
 }
 
+function readinessDotClass(status: CaptureReadinessStatus): string {
+  switch (status) {
+    case "ready":
+      return "bg-ready";
+    case "blocked":
+      return "bg-danger";
+    case "checking":
+      return "bg-muted-foreground";
+    default: {
+      const exhaustive: never = status;
+      return exhaustive;
+    }
+  }
+}
+
+type CaptureReadinessChecksProps = {
+  items: readonly CaptureReadinessItem[];
+};
+
+function CaptureReadinessChecks(props: CaptureReadinessChecksProps) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {props.items.map((item) => (
+        <Badge
+          key={item.label}
+          variant="outline"
+          className="h-6 gap-1.5"
+          data-icon="inline-end"
+          title={item.detail}
+          aria-label={`${item.label}: ${item.detail}`}
+        >
+          {item.label}
+          <span
+            className={`size-2 shrink-0 rounded-full ${readinessDotClass(item.status)}`}
+            aria-hidden="true"
+          />
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
 function CaptureNameDialog(props: {
   session: CaptureSession;
   setSession: SessionSetter;
@@ -225,6 +273,7 @@ function CaptureNameDialog(props: {
   const name = isNaming(session) ? session.name : "";
   const showDrop = session.kind === "picking-upload" || session.kind === "naming-upload";
   const selectedFileName = session.kind === "naming-upload" ? session.file.name : undefined;
+  const readiness = useCaptureReadiness(session.kind === "naming-capture");
 
   return (
     <Dialog
@@ -257,7 +306,13 @@ function CaptureNameDialog(props: {
             }
           }}
         />
-        {session.kind === "naming-capture" ? <CaptureDeviceAlert /> : null}
+        {session.kind === "naming-capture" ? (
+          <>
+            <CaptureReadinessChecks items={readiness} />
+            <CaptureDeviceAlert />
+            <p className="text-xs text-muted-foreground">{SCREEN_CAPTURE_PERMISSION_HINT}</p>
+          </>
+        ) : null}
         {showDrop ? (
           <>
             <UploadPendingAlert />

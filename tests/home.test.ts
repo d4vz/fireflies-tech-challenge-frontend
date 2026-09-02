@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { join } from "node:path";
 import {
   assistantChrome,
+  assistantOpenClickKind,
   assistantOpenHref,
   assistantPanelSlot,
   homeHref,
@@ -88,6 +89,23 @@ test("assistantOpenHref keeps Home tab and query", () => {
 
 test("assistantOpenHref is /?fred=1 off Home", () => {
   expect(assistantOpenHref({ current: null })).toBe("/?fred=1");
+});
+
+test("AskFred on Home pushes the URL so the dock opens on the first click", () => {
+  const onHome = { tab: "all", query: "", fred: "unset" } as const;
+  expect(assistantOpenClickKind(onHome, true)).toBe("push");
+  expect(assistantOpenClickKind(null, true)).toBe("navigate");
+  expect(assistantOpenClickKind(onHome, false)).toBe("ignore");
+});
+
+test("AppFrame and sidebar AskFred intercept Home clicks like the tab strip", async () => {
+  const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
+  const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
+  expect(frame).toContain("assistantOpenClickKind");
+  expect(frame).toContain("pushHomeUrl");
+  expect(frame).toContain("preventDefault");
+  expect(nav).toContain("assistantOpenClickKind");
+  expect(nav).toContain("pushHomeUrl");
 });
 
 test("assistantChrome maps fred without reading the viewport", () => {

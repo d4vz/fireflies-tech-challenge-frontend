@@ -115,7 +115,7 @@ export async function startScreenRecording(): Promise<ScreenRecording> {
     suppressLocalAudioPlayback: false,
   };
   const options: ScreenShareOptions = {
-    video: { frameRate: { ideal: 30 }, displaySurface: "browser" },
+    video: { frameRate: { ideal: 30 } },
     audio,
     systemAudio: "include",
     windowAudio: "system",
