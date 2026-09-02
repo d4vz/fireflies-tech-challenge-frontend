@@ -1,10 +1,43 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { InfoIcon, TriangleAlertIcon } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Dropzone } from "@/components/ui/dropzone";
+import { Input } from "@/components/ui/input";
 import { uploadVideo } from "@lib/api";
-import { meetingsKey } from "@lib/meetings";
+import {
+  PROCESSING_NOTICE,
+  UPLOAD_PENDING_HINT,
+  VIDEO_ACCEPT,
+  VIDEO_FORMAT_LABEL,
+  applyUploadFile,
+  canConfirm,
+  confirmCaptureNaming,
+  confirmUploadNaming,
+  failSession,
+  firstAcceptedVideo,
+  isNameModalOpen,
+  resetSession,
+  sessionLabel,
+  setSessionName,
+  startCaptureNaming,
+  startPickingUpload,
+  uploadFilename,
+  type CaptureSession,
+  type NamingSession,
+} from "@lib/capture-session";
+import { meetingId, type Meeting } from "@lib/meetings";
 import { startScreenRecording, type ScreenRecording } from "@lib/screen-record";
 
 function CameraIcon() {
@@ -38,19 +71,231 @@ function Spinner() {
   );
 }
 
+function isNaming(session: CaptureSession): session is NamingSession {
+  return (
+    session.kind === "naming-capture" ||
+    session.kind === "picking-upload" ||
+    session.kind === "naming-upload"
+  );
+}
+
+type SessionSetter = Dispatch<SetStateAction<CaptureSession>>;
+
+type AfterUpload = (meeting: Meeting) => void;
+
+async function recordThenUpload(
+  current: Extract<CaptureSession, { kind: "naming-capture" }>,
+  recordingRef: { current: ScreenRecording | null },
+  setSession: SessionSetter,
+  afterUpload: AfterUpload,
+) {
+  const next = confirmCaptureNaming(current);
+  setSession(next);
+  if (next.kind !== "recording") {
+    return;
+  }
+  try {
+    const handle = await startScreenRecording();
+    recordingRef.current = handle;
+    const file = await handle.done;
+    recordingRef.current = null;
+    setSession({ kind: "uploading", name: next.name });
+    const meeting = await uploadVideo(file, uploadFilename(next.name, file));
+    setSession(resetSession());
+    afterUpload(meeting);
+  } catch (caught) {
+    recordingRef.current = null;
+    if (caught instanceof DOMException && caught.name === "NotAllowedError") {
+      setSession(resetSession());
+      return;
+    }
+    setSession(failSession(caught instanceof Error ? caught.message : "recording failed"));
+  }
+}
+
+async function uploadNamedFile(
+  current: Extract<CaptureSession, { kind: "naming-upload" }>,
+  setSession: SessionSetter,
+  afterUpload: AfterUpload,
+) {
+  const confirmed = confirmUploadNaming(current);
+  if (confirmed.kind !== "uploading") {
+    return;
+  }
+  setSession(confirmed.session);
+  try {
+    const meeting = await uploadVideo(confirmed.file, confirmed.filename);
+    setSession(resetSession());
+    afterUpload(meeting);
+  } catch (caught) {
+    setSession(failSession(caught instanceof Error ? caught.message : "upload failed"));
+  }
+}
+
+function CaptureSplitButton(props: {
+  uploading: boolean;
+  menuOpen: boolean;
+  captureRef: { current: HTMLDivElement | null };
+  onCapture: () => void;
+  onToggleMenu: () => void;
+  onUploadVideo: () => void;
+}) {
+  return (
+    <div className="relative" ref={props.captureRef}>
+      <div className="inline-flex overflow-hidden rounded-[10px]">
+        <button
+          aria-busy={props.uploading}
+          className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-2.5 py-2 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent md:px-3.5"
+          disabled={props.uploading}
+          type="button"
+          onClick={props.onCapture}
+        >
+          {props.uploading ? <Spinner /> : <CameraIcon />}
+          <span className="max-md:sr-only">Capture</span>
+        </button>
+        <button
+          aria-expanded={props.menuOpen}
+          aria-haspopup="menu"
+          aria-label="Upload video"
+          className="inline-flex cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
+          disabled={props.uploading}
+          type="button"
+          onClick={props.onToggleMenu}
+        >
+          <ChevronIcon />
+        </button>
+      </div>
+      {props.menuOpen ? (
+        <div className="absolute top-[calc(100%+0.4rem)] right-0 z-10 min-w-45 rounded-xl border border-line bg-paper p-1.5 shadow-[0_10px_30px_rgba(16,18,27,0.1)]">
+          <button
+            className="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-2 text-left hover:bg-nav"
+            type="button"
+            onClick={props.onUploadVideo}
+          >
+            Upload video
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+const SCREEN_CAPTURE_COMPAT_HREF =
+  "https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia#browser_compatibility";
+
+function CaptureDeviceAlert() {
+  return (
+    <Alert variant="warning">
+      <TriangleAlertIcon />
+      <AlertTitle>Limited device support</AlertTitle>
+      <AlertDescription>
+        Screen capture does not work properly on some phones, tablets, and browsers.{" "}
+        <a href={SCREEN_CAPTURE_COMPAT_HREF} target="_blank" rel="noreferrer">
+          See which devices this works on
+        </a>
+        .
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function UploadPendingAlert() {
+  return (
+    <Alert variant="info">
+      <InfoIcon />
+      <AlertTitle>Pending after upload</AlertTitle>
+      <AlertDescription>
+        {UPLOAD_PENDING_HINT.replace(/Meetings\.$/, "")}
+        <Link href="/meetings">Meetings</Link>.
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function CaptureNameDialog(props: {
+  session: CaptureSession;
+  setSession: SessionSetter;
+  onConfirm: () => void;
+}) {
+  const session = props.session;
+  const namingOpen = isNameModalOpen(session);
+  const confirmEnabled = canConfirm(session);
+  const confirmLabel = session.kind === "naming-capture" ? "Start capture" : "Upload";
+  const name = isNaming(session) ? session.name : "";
+  const showDrop = session.kind === "picking-upload" || session.kind === "naming-upload";
+  const selectedFileName = session.kind === "naming-upload" ? session.file.name : undefined;
+
+  return (
+    <Dialog
+      open={namingOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          props.setSession((current) => (isNameModalOpen(current) ? resetSession() : current));
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-lg md:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Meeting name</DialogTitle>
+        </DialogHeader>
+        <Input
+          aria-label="Meeting name"
+          value={name}
+          autoFocus
+          placeholder="Meeting name"
+          onChange={(event) => {
+            const nextName = event.target.value;
+            props.setSession((current) =>
+              isNaming(current) ? setSessionName(current, nextName) : current,
+            );
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              props.onConfirm();
+            }
+          }}
+        />
+        {session.kind === "naming-capture" ? <CaptureDeviceAlert /> : null}
+        {showDrop ? (
+          <>
+            <UploadPendingAlert />
+            <Dropzone
+              accept={VIDEO_ACCEPT}
+              className="min-h-32 gap-1.5 sm:min-h-40"
+              onDrop={(files) => {
+                const file = firstAcceptedVideo(files);
+                if (!file) {
+                  return;
+                }
+                props.setSession((current) => applyUploadFile(current, file));
+              }}
+            >
+              <span className="text-foreground">
+                {selectedFileName ?? "Drop a video or click to browse"}
+              </span>
+              <span>Supported files: {VIDEO_FORMAT_LABEL}</span>
+            </Dropzone>
+          </>
+        ) : null}
+        <DialogFooter>
+          <Button type="button" disabled={!confirmEnabled} onClick={props.onConfirm}>
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function Capture() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const inputRef = useRef<HTMLInputElement>(null);
   const captureRef = useRef<HTMLDivElement>(null);
   const recordingRef = useRef<ScreenRecording | null>(null);
-  const [open, setOpen] = useState(false);
-  const [stage, setStage] = useState("");
-  const [error, setError] = useState("");
-  const [recording, setRecording] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [session, setSession] = useState<CaptureSession>(resetSession);
 
   useEffect(() => {
-    if (!open) {
+    if (!menuOpen) {
       return;
     }
     function onPointerDown(event: PointerEvent) {
@@ -58,62 +303,43 @@ export function Capture() {
       if (node instanceof Node && captureRef.current?.contains(node)) {
         return;
       }
-      setOpen(false);
+      setMenuOpen(false);
     }
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+  }, [menuOpen]);
 
-  async function onFile(file: File | undefined) {
-    if (!file) {
+  function afterUpload(meeting: Meeting) {
+    const id = meetingId(meeting);
+    toast(PROCESSING_NOTICE, {
+      description: (
+        <Link className="underline underline-offset-3" href={`/meetings/${id}`}>
+          View meeting
+        </Link>
+      ),
+    });
+  }
+
+  function onConfirm() {
+    if (session.kind === "naming-capture") {
+      void recordThenUpload(session, recordingRef, setSession, afterUpload);
       return;
     }
-    setError("");
-    setOpen(false);
-    setStage("uploading");
-    try {
-      await uploadVideo(file);
-      setStage("");
-      await queryClient.invalidateQueries({ queryKey: meetingsKey });
-      router.push("/meetings");
-    } catch (caught) {
-      setStage("");
-      setError(caught instanceof Error ? caught.message : "upload failed");
+    if (session.kind === "naming-upload") {
+      void uploadNamedFile(session, setSession, afterUpload);
     }
   }
 
-  async function onRecord() {
-    setError("");
-    setOpen(false);
-    try {
-      const session = await startScreenRecording();
-      recordingRef.current = session;
-      setRecording(true);
-      setStage("recording");
-      const file = await session.done;
-      recordingRef.current = null;
-      setRecording(false);
-      await onFile(file);
-    } catch (caught) {
-      recordingRef.current = null;
-      setRecording(false);
-      setStage("");
-      if (caught instanceof DOMException && caught.name === "NotAllowedError") {
-        return;
-      }
-      setError(caught instanceof Error ? caught.message : "recording failed");
-    }
-  }
-
-  function onStopRecording() {
-    recordingRef.current?.stop();
-  }
-
-  const uploading = stage === "uploading";
+  const uploading = session.kind === "uploading";
+  const recording = session.kind === "recording";
+  const label = sessionLabel(session);
+  const error = session.kind === "failed" ? session.message : "";
 
   return (
     <div className="relative flex shrink-0 items-center gap-3">
-      {stage ? <span className="hidden text-[0.85rem] text-muted md:inline">{stage}</span> : null}
+      {label ? (
+        <span className="hidden text-[0.85rem] text-muted-foreground md:inline">{label}</span>
+      ) : null}
       {error ? (
         <span className="max-w-24 truncate text-[0.85rem] text-danger md:max-w-none">{error}</span>
       ) : null}
@@ -121,62 +347,27 @@ export function Capture() {
         <button
           className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border-0 bg-danger px-3.5 py-2 font-semibold text-white"
           type="button"
-          onClick={onStopRecording}
+          onClick={() => recordingRef.current?.stop()}
         >
           Stop
         </button>
       ) : (
-        <div className="relative" ref={captureRef}>
-          <div className="inline-flex overflow-hidden rounded-[10px]">
-            <button
-              aria-busy={uploading}
-              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-accent px-2.5 py-2 font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent md:px-3.5"
-              disabled={uploading}
-              type="button"
-              onClick={onRecord}
-            >
-              {uploading ? <Spinner /> : <CameraIcon />}
-              <span className="max-md:sr-only">Capture</span>
-            </button>
-            <button
-              aria-expanded={open}
-              aria-haspopup="menu"
-              aria-label="Upload video"
-              className="inline-flex cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
-              disabled={uploading}
-              type="button"
-              onClick={() => setOpen((value) => !value)}
-            >
-              <ChevronIcon />
-            </button>
-          </div>
-          {open ? (
-            <div className="absolute top-[calc(100%+0.4rem)] right-0 z-10 min-w-45 rounded-xl border border-line bg-paper p-1.5 shadow-[0_10px_30px_rgba(16,18,27,0.1)]">
-              <button
-                className="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-2 text-left hover:bg-nav"
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  inputRef.current?.click();
-                }}
-              >
-                Upload video
-              </button>
-            </div>
-          ) : null}
-        </div>
+        <CaptureSplitButton
+          uploading={uploading}
+          menuOpen={menuOpen}
+          captureRef={captureRef}
+          onCapture={() => {
+            setMenuOpen(false);
+            setSession(startCaptureNaming());
+          }}
+          onToggleMenu={() => setMenuOpen((value) => !value)}
+          onUploadVideo={() => {
+            setMenuOpen(false);
+            setSession(startPickingUpload());
+          }}
+        />
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/x-m4v,.mp4,.webm,.mov,.mkv,.m4v"
-        hidden
-        disabled={uploading}
-        onChange={(event) => {
-          onFile(event.target.files?.[0]);
-          event.target.value = "";
-        }}
-      />
+      <CaptureNameDialog session={session} setSession={setSession} onConfirm={onConfirm} />
     </div>
   );
 }

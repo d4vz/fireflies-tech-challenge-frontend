@@ -153,29 +153,18 @@ test("toHomeModel tags busy and action-item cards with sample coverage", () => {
   });
 });
 
-test("toHomeModel omits longest-processing when no fetched meeting is busy", () => {
-  const model = toHomeModel({
-    page: pageOf([ready, failed]),
-    view: defaults,
-    now,
-    workspaceName: "Davi",
-  });
-  expect(model.insights.some((card) => card.kind === "longest-processing")).toBe(false);
-  expect(model.coverage).toEqual({ kind: "complete" });
-});
-
-test("toHomeModel picks the oldest busy meeting for longest-processing", () => {
+test("toHomeModel never adds a longest-processing insight card", () => {
   const model = toHomeModel({
     page: pageOf([queued, processing]),
     view: defaults,
     now,
     workspaceName: "Davi",
   });
-  expect(model.insights).toContainEqual({
-    kind: "longest-processing",
-    meeting: processing,
-    processingForMs: now.getTime() - Date.parse(processing.createdAt),
-  });
+  expect(model.insights.map((card) => card.kind)).toEqual([
+    "meeting-count",
+    "busy-count",
+    "action-item-count",
+  ]);
 });
 
 test("toHomeModel filters rows by tab then query on sourceId and summary", () => {
@@ -217,4 +206,16 @@ test("Home RSC fetches meetings on the server and hydrates the client dashboard"
   expect(page).toContain("initialPage");
   expect(dashboard).toContain("initialData:");
   expect(dashboard).toContain("props.initialPage");
+});
+
+test("AskFred sheet uses full-travel slide and the dock animates", async () => {
+  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
+  const sheet = await Bun.file(join(import.meta.dir, "../components/ui/sheet.tsx")).text();
+  expect(canvas).toContain('slideTravel="full"');
+  expect(canvas).toContain("data-[side=right]:data-open:slide-in-from-right");
+  expect(canvas).toContain("data-[side=right]:data-closed:slide-out-to-right");
+  expect(canvas.includes("slide-in-from-right-10")).toBe(false);
+  expect(canvas).toContain("animate-in fade-in-0 slide-in-from-right");
+  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right ");
+  expect(sheet).toContain("data-[side=right]:data-open:slide-in-from-right-10");
 });
