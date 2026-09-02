@@ -60,6 +60,48 @@ export function parseHomeView(params: HomeSearchParams): HomeView {
   };
 }
 
+export function parseHomeViewFromSearch(search: string): HomeView {
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  return parseHomeView({
+    tab: params.get("tab") ?? undefined,
+    q: params.get("q") ?? undefined,
+    fred: params.get("fred") ?? undefined,
+  });
+}
+
+export type ClickModifiers = {
+  button: number;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+};
+
+export function isPlainLeftClick(event: ClickModifiers): boolean {
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+}
+
+const HOME_URL_EVENT = "fireflies-home-url";
+
+export function subscribeHomeUrl(onChange: () => void): () => void {
+  window.addEventListener("popstate", onChange);
+  window.addEventListener(HOME_URL_EVENT, onChange);
+  return () => {
+    window.removeEventListener("popstate", onChange);
+    window.removeEventListener(HOME_URL_EVENT, onChange);
+  };
+}
+
+export function pushHomeUrl(view: HomeView): void {
+  const href = homeHref(view);
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (current === href) {
+    return;
+  }
+  window.history.pushState(null, "", href);
+  window.dispatchEvent(new Event(HOME_URL_EVENT));
+}
+
 export function homeHref(view: HomeView): string {
   const params = new URLSearchParams();
   if (view.tab !== "all") {

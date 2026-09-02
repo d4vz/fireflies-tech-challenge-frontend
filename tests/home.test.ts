@@ -5,7 +5,9 @@ import {
   assistantOpenHref,
   assistantPanelSlot,
   homeHref,
+  isPlainLeftClick,
   parseHomeView,
+  parseHomeViewFromSearch,
   toHomeModel,
   type HomeView,
 } from "@lib/home";
@@ -45,6 +47,37 @@ test("homeHref drops default fields so home stays /", () => {
 test("homeHref writes only non-default fields", () => {
   expect(homeHref({ tab: "ready", query: "eng", fred: "open" })).toBe("/?tab=ready&q=eng&fred=1");
   expect(homeHref({ tab: "all", query: "", fred: "closed" })).toBe("/?fred=0");
+});
+
+test("parseHomeViewFromSearch reads the tab from the query string", () => {
+  expect(parseHomeViewFromSearch("?tab=ready&q=eng")).toEqual({
+    tab: "ready",
+    query: "eng",
+    fred: "unset",
+  });
+  expect(parseHomeViewFromSearch("")).toEqual(defaults);
+});
+
+test("isPlainLeftClick is false for modified or non-primary clicks", () => {
+  const plain = { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false };
+  expect(isPlainLeftClick(plain)).toBe(true);
+  expect(isPlainLeftClick({ ...plain, button: 1 })).toBe(false);
+  expect(isPlainLeftClick({ ...plain, metaKey: true })).toBe(false);
+  expect(isPlainLeftClick({ ...plain, ctrlKey: true })).toBe(false);
+});
+
+test("Home tab clicks filter the current page without a new RSC fetch", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  expect(dashboard).toContain("isPlainLeftClick");
+  expect(dashboard).toContain("pushHomeUrl");
+  expect(dashboard).toContain("preventDefault");
+});
+
+test("AppFrame and AskFred sheet follow pushHomeUrl so tab stays in the header href", async () => {
+  const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
+  const canvas = await Bun.file(join(import.meta.dir, "../components/workspace-canvas.tsx")).text();
+  expect(frame).toContain("subscribeHomeUrl");
+  expect(canvas).toContain("pushHomeUrl");
 });
 
 test("assistantOpenHref keeps Home tab and query", () => {

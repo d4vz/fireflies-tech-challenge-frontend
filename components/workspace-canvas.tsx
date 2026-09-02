@@ -1,9 +1,13 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { assistantPanelSlot, homeHref, parseHomeView, type AssistantChrome } from "@lib/home";
+import {
+  assistantPanelSlot,
+  parseHomeViewFromSearch,
+  pushHomeUrl,
+  type AssistantChrome,
+} from "@lib/home";
 
 export type AssistantRail = {
   kind: "assistant";
@@ -25,13 +29,8 @@ export type WorkspaceCanvasProps = {
   children: ReactNode;
 };
 
-function closeFredHref(params: URLSearchParams): string {
-  const view = parseHomeView({
-    tab: params.get("tab") ?? undefined,
-    q: params.get("q") ?? undefined,
-    fred: params.get("fred") ?? undefined,
-  });
-  return homeHref({ ...view, fred: "unset" });
+function closeFredView() {
+  return { ...parseHomeViewFromSearch(window.location.search), fred: "unset" as const };
 }
 
 const XL_QUERY = "(min-width: 1280px)";
@@ -52,8 +51,6 @@ type AssistantWorkspaceProps = {
 };
 
 function AssistantWorkspace(props: AssistantWorkspaceProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const chrome = props.rail.chrome;
   const isXl = useSyncExternalStore(subscribeXl, xlSnapshot, () => true);
   const slot = assistantPanelSlot(isXl, chrome.sheetOpen);
@@ -79,7 +76,7 @@ function AssistantWorkspace(props: AssistantWorkspaceProps) {
           if (open) {
             return;
           }
-          router.replace(closeFredHref(searchParams));
+          pushHomeUrl(closeFredView());
         }}
       >
         <SheetContent
