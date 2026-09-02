@@ -145,6 +145,7 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
   const query = useQuery({
     ...actionsListQuery(1, HOME_RECENT_TASK_GROUPS, "pending"),
     initialData: props.initialPage,
+    refetchInterval: 2000,
   });
   if (query.error !== null) {
     return (
