@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Mic } from "lucide-react";
 import { StatusLabel } from "@components/status-label";
 import { Thumb } from "@components/thumb";
 import { When } from "@components/when";
@@ -10,6 +10,29 @@ import { meetingId, type Meeting } from "@lib/meetings";
 export type MeetingRowProps = {
   meeting: Meeting;
 };
+
+function MeetingPreview(props: { blob: Meeting["blob"] }) {
+  switch (props.blob.kind) {
+    case "video":
+      return (
+        <Thumb
+          className="pointer-events-none size-full object-cover"
+          src={props.blob.thumbnailUrl}
+        />
+      );
+    case "audio":
+      return (
+        <div className="flex size-full items-center justify-center text-muted-foreground">
+          <Mic className="size-8" aria-hidden="true" />
+          <span className="sr-only">Audio recording</span>
+        </div>
+      );
+    default: {
+      const _exhaustive: never = props.blob;
+      return _exhaustive;
+    }
+  }
+}
 
 export function MeetingRow(props: MeetingRowProps) {
   const meeting = props.meeting;
@@ -20,10 +43,7 @@ export function MeetingRow(props: MeetingRowProps) {
       href={`/meetings/${id}`}
     >
       <div className="aspect-video min-w-0 overflow-hidden rounded-[14px] bg-neutral-200">
-        <Thumb
-          className="pointer-events-none size-full object-cover"
-          src={meeting.blob.thumbnailUrl}
-        />
+        <MeetingPreview blob={meeting.blob} />
       </div>
       <div className="grid min-w-0 gap-1.5 pt-0.5">
         <div className="flex min-w-0 flex-wrap items-center gap-2">

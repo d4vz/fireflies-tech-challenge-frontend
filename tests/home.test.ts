@@ -124,7 +124,7 @@ function meeting(input: {
             takeaways: [],
             actionItems: input.actionItems ?? [],
           },
-    blob: { url: "/v", thumbnailUrl: "/t", durationInSeconds: 1 },
+    blob: { kind: "video", url: "/v", thumbnailUrl: "/t", durationInSeconds: 1 },
   };
 }
 

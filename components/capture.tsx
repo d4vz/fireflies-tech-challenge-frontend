@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { InfoIcon, TriangleAlertIcon, Upload } from "lucide-react";
+import { InfoIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,14 +19,14 @@ import { uploadVideo } from "@lib/api";
 import {
   PROCESSING_NOTICE,
   UPLOAD_PENDING_HINT,
-  VIDEO_ACCEPT,
-  VIDEO_FORMAT_LABEL,
+  MEDIA_ACCEPT,
+  MEDIA_FORMAT_LABEL,
   applyUploadFile,
   canConfirm,
   confirmCaptureNaming,
   confirmUploadNaming,
   failSession,
-  firstAcceptedVideo,
+  firstAcceptedMedia,
   isNameModalOpen,
   resetSession,
   sessionLabel,
@@ -156,7 +156,7 @@ function CaptureSplitButton(props: {
         <button
           aria-expanded={props.menuOpen}
           aria-haspopup="menu"
-          aria-label="Upload video"
+          aria-label="Upload"
           className="inline-flex cursor-pointer items-center border-0 border-l border-white/25 bg-accent px-2 text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-accent"
           disabled={props.uploading}
           type="button"
@@ -166,19 +166,13 @@ function CaptureSplitButton(props: {
         </button>
       </div>
       {props.menuOpen ? (
-        <div className="absolute top-[calc(100%+0.4rem)] right-0 z-10 w-[min(18rem,calc(100vw-1.5rem))] rounded-xl border border-line bg-paper p-1.5 shadow-[0_10px_30px_rgba(16,18,27,0.1)]">
+        <div className="absolute top-[calc(100%+0.4rem)] right-0 z-10 min-w-45 rounded-xl border border-line bg-paper p-1.5 shadow-[0_10px_30px_rgba(16,18,27,0.1)]">
           <button
-            className="flex w-full cursor-pointer items-start gap-3 rounded-lg border-0 bg-transparent px-3 py-2.5 text-left hover:bg-nav"
+            className="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-2 text-left hover:bg-nav"
             type="button"
             onClick={props.onUploadVideo}
           >
-            <Upload className="mt-0.5 size-4 shrink-0" />
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold">Upload video</span>
-              <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">
-                Add a recording from your computer
-              </span>
-            </span>
+            Upload
           </button>
         </div>
       ) : null}
@@ -267,10 +261,10 @@ function CaptureNameDialog(props: {
           <>
             <UploadPendingAlert />
             <Dropzone
-              accept={VIDEO_ACCEPT}
+              accept={MEDIA_ACCEPT}
               className="min-h-32 gap-1.5 sm:min-h-40"
               onDrop={(files) => {
-                const file = firstAcceptedVideo(files);
+                const file = firstAcceptedMedia(files);
                 if (!file) {
                   return;
                 }
@@ -278,9 +272,9 @@ function CaptureNameDialog(props: {
               }}
             >
               <span className="text-foreground">
-                {selectedFileName ?? "Drop a video or click to browse"}
+                {selectedFileName ?? "Drop a video or audio file, or click to browse"}
               </span>
-              <span>Supported files: {VIDEO_FORMAT_LABEL}</span>
+              <span>Supported files: {MEDIA_FORMAT_LABEL}</span>
             </Dropzone>
           </>
         ) : null}

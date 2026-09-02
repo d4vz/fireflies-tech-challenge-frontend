@@ -61,7 +61,7 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="overflow-hidden rounded-[14px] bg-neutral-200">
-        <Clip className="block w-full" src={meeting.blob.url} poster={meeting.blob.thumbnailUrl} />
+        <Clip blob={meeting.blob} className="block w-full" />
       </div>
       <div>
         <h1 className="m-0 break-words text-[1.35rem] md:text-[1.6rem]">{meeting.sourceId}</h1>

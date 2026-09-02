@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  parsePublicMeeting,
   toPublicMeeting,
   type Meeting,
   type MeetingListPage,
@@ -24,7 +25,7 @@ export async function listMeetings(page: number, limit: number): Promise<Meeting
   const body: MeetingListPage = await res.json();
   return {
     ...body,
-    items: body.items.map(toPublicMeeting),
+    items: body.items.map((item) => toPublicMeeting(parsePublicMeeting(item))),
   };
 }
 
@@ -37,7 +38,7 @@ export async function getMeeting(id: string): Promise<Meeting | null> {
     throw new Error("could not load meeting");
   }
   const meeting: Meeting = await res.json();
-  return toPublicMeeting(meeting);
+  return toPublicMeeting(parsePublicMeeting(meeting));
 }
 
 export async function proxyUpload(request: Request): Promise<Response> {
