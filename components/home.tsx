@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ListChecks, ListVideo, Loader, Sparkles, Timer, X } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { AskFred } from "@components/ask-fred";
 import { MeetingRow } from "@components/meeting-row";
 import { HomeDashboardSkeleton } from "@components/skeleton";
@@ -227,6 +228,7 @@ export function HomeCanvas(props: HomeCanvasProps) {
 }
 
 export function HomeDashboard(props: HomeDashboardProps) {
+  const [now, setNow] = useState<Date | null>(null);
   const query = useQuery({
     queryKey: meetingsListKey(1, HOME_DASHBOARD_LIMIT),
     queryFn: () => listMeetings(1, HOME_DASHBOARD_LIMIT),
@@ -239,6 +241,10 @@ export function HomeDashboard(props: HomeDashboardProps) {
     },
   });
 
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
+
   if (query.error) {
     return (
       <main className="home-empty h-full overflow-y-auto px-8 pt-8 pb-12">
@@ -247,14 +253,14 @@ export function HomeDashboard(props: HomeDashboardProps) {
     );
   }
 
-  if (query.isPending || !query.data) {
+  if (query.isPending || !query.data || now === null) {
     return <HomeDashboardSkeleton />;
   }
 
   const model = toHomeModel({
     page: query.data,
     view: props.view,
-    now: new Date(),
+    now,
     workspaceName: WORKSPACE_NAME,
   });
   return <HomeCanvas model={model} fred={props.view.fred} />;
