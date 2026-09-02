@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Clip } from "@components/clip";
-import { DetailCanvas, type TranscriptView } from "@components/detail-canvas";
+import { DetailCanvas } from "@components/detail-canvas";
 import { MeetingDetailSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
 import { TaskChecklist } from "@components/task-list";
@@ -19,25 +19,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { type Meeting } from "@lib/meetings";
 import { meetingQuery, transcriptsQuery } from "@lib/query-policy";
-
-type TranscriptQueryInput = {
-  chunks: { text: string }[] | undefined;
-  meetingFailed: boolean;
-  queryError: boolean;
-};
-
-function toTranscriptView(input: TranscriptQueryInput): TranscriptView {
-  if (input.chunks) {
-    if (input.chunks.length === 0) {
-      return { kind: "empty" };
-    }
-    return { kind: "text", value: input.chunks.map((chunk) => chunk.text).join("") };
-  }
-  if (input.meetingFailed || input.queryError) {
-    return { kind: "empty" };
-  }
-  return { kind: "pending" };
-}
+import { toTranscriptView } from "@lib/transcript-view";
 
 type MeetingDetailBodyProps = {
   meeting: Meeting;
@@ -139,7 +121,7 @@ export function MeetingDetail(props: MeetingDetailProps) {
 
   const meeting = meetingState.data;
   const transcript = toTranscriptView({
-    chunks: transcriptState.data,
+    turns: transcriptState.data,
     meetingFailed: meeting.status === "failed",
     queryError: transcriptState.isError,
   });
