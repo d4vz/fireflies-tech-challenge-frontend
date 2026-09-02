@@ -8,11 +8,8 @@ services:
       - "8080:8080"
     environment:
       PORT: "8080"
+      HOSTNAME: 0.0.0.0
       API_URL: ${API_URL:-http://api:3000}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
-    depends_on:
-      api:
-        condition: service_started
-        required: false
     restart: on-failure
