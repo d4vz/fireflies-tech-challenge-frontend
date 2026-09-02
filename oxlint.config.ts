@@ -15,6 +15,7 @@ export default {
     "out/**",
     "tools/oxlint/anti-slop/**",
     "components/ui/**",
+    "components/ai-elements/**",
   ],
   jsPlugins: [{ name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" }],
   rules: {

@@ -66,6 +66,37 @@ export async function proxyUpload(request: Request): Promise<Response> {
   });
 }
 
+const UI_MESSAGE_STREAM_HEADER = "x-vercel-ai-ui-message-stream";
+
+export async function proxyAskFred(request: Request): Promise<Response> {
+  const headers = new Headers();
+  const contentType = request.headers.get("content-type");
+  if (contentType) {
+    headers.set("Content-Type", contentType);
+  }
+  const uiStream = request.headers.get(UI_MESSAGE_STREAM_HEADER);
+  if (uiStream) {
+    headers.set(UI_MESSAGE_STREAM_HEADER, uiStream);
+  }
+  const init: StreamProxyInit = {
+    method: "POST",
+    headers,
+    body: request.body,
+    duplex: "half",
+  };
+  const res = await fetch(backendUrl("/ask-fred"), init);
+  const out = new Headers();
+  out.set("Content-Type", res.headers.get("Content-Type") ?? "text/event-stream");
+  const responseStream = res.headers.get(UI_MESSAGE_STREAM_HEADER);
+  if (responseStream) {
+    out.set(UI_MESSAGE_STREAM_HEADER, responseStream);
+  }
+  return new Response(res.body, {
+    status: res.status,
+    headers: out,
+  });
+}
+
 export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
   const res = await fetch(backendUrl(`/meetings/${id}/transcripts`), { cache: "no-store" });
   if (!res.ok) {
