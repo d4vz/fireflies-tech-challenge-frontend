@@ -189,12 +189,7 @@ export type ActionItemCountInsight = {
 
 export type InsightCard = MeetingCountInsight | BusyCountInsight | ActionItemCountInsight;
 
-export type TabCounts = {
-  all: number;
-  ready: number;
-  busy: number;
-  failed: number;
-};
+export const HOME_PREVIEW_COUNT = 2;
 
 export type HomeModel = {
   greeting: Greeting;
@@ -202,7 +197,6 @@ export type HomeModel = {
   insights: InsightCard[];
   tab: HomeTab;
   query: string;
-  tabCounts: TabCounts;
   rows: Meeting[];
 };
 
@@ -228,16 +222,6 @@ function actionItemTotal(items: Meeting[]): number {
   return count;
 }
 
-function matchesTab(meeting: Meeting, tab: HomeTab): boolean {
-  if (tab === "all") {
-    return true;
-  }
-  if (tab === "busy") {
-    return isBusy(meeting.status);
-  }
-  return meeting.status === tab;
-}
-
 function matchesQuery(meeting: Meeting, query: string): boolean {
   if (query === "") {
     return true;
@@ -246,20 +230,15 @@ function matchesQuery(meeting: Meeting, query: string): boolean {
   return haystack.includes(query.toLowerCase());
 }
 
-function tabCountsOf(items: Meeting[]): TabCounts {
-  const counts: TabCounts = { all: items.length, ready: 0, busy: 0, failed: 0 };
-  for (const meeting of items) {
-    if (meeting.status === "ready") {
-      counts.ready += 1;
-    }
-    if (meeting.status === "failed") {
-      counts.failed += 1;
-    }
-    if (isBusy(meeting.status)) {
-      counts.busy += 1;
-    }
-  }
-  return counts;
+function newestFirst(left: Meeting, right: Meeting): number {
+  return Date.parse(right.createdAt) - Date.parse(left.createdAt);
+}
+
+function previewRows(items: Meeting[], query: string): Meeting[] {
+  return items
+    .filter((item) => matchesQuery(item, query))
+    .toSorted(newestFirst)
+    .slice(0, HOME_PREVIEW_COUNT);
 }
 
 function insightsOf(page: MeetingListPage, coverage: InsightCoverage): InsightCard[] {
@@ -282,9 +261,6 @@ export function toHomeModel(input: ToHomeModelInput): HomeModel {
     insights: insightsOf(input.page, coverage),
     tab: input.view.tab,
     query: input.view.query,
-    tabCounts: tabCountsOf(input.page.items),
-    rows: input.page.items.filter(
-      (item) => matchesTab(item, input.view.tab) && matchesQuery(item, input.view.query),
-    ),
+    rows: previewRows(input.page.items, input.view.query),
   };
 }

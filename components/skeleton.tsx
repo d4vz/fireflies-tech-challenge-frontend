@@ -69,11 +69,11 @@ export function HomeDashboardSkeleton() {
         <Bone className="h-20 rounded-xl md:h-24" />
       </div>
       <div className="mt-8 grid gap-3">
-        <Bone className="h-8 w-80 max-w-full rounded-md" />
-        <MeetingRowBone />
-        <MeetingRowBone />
-        <MeetingRowBone />
-        <MeetingRowBone />
+        <Bone className="h-6 w-40 max-w-full rounded-md" />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <MeetingRowBone />
+          <MeetingRowBone />
+        </div>
       </div>
     </div>
   );

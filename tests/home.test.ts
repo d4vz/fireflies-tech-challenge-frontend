@@ -67,11 +67,18 @@ test("isPlainLeftClick is false for modified or non-primary clicks", () => {
   expect(isPlainLeftClick({ ...plain, ctrlKey: true })).toBe(false);
 });
 
-test("Home tab clicks filter the current page without a new RSC fetch", async () => {
+test("Home lists the last meetings in a two-column grid with view more beside the title", async () => {
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
-  expect(dashboard).toContain("isPlainLeftClick");
-  expect(dashboard).toContain("pushHomeUrl");
-  expect(dashboard).toContain("preventDefault");
+  const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
+  expect(dashboard).toContain("Last meetings");
+  expect(dashboard).toContain('href="/meetings"');
+  expect(dashboard).toContain("view more");
+  expect(dashboard).toContain("md:grid-cols-2");
+  expect(dashboard.includes("HomeTabs")).toBe(false);
+  expect(dashboard.includes('label: "All"')).toBe(false);
+  const cardClass = row.slice(row.indexOf('case "card":'), row.indexOf('case "row":'));
+  expect(cardClass.includes("px-2.5")).toBe(false);
+  expect(cardClass.includes("hover:bg-paper")).toBe(false);
 });
 
 test("AppFrame and AskFred sheet follow pushHomeUrl so tab stays in the header href", async () => {
@@ -226,16 +233,15 @@ test("toHomeModel never adds a longest-processing insight card", () => {
   ]);
 });
 
-test("toHomeModel filters rows by tab then query on sourceId and summary", () => {
+test("toHomeModel keeps the two newest rows and ignores tab", () => {
   const page = pageOf([ready, processing, queued, failed]);
-  const busy = toHomeModel({
+  const model = toHomeModel({
     page,
     view: { tab: "busy", query: "", fred: "unset" },
     now,
     workspaceName: "Davi",
   });
-  expect(busy.rows.map((row) => row._id)).toEqual(["2", "3"]);
-  expect(busy.tabCounts).toEqual({ all: 4, ready: 1, busy: 2, failed: 1 });
+  expect(model.rows.map((row) => row._id)).toEqual(["3", "4"]);
 
   const search = toHomeModel({
     page,
