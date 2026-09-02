@@ -7,7 +7,6 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Capture } from "@components/capture";
-import { MeetingSearch } from "@components/meeting-search";
 import { Nav, PageTitle } from "@components/nav";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -106,11 +105,6 @@ export function AppFrame(props: AppFrameProps) {
             </Button>
             <PageTitle />
             <div className="min-w-0 flex-1" />
-            <MeetingSearch
-              className="hidden min-w-0 w-full max-w-sm md:block"
-              hotkey={true}
-              view={view}
-            />
             <Link
               href={assistantOpenHref({ current: homeView })}
               aria-label="AskFred"

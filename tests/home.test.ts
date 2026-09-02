@@ -69,6 +69,7 @@ test("isPlainLeftClick is false for modified or non-primary clicks", () => {
 
 test("Home lists the last meetings in a two-column grid with view more beside the title", async () => {
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
   const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
   expect(dashboard).toContain("Last meetings");
   expect(dashboard).toContain('href="/meetings"');
@@ -76,6 +77,9 @@ test("Home lists the last meetings in a two-column grid with view more beside th
   expect(dashboard).toContain("md:grid-cols-2");
   expect(dashboard.includes("HomeTabs")).toBe(false);
   expect(dashboard.includes('label: "All"')).toBe(false);
+  expect(dashboard.includes("MeetingSearch")).toBe(false);
+  expect(frame.includes("MeetingSearch")).toBe(false);
+  expect(frame.includes("Search meetings")).toBe(false);
   const cardClass = row.slice(row.indexOf('case "card":'), row.indexOf('case "row":'));
   expect(cardClass.includes("px-2.5")).toBe(false);
   expect(cardClass.includes("hover:bg-paper")).toBe(false);
