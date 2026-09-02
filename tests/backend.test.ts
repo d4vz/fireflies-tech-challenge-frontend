@@ -29,7 +29,7 @@ test("Hono helpers call backendFetch and do not take a token argument", () => {
   expect(backend).toContain("export async function proxyStoredObject");
   expect(backend.includes("token:")).toBe(false);
   expect(backend.includes("token,")).toBe(false);
-  expect(backend).toContain("backendFetch(`/meetings?page=${page}&limit=${limit}`");
+  expect(backend).toContain("backendFetch(`/meetings?${params.toString()}`");
   expect(backend).toContain("backendFetch(`/meetings/${id}`");
   expect(backend).toContain("`/meetings/upload?filename=${encodeURIComponent(filename)}`");
   expect(backend).toContain('backendFetch("/ask-fred"');
@@ -39,9 +39,10 @@ test("Hono helpers call backendFetch and do not take a token argument", () => {
   expect(backend).toContain("backendFetch(path");
 });
 
-test("listActions forwards status when it is not all", () => {
+test("listMeetings and listActions forward status when it is not all", () => {
   expect(backend).toContain('params.set("status", status)');
   expect(backend).toContain('status !== "all"');
+  expect(backend).toContain("backendFetch(`/meetings?${params.toString()}`");
 });
 
 test("only backendFetch calls fetch", () => {

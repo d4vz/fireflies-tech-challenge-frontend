@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test";
-import { parsePublicMeeting, toPublicMeeting } from "@lib/meetings";
+import {
+  parsePublicMeeting,
+  toPublicMeeting,
+  parseMeetingStatus,
+  meetingsHref,
+  parseMeetingsView,
+} from "@lib/meetings";
 
 test("toPublicMeeting rewrites video urls and thumbnail", () => {
   const meeting = toPublicMeeting({
@@ -94,4 +100,26 @@ test("parsePublicMeeting treats audio even when thumbnailUrl is present", () => 
     },
   });
   expect(meeting.blob).toEqual({ kind: "audio", url: "/v", durationInSeconds: 3 });
+});
+
+test("parseMeetingStatus keeps ready processing failed and queued", () => {
+  expect(parseMeetingStatus("ready")).toBe("ready");
+  expect(parseMeetingStatus("processing")).toBe("processing");
+  expect(parseMeetingStatus("failed")).toBe("failed");
+  expect(parseMeetingStatus("queued")).toBe("queued");
+  expect(parseMeetingStatus("pending")).toBe("all");
+  expect(parseMeetingStatus(undefined)).toBe("all");
+});
+
+test("meetingsHref drops default all and page 1", () => {
+  expect(meetingsHref("all")).toBe("/meetings");
+  expect(meetingsHref("ready")).toBe("/meetings?status=ready");
+  expect(meetingsHref("failed", 2)).toBe("/meetings?status=failed&page=2");
+  expect(meetingsHref("all", 2)).toBe("/meetings?page=2");
+});
+
+test("parseMeetingsView reads status and page", () => {
+  expect(parseMeetingsView(undefined, undefined)).toEqual({ status: "all", page: 1 });
+  expect(parseMeetingsView("processing", "2")).toEqual({ status: "processing", page: 2 });
+  expect(parseMeetingsView("nope", "0")).toEqual({ status: "all", page: 1 });
 });

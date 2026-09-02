@@ -74,14 +74,37 @@ test("Home Tasks card links to /tasks and shows pending and completed counts", a
   expect(dashboard).toContain("task-count");
 });
 
-test("Home lists the last meetings in a two-column grid with view more beside the title", async () => {
+test("Home recent tasks shows two pending meeting groups with the tasks list card", async () => {
+  const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  const page = await Bun.file(join(import.meta.dir, "../app/(app)/page.tsx")).text();
+  const recent = dashboard.slice(
+    dashboard.indexOf("function RecentTasks("),
+    dashboard.indexOf("function AskFredPanel"),
+  );
+  expect(dashboard).toContain("Recent tasks");
+  expect(dashboard).toContain("TaskGroupCard");
+  expect(dashboard).toContain("HOME_RECENT_TASK_GROUPS");
+  expect(dashboard).toContain('listActions(1, HOME_RECENT_TASK_GROUPS, "pending")');
+  expect(dashboard).toContain('tasksHref("pending")');
+  expect(dashboard).toContain('aria-label="View more tasks"');
+  expect(dashboard).toContain("initialActions");
+  expect(recent).toContain("@container");
+  expect(recent).toContain("grid-cols-1");
+  expect(recent).toContain("@4xl:grid-cols-2");
+  expect(recent.includes("md:grid-cols-2")).toBe(false);
+  expect(page).toContain("listActions");
+  expect(page).toContain("HOME_RECENT_TASK_GROUPS");
+  expect(page).toContain("initialActions");
+});
+
+test("Home lists the last meetings in a three-column grid with view more beside the title", async () => {
   const dashboard = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
   const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
   expect(dashboard).toContain("Last meetings");
   expect(dashboard).toContain('href="/meetings"');
   expect(dashboard).toContain("view more");
-  expect(dashboard).toContain("md:grid-cols-2");
+  expect(dashboard).toContain("grid-cols-3");
   expect(dashboard.includes("HomeTabs")).toBe(false);
   expect(dashboard.includes('label: "All"')).toBe(false);
   expect(dashboard.includes("MeetingSearch")).toBe(false);
@@ -92,17 +115,33 @@ test("Home lists the last meetings in a two-column grid with view more beside th
   expect(cardClass.includes("hover:bg-paper")).toBe(false);
 });
 
+test("meeting title clamps to one line beside the status label", async () => {
+  const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
+  const heading = row.slice(row.indexOf("<h2"), row.indexOf("</h2>"));
+  expect(row.includes("flex-wrap")).toBe(false);
+  expect(heading).toContain("min-w-0 flex-1");
+  expect(heading).toContain("line-clamp-1");
+});
+
 test("Home skeleton uses stacked meeting cards, not list rows", async () => {
   const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
-  const home = skeleton.slice(skeleton.indexOf("export function HomeDashboardSkeleton"));
+  const home = skeleton.slice(
+    skeleton.indexOf("export function HomeDashboardSkeleton"),
+    skeleton.indexOf("export function MeetingDetailSkeleton"),
+  );
   const list = skeleton.slice(
     skeleton.indexOf("export function MeetingsListSkeleton"),
     skeleton.indexOf("export function HomeDashboardSkeleton"),
   );
   expect(home).toContain("MeetingCardBone");
   expect(home.includes("MeetingRowBone")).toBe(false);
-  expect(home).toContain("md:grid-cols-2");
-  expect(list).toContain("MeetingRowBone");
+  expect(home).toContain("grid-cols-3");
+  expect(home).toContain("TaskGroupBone");
+  expect(home).toContain("@container");
+  expect(home).toContain("grid-cols-1");
+  expect(home).toContain("@4xl:grid-cols-2");
+  expect(home.includes("md:grid-cols-2")).toBe(false);
+  expect(list).toContain("MeetingCardBone");
   const cardBone = skeleton.slice(
     skeleton.indexOf("function MeetingCardBone"),
     skeleton.indexOf("export function TranscriptSkeleton"),
@@ -287,7 +326,7 @@ test("toHomeModel never adds a longest-processing insight card", () => {
   ]);
 });
 
-test("toHomeModel keeps the two newest rows and ignores tab", () => {
+test("toHomeModel keeps the three newest rows and ignores tab", () => {
   const page = pageOf([ready, processing, queued, failed]);
   const model = toHomeModel({
     page,
@@ -295,7 +334,7 @@ test("toHomeModel keeps the two newest rows and ignores tab", () => {
     now,
     workspaceName: "Davi",
   });
-  expect(model.rows.map((row) => row._id)).toEqual(["3", "4"]);
+  expect(model.rows.map((row) => row._id)).toEqual(["3", "4", "1"]);
 
   const search = toHomeModel({
     page,

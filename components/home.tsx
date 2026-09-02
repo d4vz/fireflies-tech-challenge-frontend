@@ -10,7 +10,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
-import { HomeDashboardSkeleton } from "@components/skeleton";
+import { HomeDashboardSkeleton, TaskGroupBone } from "@components/skeleton";
+import { TaskGroupCard } from "@components/task-group";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,18 +29,26 @@ import {
   type InsightCard,
   type InsightCoverage,
 } from "@lib/home";
-import { listMeetings } from "@lib/api";
+import { listActions, listMeetings } from "@lib/api";
+import {
+  HOME_RECENT_TASK_GROUPS,
+  actionsListKey,
+  tasksHref,
+  type ActionListPage,
+} from "@lib/actions";
 import { HOME_DASHBOARD_LIMIT, isBusy, meetingsListKey, type MeetingListPage } from "@lib/meetings";
 
 export type HomeDashboardProps = {
   view: HomeView;
   initialPage: MeetingListPage | undefined;
+  initialActions: ActionListPage | undefined;
   displayName: string;
 };
 
 export type HomeCanvasProps = {
   model: HomeModel;
   fred: FredParam;
+  initialActions: ActionListPage | undefined;
 };
 
 const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
@@ -154,6 +163,55 @@ function LastMeetingsHeader() {
   );
 }
 
+function RecentTasksHeader() {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Recent tasks</h3>
+      <Link
+        aria-label="View more tasks"
+        className="text-sm font-semibold text-accent"
+        href={tasksHref("pending")}
+      >
+        view more
+      </Link>
+    </div>
+  );
+}
+
+function RecentTasksResults(props: { error: Error | null; page: ActionListPage | undefined }) {
+  if (props.error !== null) {
+    return <p className="text-[0.85rem] text-danger">{props.error.message}</p>;
+  }
+  if (props.page === undefined) {
+    return (
+      <>
+        <TaskGroupBone />
+        <TaskGroupBone />
+      </>
+    );
+  }
+  if (props.page.total === 0) {
+    return <p className="m-0 text-[0.9rem] text-muted-foreground">No pending tasks</p>;
+  }
+  return props.page.items.map((group) => <TaskGroupCard key={group.meetingId} group={group} />);
+}
+
+function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
+  const query = useQuery({
+    queryKey: actionsListKey(1, HOME_RECENT_TASK_GROUPS, "pending"),
+    queryFn: () => listActions(1, HOME_RECENT_TASK_GROUPS, "pending"),
+    initialData: props.initialPage,
+  });
+  return (
+    <div className="@container mt-8 grid gap-3">
+      <RecentTasksHeader />
+      <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+        <RecentTasksResults error={query.error} page={query.data} />
+      </div>
+    </div>
+  );
+}
+
 function AskFredPanel(props: { closeHref: string } & AskFredProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -228,13 +286,14 @@ export function HomeCanvas(props: HomeCanvasProps) {
           {model.rows.length === 0 ? (
             <MeetingsEmpty />
           ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-3 gap-3">
               {model.rows.map((meeting) => (
                 <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
               ))}
             </div>
           )}
         </div>
+        <RecentTasks initialPage={props.initialActions} />
       </div>
     </WorkspaceCanvas>
   );
@@ -288,5 +347,5 @@ export function HomeDashboard(props: HomeDashboardProps) {
     now,
     workspaceName: props.displayName,
   });
-  return <HomeCanvas model={model} fred={view.fred} />;
+  return <HomeCanvas fred={view.fred} initialActions={props.initialActions} model={model} />;
 }

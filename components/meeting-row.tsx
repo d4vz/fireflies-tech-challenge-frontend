@@ -60,8 +60,10 @@ export function MeetingRow(props: MeetingRowProps) {
         <MeetingPreview blob={meeting.blob} />
       </div>
       <div className="grid min-w-0 gap-1.5 pt-0.5">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h2 className="m-0 truncate text-[0.95rem] font-semibold">{meeting.sourceId}</h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="m-0 min-w-0 flex-1 text-[0.95rem] font-semibold leading-5 line-clamp-1">
+            {meeting.sourceId}
+          </h2>
           <StatusLabel status={meeting.status} />
         </div>
         {meeting.summary?.text ? (
