@@ -1,4 +1,4 @@
-import { getMeetingFromBackend } from "@lib/backend";
+import { getMeeting } from "@lib/backend";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ type MeetingIdRoute = {
 export async function GET(_request: Request, context: MeetingIdRoute) {
   const params = await context.params;
   try {
-    const meeting = await getMeetingFromBackend(params.id);
+    const meeting = await getMeeting(params.id);
     if (!meeting) {
       return Response.json({ error: "meeting not found" }, { status: 404 });
     }

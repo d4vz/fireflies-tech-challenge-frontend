@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Clip } from "@components/clip";
+import { MeetingDetailSkeleton, TranscriptSkeleton } from "@components/skeleton";
 import { StatusLabel } from "@components/status-label";
-import { Thumb } from "@components/thumb";
 import { When } from "@components/when";
 import { getMeeting, getTranscripts } from "@lib/api";
 import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
@@ -16,15 +17,14 @@ function transcriptText(chunks: { text: string }[]) {
 
 type MeetingDetailBodyProps = {
   meeting: Meeting;
-  transcript: string;
 };
 
 function MeetingDetailBody(props: MeetingDetailBodyProps) {
   const meeting = props.meeting;
   return (
-    <article className="grid max-w-[760px] gap-5">
-      <div className="w-min max-w-[420px] min-w-[220px] overflow-hidden rounded-[14px] bg-neutral-200">
-        <Thumb className="block w-full" src={meeting.blob.thumbnailUrl} />
+    <article className="grid gap-5">
+      <div className="overflow-hidden rounded-[14px] bg-neutral-200">
+        <Clip className="block w-full" src={meeting.blob.url} poster={meeting.blob.thumbnailUrl} />
       </div>
       <div>
         <h1 className="m-0 text-[1.6rem]">{meeting.sourceId}</h1>
@@ -53,10 +53,6 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
             <li key={item}>{item}</li>
           ))}
         </ul>
-      </section>
-      <section>
-        <h2 className="mb-1.5 text-base">Transcript</h2>
-        <pre className="m-0 font-sans whitespace-pre-wrap text-gray-700">{props.transcript}</pre>
       </section>
     </article>
   );
@@ -88,29 +84,41 @@ export function MeetingDetail(props: MeetingDetailProps) {
 
   if (meetingQuery.error) {
     return (
-      <main className="px-8 pt-8 pb-12">
+      <main className="h-full overflow-y-auto px-8 pt-8 pb-12">
         <p className="text-[0.85rem] text-danger">{meetingQuery.error.message}</p>
       </main>
     );
   }
 
   if (meetingQuery.isPending || !meetingQuery.data) {
-    return (
-      <main className="px-8 pt-8 pb-12">
-        <p className="mt-1 text-[0.85rem] text-muted">Loading…</p>
-      </main>
-    );
+    return <MeetingDetailSkeleton />;
   }
 
+  const meeting = meetingQuery.data;
   const transcript = transcriptsQuery.data
     ? transcriptText(transcriptsQuery.data)
-    : isBusy(meetingQuery.data.status)
-      ? "Processing…"
-      : "(empty transcript)";
+    : meeting.status === "failed" || transcriptsQuery.isError
+      ? "(empty transcript)"
+      : null;
 
   return (
-    <main className="px-8 pt-8 pb-12">
-      <MeetingDetailBody meeting={meetingQuery.data} transcript={transcript} />
+    <main className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_340px]">
+      <div className="min-h-0 overflow-y-auto px-8 pt-8 pb-12">
+        <MeetingDetailBody meeting={meeting} />
+      </div>
+      <aside
+        aria-busy={transcript ? undefined : true}
+        className="min-h-0 overflow-y-auto border-l border-line bg-paper px-5 py-6"
+      >
+        <h2 className="m-0 mb-4 text-[0.95rem] font-semibold">Transcript</h2>
+        {transcript ? (
+          <div className="font-sans text-[0.9rem] leading-6 whitespace-pre-wrap text-gray-700">
+            {transcript}
+          </div>
+        ) : (
+          <TranscriptSkeleton />
+        )}
+      </aside>
     </main>
   );
 }

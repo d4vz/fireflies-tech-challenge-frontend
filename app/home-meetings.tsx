@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { StatusLabel } from "@components/status-label";
+import { HomeMeetingsSkeleton } from "@components/skeleton";
 import { Thumb } from "@components/thumb";
 import { When } from "@components/when";
 import { listMeetings } from "@lib/api";
@@ -26,7 +27,7 @@ export function HomeMeetings() {
   }
 
   if (query.isPending || !query.data) {
-    return <p className="mt-1 text-[0.85rem] text-muted">Loading…</p>;
+    return <HomeMeetingsSkeleton />;
   }
 
   if (query.data.items.length === 0) {
@@ -36,7 +37,7 @@ export function HomeMeetings() {
   }
 
   return (
-    <div className="grid max-w-[960px] grid-cols-3 gap-4">
+    <div className="grid max-w-240 grid-cols-3 gap-4">
       {query.data.items.map((meeting) => {
         const id = meetingId(meeting);
         return (

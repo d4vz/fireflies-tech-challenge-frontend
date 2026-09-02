@@ -21,7 +21,7 @@
 }
 
 @utility home-empty {
-  min-height: calc(100vh - 64px);
+  min-height: 100%;
   background:
     radial-gradient(circle at 20% 0%, #dce8ff 0%, transparent 42%),
     radial-gradient(circle at 80% 8%, #fde6d4 0%, transparent 36%), var(--color-wash);

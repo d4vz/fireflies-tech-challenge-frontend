@@ -14,10 +14,7 @@ export function backendUrl(path: string) {
   return `${base}${path}`;
 }
 
-export async function listMeetingsFromBackend(
-  page: number,
-  limit: number,
-): Promise<MeetingListPage> {
+export async function listMeetings(page: number, limit: number): Promise<MeetingListPage> {
   const res = await fetch(backendUrl(`/meetings?page=${page}&limit=${limit}`), {
     cache: "no-store",
   });
@@ -31,7 +28,7 @@ export async function listMeetingsFromBackend(
   };
 }
 
-export async function getMeetingFromBackend(id: string): Promise<Meeting | null> {
+export async function getMeeting(id: string): Promise<Meeting | null> {
   const res = await fetch(backendUrl(`/meetings/${id}`), { cache: "no-store" });
   if (res.status === 404) {
     return null;
@@ -69,7 +66,7 @@ export async function proxyUpload(request: Request): Promise<Response> {
   });
 }
 
-export async function getTranscriptsFromBackend(id: string): Promise<TranscriptChunk[]> {
+export async function getTranscripts(id: string): Promise<TranscriptChunk[]> {
   const res = await fetch(backendUrl(`/meetings/${id}/transcripts`), { cache: "no-store" });
   if (!res.ok) {
     throw new Error("could not load transcript");
