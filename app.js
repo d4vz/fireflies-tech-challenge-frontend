@@ -159,9 +159,11 @@ async function loadMeetings() {
 async function uploadFile(file) {
   showError("");
   setStage("uploading");
-  const payload = new FormData();
-  payload.set("file", file);
-  const res = await fetch(`${API_URL}/meetings/upload`, { method: "POST", body: payload });
+  const res = await fetch(`${API_URL}/meetings/upload?filename=${encodeURIComponent(file.name)}`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
   const type = res.headers.get("content-type") ?? "";
   if (type.includes("application/json")) {
     const body = await res.json();
