@@ -1,0 +1,22 @@
+{
+  "name": "fireflies-tech-challenge-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run lint && bun run fmt:check && bun run typecheck && bun run test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.80.0",
+    "@types/bun": "1.4.0",
+    "husky": "^9.1.7",
+    "oxfmt": "^0.65.0",
+    "oxlint": "1.80.0",
+    "typescript": "7.0.2"
+  }
+}
