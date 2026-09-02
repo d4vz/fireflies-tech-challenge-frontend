@@ -4,16 +4,18 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { AskFredProps } from "@components/ask-fred";
 import { useQuery } from "@tanstack/react-query";
-import { ListChecks, ListVideo, Loader, Sparkles, X } from "lucide-react";
+import { LayoutList, ListChecks, Loader, Sparkles, X } from "@animateicons/react/lucide";
 import dynamic from "next/dynamic";
+import type { IconHandle } from "@animateicons/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { MeetingRow } from "@components/meeting-row";
 import { MeetingsEmpty } from "@components/meetings-empty";
-import { HomeDashboardSkeleton, TaskGroupBone } from "@components/skeleton";
+import { HomeDashboardSkeleton } from "@components/skeleton";
 import { TaskGroupCard } from "@components/task-group";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
+import { handleHover } from "@lib/handle-hover";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   assistantChrome,
@@ -109,14 +111,14 @@ function insightCopy(card: InsightCard): InsightCopy {
   }
 }
 
-function InsightIcon(props: { kind: InsightCard["kind"] }) {
+function InsightIcon(props: { kind: InsightCard["kind"]; iconRef?: Ref<IconHandle> }) {
   switch (props.kind) {
     case "meeting-count":
-      return <ListVideo className="size-5 text-blue-600" />;
+      return <LayoutList className="text-blue-600" size={20} />;
     case "busy-count":
-      return <Loader className="size-5 text-orange-600" />;
+      return <Loader className="text-orange-600" size={20} />;
     case "task-count":
-      return <ListChecks className="size-5 text-green-700" />;
+      return <ListChecks ref={props.iconRef} className="text-green-700" size={20} />;
     default: {
       const _exhaustive: never = props.kind;
       return _exhaustive;
@@ -125,19 +127,22 @@ function InsightIcon(props: { kind: InsightCard["kind"] }) {
 }
 
 function InsightCardView(props: { card: InsightCard }) {
+  const iconRef = useRef<IconHandle>(null);
   const copy = insightCopy(props.card);
   const inner = (
-    <Card className="bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-line">
-      <CardHeader className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-3">
-        <span className="grid size-9 place-items-center rounded-xl bg-wash md:size-10">
-          <InsightIcon kind={props.card.kind} />
+    <Card className="min-w-0 bg-paper shadow-[0_1px_2px_rgba(16,18,27,0.06)] ring-line max-md:[--card-spacing:--spacing(2.5)]">
+      <CardHeader className="flex min-w-0 flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-3">
+        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-wash md:size-10">
+          <InsightIcon kind={props.card.kind} iconRef={iconRef} />
         </span>
         <p className="m-0 text-lg font-semibold tabular-nums md:hidden">{copy.metric}</p>
         <p className="sr-only md:hidden">{`${copy.title}: ${copy.body}`}</p>
         <div className="hidden min-w-0 md:block">
           <CardTitle className="truncate">{copy.title}</CardTitle>
-          <CardDescription className="text-muted-foreground">{copy.body}</CardDescription>
-          {copy.note ? <p className="m-0 text-xs text-muted-foreground">{copy.note}</p> : null}
+          <CardDescription className="truncate text-muted-foreground">{copy.body}</CardDescription>
+          {copy.note ? (
+            <p className="m-0 truncate text-xs text-muted-foreground">{copy.note}</p>
+          ) : null}
         </div>
       </CardHeader>
     </Card>
@@ -146,7 +151,12 @@ function InsightCardView(props: { card: InsightCard }) {
     return inner;
   }
   return (
-    <Link className="min-w-0 text-ink no-underline" href="/tasks">
+    <Link
+      className="min-w-0 text-ink no-underline"
+      href="/tasks"
+      onMouseEnter={(event) => handleHover(event, iconRef)}
+      onMouseLeave={(event) => handleHover(event, iconRef)}
+    >
       {inner}
     </Link>
   );
@@ -183,12 +193,7 @@ function RecentTasksResults(props: { error: Error | null; page: ActionListPage |
     return <p className="text-[0.85rem] text-danger">{props.error.message}</p>;
   }
   if (props.page === undefined) {
-    return (
-      <>
-        <TaskGroupBone />
-        <TaskGroupBone />
-      </>
-    );
+    return <p className="m-0 text-[0.9rem] text-muted-foreground">Loading tasks</p>;
   }
   if (props.page.total === 0) {
     return <p className="m-0 text-[0.9rem] text-muted-foreground">No pending tasks</p>;
@@ -203,9 +208,9 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
     initialData: props.initialPage,
   });
   return (
-    <div className="@container mt-8 grid gap-3">
+    <div className="mt-8 grid gap-3">
       <RecentTasksHeader />
-      <div className="grid grid-cols-1 gap-3 @4xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <RecentTasksResults error={query.error} page={query.data} />
       </div>
     </div>
@@ -213,17 +218,20 @@ function RecentTasks(props: { initialPage: ActionListPage | undefined }) {
 }
 
 function AskFredPanel(props: { closeHref: string } & AskFredProps) {
+  const closeRef = useRef<IconHandle>(null);
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
-        <div className="flex items-center gap-2 text-[0.95rem] font-semibold">
-          <Sparkles className="size-4 text-accent" />
+        <div className="flex items-center gap-2 text-[0.95rem] font-semibold text-accent">
+          <Sparkles size={16} />
           AskFred
         </div>
         <Button asChild variant="ghost" size="icon-sm">
           <Link
             href={props.closeHref}
             aria-label="Close AskFred"
+            onMouseEnter={(event) => handleHover(event, closeRef)}
+            onMouseLeave={(event) => handleHover(event, closeRef)}
             onClick={(event) => {
               if (!isPlainLeftClick(event)) {
                 return;
@@ -232,7 +240,7 @@ function AskFredPanel(props: { closeHref: string } & AskFredProps) {
               pushHomeUrl({ ...parseHomeViewFromSearch(window.location.search), fred: "unset" });
             }}
           >
-            <X />
+            <X ref={closeRef} size={16} />
           </Link>
         </Button>
       </div>
@@ -272,28 +280,30 @@ export function HomeCanvas(props: HomeCanvasProps) {
         ),
       }}
     >
-      <div className="home-empty min-h-full px-4 pt-8 pb-12 md:px-8">
-        <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
-          {greetingTitle(model)}
-        </h2>
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          {model.insights.map((card) => (
-            <InsightCardView key={card.kind} card={card} />
-          ))}
+      <div className="home-empty min-h-full w-full">
+        <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 md:px-8">
+          <h2 className="m-0 text-[1.5rem] font-semibold tracking-tight md:text-[1.75rem]">
+            {greetingTitle(model)}
+          </h2>
+          <div className="mt-6 grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
+            {model.insights.map((card) => (
+              <InsightCardView key={card.kind} card={card} />
+            ))}
+          </div>
+          <div className="mt-8 grid gap-3">
+            <LastMeetingsHeader />
+            {model.rows.length === 0 ? (
+              <MeetingsEmpty />
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {model.rows.map((meeting) => (
+                  <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
+                ))}
+              </div>
+            )}
+          </div>
+          <RecentTasks initialPage={props.initialActions} />
         </div>
-        <div className="mt-8 grid gap-3">
-          <LastMeetingsHeader />
-          {model.rows.length === 0 ? (
-            <MeetingsEmpty />
-          ) : (
-            <div className="grid grid-cols-3 gap-3">
-              {model.rows.map((meeting) => (
-                <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
-              ))}
-            </div>
-          )}
-        </div>
-        <RecentTasks initialPage={props.initialActions} />
       </div>
     </WorkspaceCanvas>
   );
@@ -331,8 +341,10 @@ export function HomeDashboard(props: HomeDashboardProps) {
 
   if (query.error) {
     return (
-      <main className="home-empty h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
-        <p className="text-[0.85rem] text-danger">{query.error.message}</p>
+      <main className="home-empty h-full w-full overflow-y-auto">
+        <p className="mx-auto w-full max-w-5xl px-4 pt-8 pb-12 text-[0.85rem] text-danger md:px-8">
+          {query.error.message}
+        </p>
       </main>
     );
   }

@@ -2,13 +2,15 @@
 
 import { UserButton } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
-import { Menu, Sparkles } from "lucide-react";
+import { Menu, Sparkles } from "@animateicons/react/lucide";
+import type { IconHandle } from "@animateicons/react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Capture } from "@components/capture";
 import { Nav, PageTitle } from "@components/nav";
 import { Button } from "@/components/ui/button";
+import { handleHover } from "@lib/handle-hover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
@@ -32,10 +34,20 @@ function homeSearchSnapshot(): string {
 
 function AccountButton() {
   return (
-    <div aria-label="Account" className="size-8 shrink-0">
+    <div aria-label="Account" className="size-9 shrink-0">
       <UserButton
-        appearance={{ theme: shadcn, elements: { avatarBox: "size-8" } }}
-        fallback={<span aria-hidden="true" className="block size-8 rounded-full bg-nav" />}
+        appearance={{
+          theme: shadcn,
+          elements: {
+            rootBox: "!size-9",
+            userButtonBox: "!size-9",
+            userButtonTrigger: "!size-9",
+            userButtonAvatarBox: "!size-9",
+            userButtonAvatarImage: "!size-9",
+            avatarBox: "!size-9",
+          },
+        }}
+        fallback={<span aria-hidden="true" className="block size-9 rounded-full bg-nav" />}
       />
     </div>
   );
@@ -80,6 +92,8 @@ export function AppFrame(props: AppFrameProps) {
   const view = parseHomeViewFromSearch(liveSearch);
   const homeView = pathname === "/" ? view : null;
   const [navOpen, setNavOpen] = useState(false);
+  const menuRef = useRef<IconHandle>(null);
+  const askFredRef = useRef<IconHandle>(null);
 
   useEffect(() => {
     setNavOpen(false);
@@ -100,15 +114,19 @@ export function AppFrame(props: AppFrameProps) {
               className="shrink-0 md:hidden"
               aria-label="Open navigation"
               onClick={() => setNavOpen(true)}
+              onMouseEnter={(event) => handleHover(event, menuRef)}
+              onMouseLeave={(event) => handleHover(event, menuRef)}
             >
-              <Menu />
+              <Menu ref={menuRef} size={20} />
             </Button>
             <PageTitle />
             <div className="min-w-0 flex-1" />
             <Link
               href={assistantOpenHref({ current: homeView })}
               aria-label="AskFred"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 py-2 font-semibold text-ink hover:bg-nav"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 font-semibold text-ink hover:bg-nav"
+              onMouseEnter={(event) => handleHover(event, askFredRef)}
+              onMouseLeave={(event) => handleHover(event, askFredRef)}
               onClick={(event) => {
                 if (assistantOpenClickKind(homeView, isPlainLeftClick(event)) !== "push") {
                   return;
@@ -120,7 +138,7 @@ export function AppFrame(props: AppFrameProps) {
                 pushHomeUrl({ ...homeView, fred: "open" });
               }}
             >
-              <Sparkles className="size-4 text-accent" />
+              <Sparkles ref={askFredRef} className="text-accent" size={16} />
               AskFred
             </Link>
             <Capture />

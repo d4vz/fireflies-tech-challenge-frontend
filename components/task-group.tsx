@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mic } from "lucide-react";
+import { Mic } from "@animateicons/react/lucide";
 import { TaskChecklist } from "@components/task-list";
 import { Thumb } from "@components/thumb";
 import { When } from "@components/when";
@@ -19,7 +19,7 @@ function PreviewMedia(props: { group: ActionGroup }) {
     case "audio":
       return (
         <span className="grid size-full place-items-center text-muted-foreground">
-          <Mic className="size-3.5" aria-hidden="true" />
+          <Mic aria-hidden="true" size={14} />
           <span className="sr-only">Audio recording</span>
         </span>
       );
@@ -32,7 +32,7 @@ function PreviewMedia(props: { group: ActionGroup }) {
 
 function GroupPreview(props: { group: ActionGroup }) {
   return (
-    <div className="relative h-8 aspect-video shrink-0 overflow-hidden rounded-lg bg-neutral-200">
+    <div className="relative aspect-video h-8 shrink-0 overflow-hidden rounded-lg bg-neutral-200">
       <PreviewMedia group={props.group} />
     </div>
   );

@@ -35,6 +35,25 @@ test("AskFred sidebar glyph uses the accent color", async () => {
   expect(nav).toContain("text-accent");
 });
 
+test("app chrome icons come from animateicons lucide", async () => {
+  const files = [
+    "../components/nav.tsx",
+    "../components/app-frame.tsx",
+    "../components/home.tsx",
+    "../components/ask-fred.tsx",
+    "../components/capture.tsx",
+    "../components/meeting-row.tsx",
+    "../components/meetings-empty.tsx",
+    "../components/clip.tsx",
+    "../components/meeting-search.tsx",
+  ];
+  for (const relative of files) {
+    const source = await Bun.file(join(import.meta.dir, relative)).text();
+    expect(source).toContain("@animateicons/react/lucide");
+    expect(source.includes('from "lucide-react"')).toBe(false);
+  }
+});
+
 test("Tasks is a real route, not a placeholder", () => {
   expect(NAV_ITEMS).toContainEqual({
     kind: "route",

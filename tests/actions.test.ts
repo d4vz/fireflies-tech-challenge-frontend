@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { join } from "node:path";
 import {
   HOME_RECENT_TASK_GROUPS,
   parseActionGroup,
@@ -61,4 +62,10 @@ test("taskCountLabel is singular for one", () => {
   expect(taskCountLabel(1)).toBe("1 Task");
   expect(taskCountLabel(6)).toBe("6 Tasks");
   expect(taskCountLabel(0)).toBe("0 Tasks");
+});
+
+test("Tasks with no action items reuses Capture your first meeting", async () => {
+  const list = await Bun.file(join(import.meta.dir, "../app/(app)/tasks/tasks-list.tsx")).text();
+  expect(list).toContain("MeetingsEmpty");
+  expect(list).toContain('props.status === "all"');
 });

@@ -1,4 +1,4 @@
-import { Mic } from "lucide-react";
+import { Mic } from "@animateicons/react/lucide";
 import type { Meeting } from "@lib/meetings";
 
 type ClipProps = {
@@ -22,7 +22,7 @@ export function Clip(props: ClipProps) {
     case "audio":
       return (
         <div className={`flex items-center gap-3 bg-paper px-4 py-3 ${props.className}`}>
-          <Mic className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Mic className="shrink-0 text-muted-foreground" size={20} aria-hidden="true" />
           <audio className="min-w-0 flex-1" src={props.blob.url} controls preload="metadata" />
         </div>
       );
