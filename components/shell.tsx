@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
 import { uploadVideo } from "@lib/api";
-import { meetingId, meetingsKey } from "@lib/meetings";
+import { meetingsKey } from "@lib/meetings";
 
 type ShellProps = {
   children: ReactNode;
@@ -80,10 +80,10 @@ export function Shell(props: ShellProps) {
     setOpen(false);
     setStage("uploading");
     try {
-      const meeting = await uploadVideo(file, setStage);
+      await uploadVideo(file);
       setStage("");
       await queryClient.invalidateQueries({ queryKey: meetingsKey });
-      router.push(`/meetings/${meetingId(meeting)}`);
+      router.push("/meetings");
     } catch (caught) {
       setStage("");
       setError(caught instanceof Error ? caught.message : "upload failed");

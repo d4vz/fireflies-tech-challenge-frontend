@@ -1,21 +1,22 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { StatusLabel } from "@components/status-label";
 import { Thumb } from "@components/thumb";
-import { getMeeting } from "@lib/api";
-import { meetingKey, type Meeting } from "@lib/meetings";
+import { When } from "@components/when";
+import { getMeeting, getTranscripts } from "@lib/api";
+import { isBusy, meetingKey, transcriptsKey, type Meeting } from "@lib/meetings";
 
-function formatWhen(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
+function transcriptText(chunks: { text: string }[]) {
+  if (chunks.length === 0) {
+    return "(empty transcript)";
   }
-  return date.toLocaleString();
+  return chunks.map((chunk) => chunk.text).join("");
 }
 
 type MeetingDetailBodyProps = {
   meeting: Meeting;
+  transcript: string;
 };
 
 function MeetingDetailBody(props: MeetingDetailBodyProps) {
@@ -27,7 +28,11 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
       </div>
       <div>
         <h1 className="m-0 text-[1.6rem]">{meeting.sourceId}</h1>
-        <p className="mt-1 text-[0.85rem] text-muted">{formatWhen(meeting.createdAt)}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-[0.85rem] text-muted">
+          <When value={meeting.createdAt} />
+          <StatusLabel status={meeting.status} />
+          {meeting.error ? <span className="text-danger">{meeting.error}</span> : null}
+        </p>
       </div>
       <section>
         <h2 className="mb-1.5 text-base">Summary</h2>
@@ -51,32 +56,45 @@ function MeetingDetailBody(props: MeetingDetailBodyProps) {
       </section>
       <section>
         <h2 className="mb-1.5 text-base">Transcript</h2>
-        <pre className="m-0 font-sans whitespace-pre-wrap text-gray-700">
-          {meeting.transcript.text || "(empty transcript)"}
-        </pre>
+        <pre className="m-0 font-sans whitespace-pre-wrap text-gray-700">{props.transcript}</pre>
       </section>
     </article>
   );
 }
 
-export function MeetingDetail() {
-  const params = useParams<{ id: string }>();
-  const id = params.id;
-  const query = useQuery({
+type MeetingDetailProps = {
+  id: string;
+};
+
+export function MeetingDetail(props: MeetingDetailProps) {
+  const id = props.id;
+  const meetingQuery = useQuery({
     queryKey: meetingKey(id),
     queryFn: () => getMeeting(id),
     enabled: Boolean(id),
+    refetchInterval: (current) => {
+      const status = current.state.data?.status;
+      if (!status || !isBusy(status)) {
+        return false;
+      }
+      return 2000;
+    },
+  });
+  const transcriptsQuery = useQuery({
+    queryKey: transcriptsKey(id),
+    queryFn: () => getTranscripts(id),
+    enabled: meetingQuery.data?.status === "ready",
   });
 
-  if (query.error) {
+  if (meetingQuery.error) {
     return (
       <main className="px-8 pt-8 pb-12">
-        <p className="text-[0.85rem] text-danger">{query.error.message}</p>
+        <p className="text-[0.85rem] text-danger">{meetingQuery.error.message}</p>
       </main>
     );
   }
 
-  if (query.isPending || !query.data) {
+  if (meetingQuery.isPending || !meetingQuery.data) {
     return (
       <main className="px-8 pt-8 pb-12">
         <p className="mt-1 text-[0.85rem] text-muted">Loading…</p>
@@ -84,9 +102,15 @@ export function MeetingDetail() {
     );
   }
 
+  const transcript = transcriptsQuery.data
+    ? transcriptText(transcriptsQuery.data)
+    : isBusy(meetingQuery.data.status)
+      ? "Processing…"
+      : "(empty transcript)";
+
   return (
     <main className="px-8 pt-8 pb-12">
-      <MeetingDetailBody meeting={query.data} />
+      <MeetingDetailBody meeting={meetingQuery.data} transcript={transcript} />
     </main>
   );
 }

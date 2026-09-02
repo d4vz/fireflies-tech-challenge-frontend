@@ -1,10 +1,14 @@
 import { listMeetingsFromBackend } from "@lib/backend";
+import { MEETINGS_PAGE_SIZE, parseLimit, parsePage } from "@lib/meetings";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const page = parsePage(url.searchParams.get("page"));
+  const limit = parseLimit(url.searchParams.get("limit"), MEETINGS_PAGE_SIZE);
   try {
-    return Response.json(await listMeetingsFromBackend());
+    return Response.json(await listMeetingsFromBackend(page, limit));
   } catch {
     return Response.json({ error: "could not load meetings" }, { status: 502 });
   }

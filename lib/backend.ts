@@ -1,6 +1,11 @@
 import "server-only";
 
-import { toPublicMeeting, type Meeting } from "@lib/meetings";
+import {
+  toPublicMeeting,
+  type Meeting,
+  type MeetingListPage,
+  type TranscriptChunk,
+} from "@lib/meetings";
 
 type StreamProxyInit = RequestInit & { duplex: "half" };
 
@@ -9,13 +14,21 @@ export function backendUrl(path: string) {
   return `${base}${path}`;
 }
 
-export async function listMeetingsFromBackend(): Promise<Meeting[]> {
-  const res = await fetch(backendUrl("/meetings"), { cache: "no-store" });
+export async function listMeetingsFromBackend(
+  page: number,
+  limit: number,
+): Promise<MeetingListPage> {
+  const res = await fetch(backendUrl(`/meetings?page=${page}&limit=${limit}`), {
+    cache: "no-store",
+  });
   if (!res.ok) {
     throw new Error("could not load meetings");
   }
-  const meetings: Meeting[] = await res.json();
-  return meetings.map(toPublicMeeting);
+  const body: MeetingListPage = await res.json();
+  return {
+    ...body,
+    items: body.items.map(toPublicMeeting),
+  };
 }
 
 export async function getMeetingFromBackend(id: string): Promise<Meeting | null> {
@@ -51,9 +64,18 @@ export async function proxyUpload(request: Request): Promise<Response> {
   return new Response(res.body, {
     status: res.status,
     headers: {
-      "Content-Type": res.headers.get("Content-Type") ?? "text/event-stream",
+      "Content-Type": res.headers.get("Content-Type") ?? "application/json",
     },
   });
+}
+
+export async function getTranscriptsFromBackend(id: string): Promise<TranscriptChunk[]> {
+  const res = await fetch(backendUrl(`/meetings/${id}/transcripts`), { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error("could not load transcript");
+  }
+  const chunks: TranscriptChunk[] = await res.json();
+  return chunks;
 }
 
 export async function proxyStoredObject(path: string, fallbackType: string): Promise<Response> {

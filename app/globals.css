@@ -10,6 +10,13 @@
   --color-accent-hover: #5a3ef0;
   --color-nav: #f3f4f6;
   --color-danger: #e11d48;
+  --color-ready: #15803d;
+  --color-ready-wash: #ecfdf3;
+  --color-queued: #4b5563;
+  --color-queued-wash: #f3f4f6;
+  --color-process: #5a3ef0;
+  --color-process-wash: #efeaff;
+  --color-failed-wash: #fff1f2;
   --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
 }
 
