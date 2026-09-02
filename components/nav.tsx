@@ -19,12 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { handleHover } from "@lib/handle-hover";
-import {
-  assistantOpenClickKind,
-  assistantOpenHref,
-  pushAppUrl,
-  type AppLocation,
-} from "@lib/assistant-url";
+import { appLocation, assistantOpenHref, pushAppUrl, type AppLocation } from "@lib/assistant-url";
 import { isPlainLeftClick } from "@lib/home";
 import {
   isRouteActive,
@@ -118,11 +113,13 @@ function AssistantLink(props: { item: AssistantNavItem; location: AppLocation })
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
       onClick={(event) => {
-        if (assistantOpenClickKind(isPlainLeftClick(event)) !== "push") {
+        if (!isPlainLeftClick(event)) {
           return;
         }
         event.preventDefault();
-        pushAppUrl(assistantOpenHref(props.location));
+        pushAppUrl(
+          assistantOpenHref(appLocation(window.location.pathname, window.location.search)),
+        );
       }}
     >
       <NavGlyph icon={props.item.icon} iconRef={iconRef} />

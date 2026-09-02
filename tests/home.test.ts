@@ -274,14 +274,16 @@ test("AssistantHost mounts from AppFrame, not the app layout", async () => {
   expect(layout.includes("AssistantHost")).toBe(false);
 });
 
-test("AppFrame and sidebar AskFred intercept clicks with pushAppUrl", async () => {
+test("AppFrame and sidebar AskFred intercept clicks with isPlainLeftClick", async () => {
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
   const nav = await Bun.file(join(import.meta.dir, "../components/nav.tsx")).text();
-  expect(frame).toContain("assistantOpenClickKind");
+  expect(frame).toContain("isPlainLeftClick");
   expect(frame).toContain("pushAppUrl");
   expect(frame).toContain("preventDefault");
-  expect(nav).toContain("assistantOpenClickKind");
+  expect(frame.includes("assistantOpenClickKind")).toBe(false);
+  expect(nav).toContain("isPlainLeftClick");
   expect(nav).toContain("pushAppUrl");
+  expect(nav.includes("assistantOpenClickKind")).toBe(false);
 });
 
 test("AskFred close lives on the host and omits fred", async () => {
@@ -469,10 +471,10 @@ test("toHomeModel greeting uses periodAt and the workspace name", () => {
   expect(model.greeting).toEqual({ period: "afternoon", workspaceName: "Davi" });
 });
 
-test("pushHomeUrl merges live fred so Home URL edits keep AskFred open", async () => {
+test("pushHomeUrl keeps AskFred open via applyAssistantPresence", async () => {
   const home = await Bun.file(join(import.meta.dir, "../lib/home.ts")).text();
+  expect(home).toContain("applyAssistantPresence");
   expect(home).toContain("parseAssistantOpen");
-  expect(home).toContain("locationHref");
   expect(home).toContain("pushAppUrl");
   expect(home.includes("assistantOpen")).toBe(false);
   expect(home.includes("subscribeHomeUrl")).toBe(false);

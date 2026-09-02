@@ -3,7 +3,7 @@ import { join } from "node:path";
 import {
   appLocation,
   assistantCloseHref,
-  assistantOpenClickKind,
+  applyAssistantPresence,
   assistantOpenHref,
   locationHref,
   parseAssistantOpen,
@@ -44,16 +44,18 @@ test("locationHref never writes fred=0", () => {
   expect(locationHref({ pathname: "/meetings", search: "?fred=0" }, true)).toBe("/meetings?fred=1");
 });
 
-test("assistantOpenClickKind is ignore or push and has no navigate", () => {
-  expect(assistantOpenClickKind(true)).toBe("push");
-  expect(assistantOpenClickKind(false)).toBe("ignore");
-  expect(assistantOpenClickKind.length).toBe(1);
+test("applyAssistantPresence patches fred onto an existing href", () => {
+  expect(applyAssistantPresence("/?tab=busy", true)).toBe("/?tab=busy&fred=1");
+  expect(applyAssistantPresence("/meetings?fred=1", false)).toBe("/meetings");
+  expect(applyAssistantPresence("/meetings", true)).toBe("/meetings?fred=1");
+  expect(applyAssistantPresence("/meetings?fred=1", true)).toBe("/meetings?fred=1");
+  expect(applyAssistantPresence("/?tab=busy&fred=1", false)).toBe("/?tab=busy");
 });
 
-test("assistant-url click kind has no navigate branch", async () => {
+test("assistant-url has no click-kind wrapper", async () => {
   const source = await Bun.file(join(import.meta.dir, "../lib/assistant-url.ts")).text();
+  expect(source.includes("assistantOpenClickKind")).toBe(false);
   expect(source.includes('"navigate"')).toBe(false);
-  expect(source.includes("'navigate'")).toBe(false);
 });
 
 test("locationHref preserves status and page", () => {

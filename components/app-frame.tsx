@@ -16,7 +16,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   appLocation,
-  assistantOpenClickKind,
   assistantOpenHref,
   pushAppUrl,
   subscribeAppUrl,
@@ -128,11 +127,13 @@ export function AppFrame(props: AppFrameProps) {
               onMouseEnter={(event) => handleHover(event, askFredRef)}
               onMouseLeave={(event) => handleHover(event, askFredRef)}
               onClick={(event) => {
-                if (assistantOpenClickKind(isPlainLeftClick(event)) !== "push") {
+                if (!isPlainLeftClick(event)) {
                   return;
                 }
                 event.preventDefault();
-                pushAppUrl(assistantOpenHref(location));
+                pushAppUrl(
+                  assistantOpenHref(appLocation(window.location.pathname, window.location.search)),
+                );
               }}
             >
               <Sparkles ref={askFredRef} className="text-accent" size={16} />

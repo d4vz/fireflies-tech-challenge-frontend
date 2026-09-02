@@ -5,8 +5,6 @@ export type AppLocation = {
   search: string;
 };
 
-export type AssistantOpenClickKind = "ignore" | "push";
-
 const APP_URL_EVENT = "fireflies-app-url";
 
 function searchParamsOf(search: string): URLSearchParams {
@@ -43,11 +41,11 @@ export function assistantCloseHref(location: AppLocation): string {
   return locationHref(location, false);
 }
 
-export function assistantOpenClickKind(isPlain: boolean): AssistantOpenClickKind {
-  if (!isPlain) {
-    return "ignore";
-  }
-  return "push";
+export function applyAssistantPresence(href: string, open: AssistantOpen): string {
+  const queryAt = href.indexOf("?");
+  const pathname = queryAt === -1 ? href : href.slice(0, queryAt);
+  const search = queryAt === -1 ? "" : href.slice(queryAt);
+  return locationHref({ pathname, search }, open);
 }
 
 export function pushAppUrl(href: string): void {
