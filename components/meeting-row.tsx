@@ -7,9 +7,25 @@ import { Thumb } from "@components/thumb";
 import { When } from "@components/when";
 import { meetingId, type Meeting } from "@lib/meetings";
 
+export type MeetingRowLayout = "row" | "card";
+
 export type MeetingRowProps = {
   meeting: Meeting;
+  layout?: MeetingRowLayout;
 };
+
+function rowClass(layout: MeetingRowLayout): string {
+  switch (layout) {
+    case "card":
+      return "grid min-w-0 gap-3";
+    case "row":
+      return "grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_auto]";
+    default: {
+      const _exhaustive: never = layout;
+      return _exhaustive;
+    }
+  }
+}
 
 function MeetingPreview(props: { blob: Meeting["blob"] }) {
   switch (props.blob.kind) {
@@ -36,12 +52,10 @@ function MeetingPreview(props: { blob: Meeting["blob"] }) {
 
 export function MeetingRow(props: MeetingRowProps) {
   const meeting = props.meeting;
+  const layout = props.layout ?? "row";
   const id = meetingId(meeting);
   return (
-    <Link
-      className="grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_auto]"
-      href={`/meetings/${id}`}
-    >
+    <Link className={rowClass(layout)} href={`/meetings/${id}`}>
       <div className="aspect-video min-w-0 overflow-hidden rounded-[14px] bg-neutral-200">
         <MeetingPreview blob={meeting.blob} />
       </div>
@@ -57,7 +71,9 @@ export function MeetingRow(props: MeetingRowProps) {
         ) : null}
         <When className="text-[0.8rem] text-muted-foreground" value={meeting.createdAt} />
       </div>
-      <ChevronRight className="hidden size-5 shrink-0 self-center text-muted-foreground lg:block" />
+      {layout === "row" ? (
+        <ChevronRight className="hidden size-5 shrink-0 self-center text-muted-foreground lg:block" />
+      ) : null}
     </Link>
   );
 }

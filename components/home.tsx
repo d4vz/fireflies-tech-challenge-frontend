@@ -7,9 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ListChecks, ListVideo, Loader, Sparkles, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { MeetingRow } from "@components/meeting-row";
-import { MeetingSearch } from "@components/meeting-search";
 import { HomeDashboardSkeleton } from "@components/skeleton";
 import { WorkspaceCanvas } from "@components/workspace-canvas";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ import {
   toHomeModel,
   type FredParam,
   type HomeModel,
-  type HomeTab,
   type HomeView,
   type InsightCard,
   type InsightCoverage,
@@ -41,19 +39,11 @@ export type HomeDashboardProps = {
 export type HomeCanvasProps = {
   model: HomeModel;
   fred: FredParam;
-  onTabClick: (event: MouseEvent<HTMLAnchorElement>, tab: HomeTab) => void;
 };
 
 const AskFred = dynamic(() => import("@components/ask-fred").then((mod) => mod.AskFred), {
   ssr: false,
 });
-
-const HOME_TABS: { tab: HomeTab; label: string }[] = [
-  { tab: "all", label: "All" },
-  { tab: "ready", label: "Ready" },
-  { tab: "busy", label: "Busy" },
-  { tab: "failed", label: "Failed" },
-];
 
 function greetingTitle(model: HomeModel): string {
   const name = model.greeting.workspaceName;
@@ -130,34 +120,13 @@ function InsightCardView(props: { card: InsightCard }) {
   );
 }
 
-type HomeTabsProps = {
-  model: HomeModel;
-  fred: FredParam;
-  onTabClick: (event: MouseEvent<HTMLAnchorElement>, tab: HomeTab) => void;
-};
-
-function HomeTabs(props: HomeTabsProps) {
+function LastMeetingsHeader() {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line">
-      <nav className="flex flex-wrap gap-1">
-        {HOME_TABS.map((item) => {
-          const active = props.model.tab === item.tab;
-          return (
-            <Link
-              key={item.tab}
-              href={homeHref({ tab: item.tab, query: props.model.query, fred: props.fred })}
-              onClick={(event) => props.onTabClick(event, item.tab)}
-              className={
-                active
-                  ? "border-b-2 border-ink px-3 py-2 text-sm font-semibold text-ink"
-                  : "px-3 py-2 text-sm text-muted-foreground"
-              }
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+    <div className="flex items-baseline justify-between gap-3">
+      <h3 className="m-0 text-[1.05rem] font-semibold tracking-tight">Last meetings</h3>
+      <Link className="text-sm font-semibold text-accent" href="/meetings">
+        view more
+      </Link>
     </div>
   );
 }
@@ -232,27 +201,14 @@ export function HomeCanvas(props: HomeCanvasProps) {
           ))}
         </div>
         <div className="mt-8 grid gap-3">
-          <MeetingSearch
-            className="md:hidden"
-            hotkey={false}
-            view={{ tab: model.tab, query: model.query, fred: props.fred }}
-          />
-          <HomeTabs model={model} fred={props.fred} onTabClick={props.onTabClick} />
+          <LastMeetingsHeader />
           {model.rows.length === 0 ? (
-            <p className="mt-1 text-[0.85rem] text-muted-foreground">
-              No meetings in this view.{" "}
-              <Link className="font-semibold text-accent" href="/meetings">
-                View all meetings
-              </Link>
-            </p>
+            <p className="mt-1 text-[0.85rem] text-muted-foreground">No meetings in this view.</p>
           ) : (
-            <div className="grid gap-1">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {model.rows.map((meeting) => (
-                <MeetingRow key={meeting._id} meeting={meeting} />
+                <MeetingRow key={meeting._id} layout="card" meeting={meeting} />
               ))}
-              <Link className="mt-2 text-sm font-semibold text-accent" href="/meetings">
-                View more
-              </Link>
             </div>
           )}
         </div>
@@ -291,19 +247,6 @@ export function HomeDashboard(props: HomeDashboardProps) {
     });
   }, []);
 
-  function onTabClick(event: MouseEvent<HTMLAnchorElement>, tab: HomeTab) {
-    if (!isPlainLeftClick(event)) {
-      return;
-    }
-    event.preventDefault();
-    if (view.tab === tab) {
-      return;
-    }
-    const next = { ...view, tab };
-    setView(next);
-    pushHomeUrl(next);
-  }
-
   if (query.error) {
     return (
       <main className="home-empty h-full overflow-y-auto px-4 pt-8 pb-12 md:px-8">
@@ -322,5 +265,5 @@ export function HomeDashboard(props: HomeDashboardProps) {
     now,
     workspaceName: props.displayName,
   });
-  return <HomeCanvas model={model} fred={view.fred} onTabClick={onTabClick} />;
+  return <HomeCanvas model={model} fred={view.fred} />;
 }
