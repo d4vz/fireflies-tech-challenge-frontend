@@ -4,9 +4,11 @@ import Link from "next/link";
 import { ChevronRight, Mic } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { StatusLabel } from "@components/status-label";
+import { SummarySkeleton } from "@components/skeleton";
 import { Thumb } from "@components/thumb";
 import { When } from "@components/when";
 import { handleHover } from "@lib/handle-hover";
+import { toMeetingNotesView } from "@lib/meeting-notes-view";
 import { meetingId, type Meeting } from "@lib/meetings";
 import { useRef } from "react";
 
@@ -60,6 +62,28 @@ function MeetingPreview(props: { blob: Meeting["blob"] }) {
   }
 }
 
+function MeetingSummary(props: { meeting: Meeting }) {
+  const notes = toMeetingNotesView(props.meeting);
+  switch (notes.kind) {
+    case "pending":
+      return (
+        <div className="md:min-h-[3.75rem]">
+          <SummarySkeleton />
+        </div>
+      );
+    case "ready":
+      return (
+        <p className="m-0 line-clamp-2 text-[0.85rem] leading-5 text-muted-foreground md:min-h-[3.75rem] md:line-clamp-3">
+          {notes.summaryText ?? ""}
+        </p>
+      );
+    default: {
+      const _exhaustive: never = notes;
+      return _exhaustive;
+    }
+  }
+}
+
 export function MeetingRow(props: MeetingRowProps) {
   const meeting = props.meeting;
   const layout = props.layout ?? "row";
@@ -94,9 +118,7 @@ export function MeetingRow(props: MeetingRowProps) {
             </span>
           )}
         </div>
-        <p className="m-0 line-clamp-2 text-[0.85rem] leading-5 text-muted-foreground md:min-h-[3.75rem] md:line-clamp-3">
-          {meeting.summary?.text ?? ""}
-        </p>
+        <MeetingSummary meeting={meeting} />
         <When className="text-[0.8rem] text-muted-foreground" value={meeting.createdAt} />
       </div>
       {layout === "row" ? (
