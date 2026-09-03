@@ -170,3 +170,42 @@ export function uploadFilename(displayName: string, file: File): string {
   }
   return `${trimmed}${ext}`;
 }
+
+const WEBM_VIDEO_CODECS = ["V_VP8", "V_VP9", "V_AV1"] as const;
+const WEBM_AUDIO_CODECS = ["A_OPUS", "A_VORBIS", "A_AAC"] as const;
+
+function declaredMime(file: File): string {
+  return file.type.split(";")[0]?.trim() ?? "";
+}
+
+function isWebmUpload(file: File, mime: string): boolean {
+  return (
+    mime === "video/webm" || mime === "audio/webm" || file.name.toLowerCase().endsWith(".webm")
+  );
+}
+
+function containsAscii(bytes: Uint8Array, token: string): boolean {
+  return new TextDecoder("latin1").decode(bytes).includes(token);
+}
+
+/**
+ * Content-Type for POST /meetings/upload. Browsers tag audio-only WebM as
+ * video/webm, so peek at codec IDs and send audio/webm when there is no video.
+ */
+export async function uploadContentType(file: File): Promise<string> {
+  const mime = declaredMime(file);
+  if (mime.startsWith("audio/")) {
+    return mime;
+  }
+  if (!isWebmUpload(file, mime)) {
+    return mime || "application/octet-stream";
+  }
+  const prefix = new Uint8Array(await file.slice(0, 65_536).arrayBuffer());
+  if (WEBM_VIDEO_CODECS.some((id) => containsAscii(prefix, id))) {
+    return mime || "video/webm";
+  }
+  if (WEBM_AUDIO_CODECS.some((id) => containsAscii(prefix, id))) {
+    return "audio/webm";
+  }
+  return mime || "application/octet-stream";
+}

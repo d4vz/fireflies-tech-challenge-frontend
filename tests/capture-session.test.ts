@@ -15,6 +15,7 @@ import {
   setSessionName,
   startCaptureNaming,
   startPickingUpload,
+  uploadContentType,
   uploadFilename,
 } from "@lib/capture-session";
 
@@ -116,6 +117,32 @@ test("firstAcceptedMedia keeps mp3 and rejects txt", () => {
   expect(
     firstAcceptedMedia([new File(["x"], "notes.txt", { type: "text/plain" })]),
   ).toBeUndefined();
+});
+
+test("uploadContentType keeps a declared audio MIME", async () => {
+  expect(await uploadContentType(audio("talk.mp3"))).toBe("audio/mpeg");
+  expect(await uploadContentType(audio("talk.webm", "audio/webm"))).toBe("audio/webm");
+});
+
+test("uploadContentType keeps a declared video MIME for non-webm files", async () => {
+  expect(await uploadContentType(video("clip.mp4"))).toBe("video/mp4");
+});
+
+test("uploadContentType sends audio/webm for audio-only webm tagged as video/webm", async () => {
+  const file = new File([new TextEncoder().encode("A_OPUS")], "talk.webm", { type: "video/webm" });
+  expect(await uploadContentType(file)).toBe("audio/webm");
+});
+
+test("uploadContentType keeps video/webm when a video codec is present", async () => {
+  const file = new File([new TextEncoder().encode("V_VP8A_VORBIS")], "clip.webm", {
+    type: "video/webm",
+  });
+  expect(await uploadContentType(file)).toBe("video/webm");
+});
+
+test("uploadContentType sends audio/webm for an untyped audio-only webm", async () => {
+  const file = new File([new TextEncoder().encode("A_OPUS")], "talk.webm", { type: "" });
+  expect(await uploadContentType(file)).toBe("audio/webm");
 });
 
 test("uploadFilename appends mp3 when the display name has no extension", () => {

@@ -7,6 +7,7 @@ import type {
   TranscriptTurn,
 } from "@lib/meetings";
 import type { ActionListPage, ActionStatusFilter } from "@lib/actions";
+import { uploadContentType } from "@lib/capture-session";
 
 export async function listMeetings(
   page: number,
@@ -91,7 +92,7 @@ export async function uploadVideo(
   const params = new URLSearchParams({ filename, name });
   const res = await fetch(`/api/meetings/upload?${params.toString()}`, {
     method: "POST",
-    headers: { "Content-Type": file.type || "application/octet-stream" },
+    headers: { "Content-Type": await uploadContentType(file) },
     body: file,
   });
   const body: Meeting & { error?: string } = await res.json();
