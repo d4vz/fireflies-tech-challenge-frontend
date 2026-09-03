@@ -126,6 +126,13 @@ test("suggestion chips stay until the first assistant reply", () => {
   expect(shouldShowFredSuggestions([{ role: "assistant" }])).toBe(false);
 });
 
+test("Ask Fred suggestion chips leave with an exit animation", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/ask-fred.tsx")).text();
+  expect(source).toContain("AnimatePresence");
+  expect(source).toContain("showSuggestions && !busy");
+  expect(source).toContain("exit=");
+});
+
 test("Ask Fred shows a thinking shimmer while waiting for the model", async () => {
   const source = await Bun.file(join(import.meta.dir, "../components/ask-fred.tsx")).text();
   expect(source).toContain("shouldShowFredPending");
@@ -138,9 +145,12 @@ test("Ask Fred empty state is a greeting, stacked chips, and inset send control"
   expect(source).toContain("Hi ${props.displayName}!");
   expect(source).toContain("Get ready for your meeting.");
   expect(source).toContain("flex-col");
-  expect(source).toContain("flex flex-col items-stretch gap-2 px-3 pt-2 pb-0");
+  expect(source).toContain("flex flex-col items-stretch gap-3 overflow-hidden px-3 pt-3 pb-0");
+  expect(source).toContain("rounded-[10px] p-3");
   expect(source).toContain("shrink-0 p-3");
   expect(source).toContain("rounded-[10px]");
+  expect(source.includes("gap-2 px-3 pt-2 pb-0")).toBe(false);
+  expect(source.includes("py-2.5")).toBe(false);
   expect(source.includes("rounded-2xl")).toBe(false);
   expect(source).toContain("ArrowUp");
   expect(source.includes("Type @ to mention")).toBe(false);

@@ -35,6 +35,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { ArrowUp, ListChecks, Sparkles } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { isDynamicToolUIPart, isStaticToolUIPart, type UIMessage } from "ai";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { handleHover } from "@lib/handle-hover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -208,7 +209,7 @@ function FredChip(props: { chip: (typeof CHIPS)[number]; onSend: (text: string) 
   const Icon = CHIP_ICONS[props.chip];
   return (
     <Suggestion
-      className="surface-card-hover h-auto w-full justify-start gap-2 rounded-[10px] py-2.5 text-left whitespace-normal"
+      className="surface-card-hover h-auto w-full justify-start gap-2 rounded-[10px] p-3 text-left whitespace-normal"
       onClick={props.onSend}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
@@ -219,6 +220,30 @@ function FredChip(props: { chip: (typeof CHIPS)[number]; onSend: (text: string) 
       </span>
       {props.chip}
     </Suggestion>
+  );
+}
+
+function FredSuggestions(props: { open: boolean; onSend: (text: string) => void }) {
+  const reduceMotion = useReducedMotion();
+  const transition =
+    reduceMotion === true ? { duration: 0 } : { duration: 0.22, ease: "easeOut" as const };
+  return (
+    <AnimatePresence initial={false}>
+      {props.open ? (
+        <motion.div
+          key="fred-suggestions"
+          className="flex flex-col items-stretch gap-3 overflow-hidden px-3 pt-3 pb-0"
+          initial={false}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={transition}
+        >
+          {CHIPS.map((chip) => (
+            <FredChip chip={chip} key={chip} onSend={props.onSend} />
+          ))}
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 
@@ -274,13 +299,7 @@ export function AskFred(props: AskFredProps) {
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
-      {showSuggestions ? (
-        <div className="flex flex-col items-stretch gap-2 px-3 pt-2 pb-0">
-          {CHIPS.map((chip) => (
-            <FredChip chip={chip} key={chip} onSend={send} />
-          ))}
-        </div>
-      ) : null}
+      <FredSuggestions open={showSuggestions && !busy} onSend={send} />
       {props.error !== undefined ? (
         <Alert className="mx-4 mb-2" variant="destructive">
           <AlertDescription>{props.error.message}</AlertDescription>
