@@ -101,7 +101,11 @@ function CaptureSplitButton(props: {
           onMouseEnter={(event) => handleHover(event, chevronRef)}
           onMouseLeave={(event) => handleHover(event, chevronRef)}
         >
-          <ChevronDown ref={chevronRef} size={14} />
+          <ChevronDown
+            ref={chevronRef}
+            className={props.menuOpen ? "rotate-180" : undefined}
+            size={14}
+          />
         </button>
       </div>
       {props.menuOpen ? (

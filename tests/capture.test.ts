@@ -49,6 +49,14 @@ test("Capture split control is the same height as the header user button", async
   expect(source).toContain("h-9");
 });
 
+test("header stacks above the page so the upload menu is not behind transcript", async () => {
+  const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
+  const capture = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
+  expect(frame).toContain("relative z-20 flex min-w-0 items-center");
+  expect(capture).toContain("absolute top-[calc(100%+0.4rem)] right-0 z-10");
+  expect(capture).toContain('className={props.menuOpen ? "rotate-180" : undefined}');
+});
+
 test("capture alerts keep a wrapped icon beside the title", async () => {
   const alert = await Bun.file(join(import.meta.dir, "../components/ui/alert.tsx")).text();
   expect(alert).toContain("has-[svg]:grid-cols-[auto_1fr]");

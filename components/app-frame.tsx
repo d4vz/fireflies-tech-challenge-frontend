@@ -87,7 +87,7 @@ export function AppFrame(props: AppFrameProps) {
           <NavPane pathname={pathname} />
         </aside>
         <div className="grid min-h-0 min-w-0 grid-rows-[64px_minmax(0,1fr)]">
-          <header className="flex min-w-0 items-center gap-2 border-b border-line bg-paper px-3 md:gap-4 md:px-6">
+          <header className="relative z-20 flex min-w-0 items-center gap-2 border-b border-line bg-paper px-3 md:gap-4 md:px-6">
             <Button
               type="button"
               variant="ghost"
