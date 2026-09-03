@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type ThumbProps = {
@@ -17,5 +18,15 @@ export function Thumb(props: ThumbProps) {
   if (!src || failed) {
     return null;
   }
-  return <img className={props.className} src={src} alt="" onError={() => setFailed(true)} />;
+  return (
+    <Image
+      alt=""
+      className={props.className}
+      fill
+      onError={() => setFailed(true)}
+      sizes="(max-width: 768px) 100vw, 240px"
+      src={src}
+      unoptimized
+    />
+  );
 }

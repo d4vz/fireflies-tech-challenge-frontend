@@ -4,6 +4,7 @@ import { UserButton } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import { Menu, Sparkles } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -45,10 +46,11 @@ function AccountButton() {
 function BrandMark() {
   return (
     <Link className="block px-2 py-1.5" href="/">
-      <img
+      <Image
         alt="Fireflies"
         className="h-6 w-auto"
         height={24}
+        priority
         src="/fireflies-logo.svg"
         width={118}
       />

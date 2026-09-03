@@ -69,6 +69,20 @@ test("WORKSPACE_NAME is gone from chrome and greeting callers", async () => {
   expect(fred).toContain("displayName");
 });
 
+test("chrome images use next/image", async () => {
+  const frame = await Bun.file(join(root, "components/app-frame.tsx")).text();
+  const signIn = await Bun.file(join(root, "app/(auth)/sign-in/[[...sign-in]]/page.tsx")).text();
+  const thumb = await Bun.file(join(root, "components/thumb.tsx")).text();
+  for (const source of [frame, signIn, thumb]) {
+    expect(source).toContain('from "next/image"');
+    expect(source.includes("<img")).toBe(false);
+  }
+  expect(frame).toContain("priority");
+  expect(signIn).toContain("priority");
+  expect(thumb).toContain("fill");
+  expect(thumb).toContain("unoptimized");
+});
+
 test("sidebar brand mark is the Fireflies SVG wordmark", async () => {
   const logo = await Bun.file(join(root, "public/fireflies-logo.svg")).text();
   expect(logo).toContain('viewBox="0 0 235 48"');
