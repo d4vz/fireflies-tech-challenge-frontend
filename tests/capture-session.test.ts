@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { join } from "node:path";
 import {
   PROCESSING_NOTICE,
+  UPLOAD_LOADING,
   UPLOAD_PENDING_HINT,
   MEDIA_ACCEPT,
   MEDIA_FORMAT_LABEL,
@@ -30,6 +31,7 @@ function audio(name: string, type = "audio/mpeg") {
 test("UPLOAD_PENDING_HINT tells the user the meeting stays pending", () => {
   expect(UPLOAD_PENDING_HINT).toContain("pending");
   expect(UPLOAD_PENDING_HINT).toContain("Meetings");
+  expect(UPLOAD_LOADING).toContain("Uploading");
   expect(PROCESSING_NOTICE).toContain("processing");
   expect(PROCESSING_NOTICE).toContain("pending");
   expect(PROCESSING_NOTICE).toContain("transcription");

@@ -31,6 +31,7 @@ import { uploadVideo } from "@lib/api";
 import { createCaptureFlow } from "@lib/capture-flow";
 import {
   PROCESSING_NOTICE,
+  UPLOAD_LOADING,
   UPLOAD_PENDING_HINT,
   MEDIA_ACCEPT,
   MEDIA_FORMAT_LABEL,
@@ -294,22 +295,34 @@ export function Capture() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [session, setSession] = useState<CaptureSession>(resetSession);
   const uploadedRef = useRef<(meeting: Meeting) => void>(() => {});
-  uploadedRef.current = (meeting) => {
+  uploadedRef.current = () => {
     void invalidateMeetingData(queryClient);
-    const id = meetingId(meeting);
-    toast(PROCESSING_NOTICE, {
-      description: (
-        <Link className="underline underline-offset-3" href={`/meetings/${id}`}>
-          View meeting
-        </Link>
-      ),
-    });
   };
   const flow = useMemo(
     () =>
       createCaptureFlow({
         record: startScreenRecording,
-        upload: uploadVideo,
+        upload: async (file, filename, name) => {
+          const toastId = toast.loading(UPLOAD_LOADING);
+          try {
+            const meeting = await uploadVideo(file, filename, name);
+            toast(PROCESSING_NOTICE, {
+              id: toastId,
+              description: (
+                <Link
+                  className="underline underline-offset-3"
+                  href={`/meetings/${meetingId(meeting)}`}
+                >
+                  View meeting
+                </Link>
+              ),
+            });
+            return meeting;
+          } catch (error) {
+            toast.dismiss(toastId);
+            throw error;
+          }
+        },
         onChange: setSession,
         onUploaded: (meeting) => uploadedRef.current(meeting),
       }),

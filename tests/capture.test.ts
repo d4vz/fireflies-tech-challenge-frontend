@@ -38,6 +38,12 @@ test("naming dialog is titled Create a meeting", async () => {
   expect(source.includes("Meeting name")).toBe(false);
 });
 
+test("Capture shows a Sonner loading toast while the file uploads", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
+  expect(source).toContain("toast.loading");
+  expect(source).toContain("UPLOAD_LOADING");
+});
+
 test("Capture split control is the same height as the header user button", async () => {
   const source = await Bun.file(join(import.meta.dir, "../components/capture.tsx")).text();
   expect(source).toContain("h-9");

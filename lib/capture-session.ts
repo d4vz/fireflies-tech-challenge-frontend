@@ -21,6 +21,8 @@ const MEDIA_EXTS = MEDIA_ACCEPT_TOKENS.filter((token) => token.startsWith("."));
 
 export const MEDIA_FORMAT_LABEL = MEDIA_EXTS.join(", ");
 
+export const UPLOAD_LOADING = "Uploading the recording.";
+
 export const UPLOAD_PENDING_HINT =
   "The file is uploaded and stays pending while we process it. You can view it in Meetings.";
 
