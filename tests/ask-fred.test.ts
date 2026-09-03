@@ -138,9 +138,18 @@ test("Ask Fred empty state is a greeting, stacked chips, and inset send control"
   expect(source).toContain("Hi ${props.displayName}!");
   expect(source).toContain("Get ready for your meeting.");
   expect(source).toContain("flex-col");
-  expect(source).toContain("rounded-2xl");
+  expect(source).toContain("rounded-[10px]");
+  expect(source.includes("rounded-2xl")).toBe(false);
   expect(source).toContain("ArrowUp");
   expect(source.includes("Type @ to mention")).toBe(false);
+});
+
+test("Ask Fred keeps the composer enabled while a reply is in flight", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/ask-fred.tsx")).text();
+  expect(source).toContain("if (props.busy)");
+  expect(source).toContain('if (trimmed === "" || busy)');
+  expect(source.includes("disabled={props.busy}")).toBe(false);
+  expect(source.includes("disabled={busy}")).toBe(false);
 });
 
 test("Ask Fred composer is the AI Elements prompt input, not a mid-box Input", async () => {

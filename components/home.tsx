@@ -12,7 +12,7 @@ import { TaskGroupCard } from "@components/task-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { handleHover } from "@lib/handle-hover";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toHomeModel, type HomeModel, type InsightCard } from "@lib/home";
+import { insightHref, toHomeModel, type HomeModel, type InsightCard } from "@lib/home";
 import { HOME_RECENT_TASK_GROUPS, tasksHref, type ActionListPage } from "@lib/actions";
 import { HOME_DASHBOARD_LIMIT, type MeetingListPage } from "@lib/meetings";
 import { actionsListQuery, meetingsListQuery } from "@lib/query-policy";
@@ -40,12 +40,12 @@ function greetingTitle(model: HomeModel): string {
   return `Good Evening, ${name} 👋`;
 }
 
-function InsightIcon(props: { kind: InsightCard["kind"]; iconRef?: Ref<IconHandle> }) {
+function InsightIcon(props: { kind: InsightCard["kind"]; iconRef: Ref<IconHandle> }) {
   switch (props.kind) {
     case "meeting-count":
-      return <LayoutList className="text-blue-600" size={20} />;
+      return <LayoutList ref={props.iconRef} className="text-blue-600" size={20} />;
     case "busy-count":
-      return <Loader className="text-orange-600" size={20} />;
+      return <Loader ref={props.iconRef} className="text-orange-600" size={20} />;
     case "task-count":
       return <ListChecks ref={props.iconRef} className="text-green-700" size={20} />;
     default: {
@@ -69,37 +69,31 @@ function staggerClass(index: number): string {
 function InsightCardView(props: { card: InsightCard; index: number }) {
   const iconRef = useRef<IconHandle>(null);
   const card = props.card;
-  const inner = (
-    <Card
-      className={`min-w-0 bg-paper shadow-none ring-1 ring-line max-md:[--card-spacing:--spacing(2.5)]${card.kind === "task-count" ? " hover:bg-wash" : ""}`}
-    >
-      <CardHeader className="flex min-w-0 flex-col gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-wash md:size-10">
-          <InsightIcon kind={card.kind} iconRef={iconRef} />
-        </span>
-        <p className="m-0 text-2xl font-semibold tabular-nums md:text-3xl">{card.metric}</p>
-        <p className="sr-only md:hidden">{`${card.title}: ${card.body}`}</p>
-        <div className="hidden min-w-0 md:block">
-          <CardTitle className="truncate">{card.title}</CardTitle>
-          <CardDescription className="truncate text-muted-foreground">{card.body}</CardDescription>
-          {card.note ? (
-            <p className="m-0 truncate text-xs text-muted-foreground">{card.note}</p>
-          ) : null}
-        </div>
-      </CardHeader>
-    </Card>
-  );
-  if (card.kind !== "task-count") {
-    return <div className={staggerClass(props.index)}>{inner}</div>;
-  }
   return (
     <Link
       className={`min-w-0 text-ink no-underline ${staggerClass(props.index)}`}
-      href="/tasks"
+      href={insightHref(card.kind)}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
     >
-      {inner}
+      <Card className="min-w-0 bg-paper shadow-none ring-1 ring-line hover:bg-wash max-md:[--card-spacing:--spacing(2.5)]">
+        <CardHeader className="flex min-w-0 flex-col gap-2">
+          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-wash md:size-10">
+            <InsightIcon kind={card.kind} iconRef={iconRef} />
+          </span>
+          <p className="m-0 text-2xl font-semibold tabular-nums md:text-3xl">{card.metric}</p>
+          <p className="sr-only md:hidden">{`${card.title}: ${card.body}`}</p>
+          <div className="hidden min-w-0 md:block">
+            <CardTitle className="truncate">{card.title}</CardTitle>
+            <CardDescription className="truncate text-muted-foreground">
+              {card.body}
+            </CardDescription>
+            {card.note ? (
+              <p className="m-0 truncate text-xs text-muted-foreground">{card.note}</p>
+            ) : null}
+          </div>
+        </CardHeader>
+      </Card>
     </Link>
   );
 }

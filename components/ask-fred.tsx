@@ -180,7 +180,7 @@ function FredComposer(props: {
 
   return (
     <PromptInput
-      className="shrink-0 p-3 [&_[data-slot=input-group]]:rounded-2xl [&_[data-slot=input-group]]:border-line [&_[data-slot=input-group]]:bg-paper [&_[data-slot=input-group]]:focus-within:border-accent [&_[data-slot=input-group]]:focus-within:ring-2 [&_[data-slot=input-group]]:focus-within:ring-accent/30 [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:bg-accent [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:text-white [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:hover:bg-accent-hover [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:hover:text-white"
+      className="shrink-0 p-3 [&_[data-slot=input-group]]:rounded-[10px] [&_[data-slot=input-group]]:border-line [&_[data-slot=input-group]]:bg-paper [&_[data-slot=input-group]]:focus-within:border-accent [&_[data-slot=input-group]]:focus-within:ring-2 [&_[data-slot=input-group]]:focus-within:ring-accent/30 [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:bg-accent [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:text-white [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:hover:bg-accent-hover [&:has(textarea:not(:placeholder-shown))_[aria-label=Send]]:hover:text-white"
       onSubmit={onSubmit}
     >
       <PromptInputTextarea
@@ -192,7 +192,6 @@ function FredComposer(props: {
         <PromptInputSubmit
           aria-label="Send"
           className="rounded-lg bg-process-wash text-accent hover:bg-process-wash hover:text-accent"
-          disabled={props.busy}
           status={props.status}
           onMouseEnter={(event) => handleHover(event, sendRef)}
           onMouseLeave={(event) => handleHover(event, sendRef)}

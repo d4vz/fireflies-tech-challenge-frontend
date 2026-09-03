@@ -88,9 +88,9 @@ function NotesBlock(props: { meetingId: string; notes: MeetingNotesView }) {
               Summary
             </h2>
             {props.notes.summaryText ? (
-              <p className="max-w-prose leading-7">{props.notes.summaryText}</p>
+              <p className="leading-7">{props.notes.summaryText}</p>
             ) : (
-              <p className="max-w-prose text-muted-foreground italic leading-7">(no summary)</p>
+              <p className="text-muted-foreground italic leading-7">(no summary)</p>
             )}
           </section>
           <ReadyTasks meetingId={props.meetingId} tasks={props.notes.tasks} />

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { HOME_PREVIEW_COUNT, toHomeModel } from "@lib/home";
+import { join } from "node:path";
+import { HOME_PREVIEW_COUNT, insightHref, toHomeModel } from "@lib/home";
 import type { Meeting, MeetingListPage } from "@lib/meetings";
 
 function meeting(input: {
@@ -146,6 +147,12 @@ test("toHomeModel keeps the newest preview rows", () => {
   expect(model.rows.map((row) => row._id)).toEqual(["3", "4"]);
 });
 
+test("insightHref sends Meetings to all and In progress to processing", () => {
+  expect(insightHref("meeting-count")).toBe("/meetings");
+  expect(insightHref("busy-count")).toBe("/meetings?status=processing");
+  expect(insightHref("task-count")).toBe("/tasks");
+});
+
 test("toHomeModel greeting uses periodAt and the workspace name", () => {
   const model = toHomeModel({
     page: pageOf([]),
@@ -153,4 +160,10 @@ test("toHomeModel greeting uses periodAt and the workspace name", () => {
     workspaceName: "Davi",
   });
   expect(model.greeting).toEqual({ period: "afternoon", workspaceName: "Davi" });
+});
+
+test("Home insight cards are links like Tasks", async () => {
+  const source = await Bun.file(join(import.meta.dir, "../components/home.tsx")).text();
+  expect(source).toContain("insightHref");
+  expect(source.includes('if (card.kind !== "task-count")')).toBe(false);
 });

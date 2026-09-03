@@ -1,5 +1,5 @@
 import { periodAt, type DayPeriod } from "@lib/chrome";
-import { isBusy, type Meeting, type MeetingListPage } from "@lib/meetings";
+import { isBusy, meetingsHref, type Meeting, type MeetingListPage } from "@lib/meetings";
 
 export type InsightCoverage =
   | { kind: "complete" }
@@ -101,6 +101,21 @@ function insightsOf(page: MeetingListPage, coverage: InsightCoverage): InsightCa
     note === undefined ? busy : { ...busy, note },
     note === undefined ? tasks : { ...tasks, note },
   ];
+}
+
+export function insightHref(kind: InsightCard["kind"]): string {
+  switch (kind) {
+    case "meeting-count":
+      return meetingsHref("all");
+    case "busy-count":
+      return meetingsHref("processing");
+    case "task-count":
+      return "/tasks";
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
 }
 
 export function toHomeModel(input: ToHomeModelInput): HomeModel {

@@ -32,6 +32,19 @@ test("meeting detail action items are a checkbox list from meeting.tasks", async
   expect(detail.includes("actionItems")).toBe(false);
 });
 
+test("meeting detail summary uses the full column width", async () => {
+  const detail = await Bun.file(
+    join(import.meta.dir, "../app/(app)/meetings/[id]/meeting-detail.tsx"),
+  ).text();
+  const skeleton = await Bun.file(join(import.meta.dir, "../components/skeleton.tsx")).text();
+  const notes = detail.slice(detail.indexOf("function NotesBlock"));
+  expect(notes.includes("max-w-prose")).toBe(false);
+  expect(skeleton.includes('aria-label="Loading summary"')).toBe(true);
+  expect(
+    skeleton.slice(skeleton.indexOf("export function SummarySkeleton")).includes("max-w-prose"),
+  ).toBe(false);
+});
+
 test("queued and processing meetings show summary and tasks skeletons", async () => {
   const detail = await Bun.file(
     join(import.meta.dir, "../app/(app)/meetings/[id]/meeting-detail.tsx"),

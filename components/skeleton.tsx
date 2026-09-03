@@ -49,7 +49,7 @@ export function TranscriptSkeleton() {
 
 export function SummarySkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading summary" className="grid max-w-prose gap-2.5">
+    <div aria-busy="true" aria-label="Loading summary" className="grid gap-2.5">
       <Bone className="h-3.5 w-full rounded-md" />
       <Bone className="h-3.5 w-11/12 rounded-md" />
       <Bone className="h-3.5 w-4/5 rounded-md" />
