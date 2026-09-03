@@ -18,7 +18,7 @@ export type InsightCard = {
   note?: string;
 };
 
-export const HOME_PREVIEW_COUNT = 3;
+export const HOME_PREVIEW_COUNT = 2;
 
 export type HomeModel = {
   greeting: Greeting;

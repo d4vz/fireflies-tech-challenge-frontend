@@ -137,13 +137,13 @@ test("toHomeModel never adds a longest-processing insight card", () => {
 });
 
 test("toHomeModel keeps the newest preview rows", () => {
-  expect(HOME_PREVIEW_COUNT).toBe(3);
+  expect(HOME_PREVIEW_COUNT).toBe(2);
   const model = toHomeModel({
     page: pageOf([ready, processing, queued, failed]),
     now,
     workspaceName: "Davi",
   });
-  expect(model.rows.map((row) => row._id)).toEqual(["3", "4", "1"]);
+  expect(model.rows.map((row) => row._id)).toEqual(["3", "4"]);
 });
 
 test("toHomeModel greeting uses periodAt and the workspace name", () => {
