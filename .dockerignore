@@ -1,15 +1,67 @@
-node_modules
-.worktrees
-.git
-.husky
-.env
-.env.*
-!.env.example
-.next
-.next-verify
-*.log
-.DS_Store
-README.md
+# Dependencies (installed inside the image, never copy from host)
+node_modules/
+.pnp/
+.pnp.js
+.pnpm-store/
+
+# Next.js build output (generated during the image build)
+.next/
+.next-verify/
+out/
+dist/
+build/
+.vercel/
+
+# Testing (not needed in the production image)
+coverage/
+.nyc_output/
+__tests__/
+__mocks__/
+tests/
 **/*.test.ts
-tools
-.github
+tools/
+
+# Environment files (avoid leaking secrets into the build context)
+.env
+.env*
+!.env.example
+
+# Debug and log files
+*.log
+
+# IDE and editor files
+.vscode/
+.idea/
+.cursor/
+.husky/
+.worktrees/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker files (reduce build context; not needed inside the image)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+compose*.yaml
+
+# Documentation (not needed in the image)
+*.md
+docs/
+
+# CI/CD (not needed in the image)
+.github/
+
+# TypeScript and build metadata
+*.tsbuildinfo
+
+# Cache and temporary directories
+.cache/
+.turbo/
+.tmp/
+.temp/
+
+# OS-specific files
+.DS_Store
