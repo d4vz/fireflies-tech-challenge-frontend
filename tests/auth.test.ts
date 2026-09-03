@@ -76,6 +76,16 @@ test("sidebar brand mark is the Fireflies SVG wordmark", async () => {
   expect(logo).toContain("#0C083D");
 });
 
+test("app favicon is the Fireflies mark without the wordmark", async () => {
+  const icon = await Bun.file(join(root, "app/icon.svg")).text();
+  const favicon = Bun.file(join(root, "app/favicon.ico"));
+  expect(icon).toContain('viewBox="0 0 48 48"');
+  expect(icon).toContain("#E82A73");
+  expect(icon.includes("#0C083D")).toBe(false);
+  expect(await favicon.exists()).toBe(true);
+  expect(favicon.size).toBeGreaterThan(100);
+});
+
 test("Clerk UserButton sits beside Capture with the shadcn theme", async () => {
   const frame = await Bun.file(join(root, "components/app-frame.tsx")).text();
   const layout = await Bun.file(join(root, "app/(app)/layout.tsx")).text();
