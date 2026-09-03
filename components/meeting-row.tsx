@@ -22,7 +22,7 @@ export type MeetingRowProps = {
 function rowClass(layout: MeetingRowLayout): string {
   switch (layout) {
     case "card":
-      return "group grid w-full min-w-0 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 surface-card-hover md:grid-cols-1 md:items-start";
+      return "group grid w-full min-w-0 grid-cols-1 items-start gap-3 surface-card-hover";
     case "row":
       return "grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_auto]";
     default: {
@@ -32,10 +32,7 @@ function rowClass(layout: MeetingRowLayout): string {
   }
 }
 
-function thumbClass(compactMobile: boolean): string {
-  if (compactMobile) {
-    return "relative max-md:size-16 min-w-0 shrink-0 overflow-hidden rounded-[10px] bg-neutral-200 md:aspect-video md:w-full md:rounded-[14px]";
-  }
+function thumbClass(): string {
   return "relative aspect-video w-full min-w-0 shrink-0 overflow-hidden rounded-[14px] bg-neutral-200";
 }
 
@@ -97,12 +94,12 @@ export function MeetingRow(props: MeetingRowProps) {
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
     >
-      <div className={thumbClass(compactMobile)}>
+      <div className={thumbClass()}>
         <div className="size-full transition-transform motion-safe:group-hover:scale-[1.03]">
           <MeetingPreview blob={meeting.blob} />
         </div>
         {compactMobile ? (
-          <span className="absolute top-2 right-2 max-md:hidden">
+          <span className="absolute top-2 right-2">
             <StatusLabel status={meeting.status} />
           </span>
         ) : null}

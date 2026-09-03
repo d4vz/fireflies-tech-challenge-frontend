@@ -138,6 +138,8 @@ test("Ask Fred empty state is a greeting, stacked chips, and inset send control"
   expect(source).toContain("Hi ${props.displayName}!");
   expect(source).toContain("Get ready for your meeting.");
   expect(source).toContain("flex-col");
+  expect(source).toContain("flex flex-col items-stretch gap-2 px-3 pt-2 pb-0");
+  expect(source).toContain("shrink-0 p-3");
   expect(source).toContain("rounded-[10px]");
   expect(source.includes("rounded-2xl")).toBe(false);
   expect(source).toContain("ArrowUp");

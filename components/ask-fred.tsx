@@ -275,7 +275,7 @@ export function AskFred(props: AskFredProps) {
         <ConversationScrollButton />
       </Conversation>
       {showSuggestions ? (
-        <div className="flex flex-col items-stretch gap-2 px-4 py-2">
+        <div className="flex flex-col items-stretch gap-2 px-3 pt-2 pb-0">
           {CHIPS.map((chip) => (
             <FredChip chip={chip} key={chip} onSend={send} />
           ))}

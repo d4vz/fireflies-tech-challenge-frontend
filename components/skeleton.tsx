@@ -21,8 +21,8 @@ function InsightCardBone() {
 
 function MeetingCardBone() {
   return (
-    <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] items-center gap-3 md:grid-cols-1">
-      <Bone className="max-md:size-16 max-md:rounded-lg aspect-video w-full rounded-[14px]" />
+    <div className="grid min-w-0 grid-cols-1 gap-3">
+      <Bone className="aspect-video w-full rounded-[14px]" />
       <div className="grid min-w-0 gap-1.5 pt-0.5">
         <Bone className="h-4 w-48 max-w-full rounded-md" />
         <Bone className="h-3.5 w-full rounded-md" />
