@@ -107,20 +107,21 @@ export function AppFrame(props: AppFrameProps) {
             <Suspense fallback={<div className="min-w-0 max-w-xl flex-1" />}>
               <MeetingSearch />
             </Suspense>
-            <div className="min-w-0 flex-1" />
-            <Link
-              href={assistant.openHref}
-              aria-label="AskFred"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-3 font-semibold text-ink hover:border-accent/30 hover:bg-process-wash"
-              onMouseEnter={(event) => handleHover(event, askFredRef)}
-              onMouseLeave={(event) => handleHover(event, askFredRef)}
-              onClick={assistant.onOpenClick}
-            >
-              <Sparkles ref={askFredRef} className="text-accent" size={16} />
-              AskFred
-            </Link>
-            <Capture />
-            <AccountButton />
+            <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-4">
+              <Link
+                href={assistant.openHref}
+                aria-label="AskFred"
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-line bg-paper px-2 font-semibold text-ink hover:border-accent/30 hover:bg-process-wash md:px-3"
+                onMouseEnter={(event) => handleHover(event, askFredRef)}
+                onMouseLeave={(event) => handleHover(event, askFredRef)}
+                onClick={assistant.onOpenClick}
+              >
+                <Sparkles ref={askFredRef} className="text-accent" size={16} />
+                <span className="max-md:sr-only">AskFred</span>
+              </Link>
+              <Capture />
+              <AccountButton />
+            </div>
           </header>
           <div className="min-h-0 min-w-0 overflow-hidden">{props.children}</div>
         </div>

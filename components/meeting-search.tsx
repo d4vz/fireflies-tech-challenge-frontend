@@ -1,8 +1,8 @@
 "use client";
 
+import { Search } from "@animateicons/react/lucide";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { MeetingRow } from "@components/meeting-row";
 import {
   meetingSearchPanel,
@@ -43,7 +44,7 @@ function MeetingSearchResults(props: { panel: MeetingSearchPanel }) {
           {panel.items.map((meeting) => (
             <DropdownMenuItem
               asChild
-              className="grid h-[4.5rem] items-stretch gap-3 overflow-hidden p-0 focus:bg-nav"
+              className="grid h-[4.5rem] items-start gap-3 overflow-hidden p-0 focus:bg-nav"
               key={meeting._id}
             >
               <MeetingRow layout="menu" meeting={meeting} />
@@ -88,38 +89,43 @@ export function MeetingSearch() {
       <form className="min-w-0 max-w-xl flex-1" onSubmit={onSubmit}>
         <DropdownMenuTrigger asChild>
           <div className="w-full">
-            <Input
-              aria-controls="meeting-search-results"
-              aria-expanded={open}
-              aria-haspopup="listbox"
-              aria-label="Search meetings"
-              className="h-9"
-              onChange={(event) => {
-                const value = event.target.value;
-                setDraft(value);
-                setOpen(parseMeetingTextQuery(value) !== "");
-              }}
-              onFocus={() => {
-                if (q !== "") {
-                  setOpen(true);
-                }
-              }}
-              onPointerDown={(event) => {
-                if (open) {
-                  event.stopPropagation();
-                }
-              }}
-              placeholder="Search titles and summaries"
-              role="combobox"
-              type="search"
-              value={draft}
-            />
+            <InputGroup className="h-9">
+              <InputGroupInput
+                aria-controls="meeting-search-results"
+                aria-expanded={open}
+                aria-haspopup="listbox"
+                aria-label="Search meetings"
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDraft(value);
+                  setOpen(parseMeetingTextQuery(value) !== "");
+                }}
+                onFocus={() => {
+                  if (q !== "") {
+                    setOpen(true);
+                  }
+                }}
+                onPointerDown={(event) => {
+                  if (open) {
+                    event.stopPropagation();
+                  }
+                }}
+                placeholder="Search titles and summaries"
+                role="combobox"
+                type="search"
+                value={draft}
+              />
+              <InputGroupAddon>
+                <Search aria-hidden="true" className="size-4 opacity-50" size={16} />
+              </InputGroupAddon>
+            </InputGroup>
           </div>
         </DropdownMenuTrigger>
       </form>
       <DropdownMenuContent
         align="start"
-        className="w-(--radix-dropdown-menu-trigger-width) p-1.5"
+        className="w-[min(36rem,calc(100vw-1.5rem))] p-1.5"
+        collisionPadding={8}
         id="meeting-search-results"
         onCloseAutoFocus={(event) => {
           event.preventDefault();

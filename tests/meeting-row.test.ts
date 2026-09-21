@@ -30,8 +30,12 @@ test("menu meeting cards keep title and summary inside the thumbnail height", as
   const menuRow = row.slice(row.indexOf('case "menu":'), row.indexOf("default: {"));
   expect(menuRow).toContain("overflow-hidden");
   expect(menuRow).toContain("grid-rows-[4.5rem]");
+  expect(menuRow).toContain("items-start");
+  expect(row).toContain("content-start");
   expect(row).toContain('layout === "menu" ? null');
   expect(row.includes("grid-cols-[6.75rem_")).toBe(false);
+  expect(row.includes("content-center")).toBe(false);
+  expect(row.includes("items-stretch")).toBe(false);
 });
 
 test("busy meeting rows show a summary skeleton instead of empty copy", async () => {

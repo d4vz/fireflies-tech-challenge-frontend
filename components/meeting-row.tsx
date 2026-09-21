@@ -27,7 +27,7 @@ function rowClass(layout: MeetingRowLayout): string {
     case "row":
       return "grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_auto]";
     case "menu":
-      return "group grid h-[4.5rem] w-full min-w-0 grid-cols-[8rem_minmax(0,1fr)] grid-rows-[4.5rem] items-stretch gap-3 overflow-hidden rounded-lg";
+      return "group grid h-[4.5rem] w-full min-w-0 grid-cols-[8rem_minmax(0,1fr)] grid-rows-[4.5rem] items-start gap-3 overflow-hidden rounded-lg";
     default: {
       const _exhaustive: never = layout;
       return _exhaustive;
@@ -52,7 +52,7 @@ function thumbClass(layout: MeetingRowLayout): string {
 function copyClass(layout: MeetingRowLayout): string {
   switch (layout) {
     case "menu":
-      return "grid min-h-0 min-w-0 content-center gap-1 overflow-hidden";
+      return "grid min-h-0 min-w-0 content-start gap-1 overflow-hidden";
     case "card":
     case "row":
       return "grid min-w-0 gap-1.5 pt-0.5";

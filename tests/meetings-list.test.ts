@@ -66,9 +66,16 @@ test("header Search meetings opens a dropdown of meeting cards", async () => {
   expect(search).toContain('layout="menu"');
   expect(search.includes("router.push")).toBe(false);
   expect(search.includes("meetingsSearchTarget")).toBe(false);
+  expect(search).toContain("InputGroup");
+  expect(search).toContain("InputGroupAddon");
+  expect(search).toContain("InputGroupInput");
+  expect(search).toContain("items-start");
   expect(search).toContain("grid h-[4.5rem]");
   expect(search).toContain("overflow-hidden");
+  expect(search).toContain("w-[min(36rem,calc(100vw-1.5rem))]");
   expect(frame).toContain("MeetingSearch");
+  expect(frame).toContain("ml-auto");
+  expect(frame).toContain('className="max-md:sr-only">AskFred');
 });
 
 test("Meetings and Tasks pagers sit on the right", async () => {
