@@ -52,7 +52,7 @@ function thumbClass(layout: MeetingRowLayout): string {
 function copyClass(layout: MeetingRowLayout): string {
   switch (layout) {
     case "menu":
-      return "grid min-h-0 min-w-0 content-start gap-1 overflow-hidden";
+      return "grid min-h-0 min-w-0 content-start gap-0.5 overflow-hidden";
     case "card":
     case "row":
       return "grid min-w-0 gap-1.5 pt-0.5";
@@ -155,6 +155,19 @@ function summaryReadyClass(layout: MeetingRowLayout): string {
   }
 }
 
+function whenClass(layout: MeetingRowLayout): string {
+  switch (layout) {
+    case "menu":
+      return "min-w-0 truncate text-[0.7rem] leading-4 text-muted-foreground";
+    case "card":
+    case "row":
+      return "text-[0.8rem] text-muted-foreground";
+    default: {
+      const _exhaustive: never = layout;
+      return _exhaustive;
+    }
+  }
+}
 function MeetingSummary(props: { meeting: Meeting; layout: MeetingRowLayout }) {
   const notes = toMeetingNotesView(props.meeting);
   switch (notes.kind) {
@@ -203,9 +216,7 @@ export function MeetingRow(props: MeetingRowProps) {
           )}
         </div>
         <MeetingSummary layout={layout} meeting={meeting} />
-        {layout === "menu" ? null : (
-          <When className="text-[0.8rem] text-muted-foreground" value={meeting.createdAt} />
-        )}
+        <When className={whenClass(layout)} value={meeting.createdAt} />
       </div>
       {layout === "row" ? (
         <ChevronRight
