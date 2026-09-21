@@ -4,9 +4,9 @@ import {
   toPublicMeeting,
   parseMeetingStatus,
   meetingsHref,
-  meetingsSearchTarget,
   parseMeetingsView,
 } from "@lib/meetings";
+import { meetingSearchPanel } from "@lib/meeting-search";
 
 test("toPublicMeeting rewrites video urls and thumbnail", () => {
   const meeting = toPublicMeeting({
@@ -148,14 +148,38 @@ test("parseMeetingStatus keeps ready processing failed and queued", () => {
   expect(parseMeetingStatus(undefined)).toBe("all");
 });
 
-test("meetingsSearchTarget keeps list status and resets other routes to All", () => {
-  expect(meetingsSearchTarget("/", null, "standup")).toBe("/meetings?q=standup");
-  expect(meetingsSearchTarget("/tasks", "failed", "standup")).toBe("/meetings?q=standup");
-  expect(meetingsSearchTarget("/meetings/abc", "ready", "standup")).toBe("/meetings?q=standup");
-  expect(meetingsSearchTarget("/meetings", "failed", "standup")).toBe(
-    "/meetings?status=failed&q=standup",
-  );
-  expect(meetingsSearchTarget("/meetings", "failed", "  ")).toBe("/meetings?status=failed");
+test("meetingSearchPanel stays closed until a query is open", () => {
+  const page = {
+    items: [],
+    total: 0,
+    page: 1,
+    limit: 5,
+  };
+  expect(meetingSearchPanel("", true, page, null)).toEqual({ kind: "closed" });
+  expect(meetingSearchPanel("standup", false, page, null)).toEqual({ kind: "closed" });
+  expect(meetingSearchPanel("standup", true, undefined, null)).toEqual({
+    kind: "loading",
+    q: "standup",
+  });
+  expect(meetingSearchPanel("standup", true, page, null)).toEqual({
+    kind: "empty",
+    q: "standup",
+  });
+  expect(meetingSearchPanel("standup", true, undefined, new Error("nope"))).toEqual({
+    kind: "failed",
+    q: "standup",
+  });
+  const meeting = {
+    _id: "abc",
+    sourceId: "clip.mp3",
+    name: "Weekly standup",
+    createdAt: "2026-09-01T00:00:00.000Z",
+    status: "ready" as const,
+    blob: { kind: "audio" as const, url: "/a", durationInSeconds: 2 },
+  };
+  expect(
+    meetingSearchPanel("standup", true, { items: [meeting], total: 1, page: 1, limit: 5 }, null),
+  ).toEqual({ kind: "results", q: "standup", items: [meeting] });
 });
 
 test("meetingsHref drops default all and page 1", () => {

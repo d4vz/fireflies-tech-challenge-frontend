@@ -58,16 +58,15 @@ test("Meetings list keeps q on tabs and pager", async () => {
   expect(list).toContain("meetingsHref(props.status, props.page + 1, props.q)");
 });
 
-test("header Search meetings opens the library with cards", async () => {
+test("header Search meetings opens a dropdown of meeting cards", async () => {
   const search = await Bun.file(join(import.meta.dir, "../components/meeting-search.tsx")).text();
   const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
-  const list = await Bun.file(
-    join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
-  ).text();
   expect(search).toContain('aria-label="Search meetings"');
-  expect(search).toContain("meetingsSearchTarget");
+  expect(search).toContain("DropdownMenu");
+  expect(search).toContain('layout="menu"');
+  expect(search.includes("router.push")).toBe(false);
+  expect(search.includes("meetingsSearchTarget")).toBe(false);
   expect(frame).toContain("MeetingSearch");
-  expect(list).toContain('layout="card"');
 });
 
 test("Meetings and Tasks pagers sit on the right", async () => {

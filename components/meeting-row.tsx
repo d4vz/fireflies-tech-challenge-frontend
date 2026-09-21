@@ -10,13 +10,14 @@ import { When } from "@components/when";
 import { handleHover } from "@lib/handle-hover";
 import { toMeetingNotesView } from "@lib/meeting-notes-view";
 import { meetingId, type Meeting } from "@lib/meetings";
-import { useRef } from "react";
+import { useRef, type Ref } from "react";
 
-export type MeetingRowLayout = "row" | "card";
+export type MeetingRowLayout = "row" | "card" | "menu";
 
 export type MeetingRowProps = {
   meeting: Meeting;
   layout?: MeetingRowLayout;
+  ref?: Ref<HTMLAnchorElement>;
 };
 
 function rowClass(layout: MeetingRowLayout): string {
@@ -25,6 +26,8 @@ function rowClass(layout: MeetingRowLayout): string {
       return "group grid w-full min-w-0 grid-cols-1 items-start gap-3 surface-card-hover";
     case "row":
       return "grid min-w-0 items-start gap-3 rounded-xl px-2.5 py-2.5 hover:bg-paper hover:shadow-[0_1px_2px_rgba(16,18,27,0.06)] max-lg:grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_auto]";
+    case "menu":
+      return "group grid w-full min-w-0 grid-cols-[6.75rem_minmax(0,1fr)] items-start gap-3 rounded-lg";
     default: {
       const _exhaustive: never = layout;
       return _exhaustive;
@@ -32,8 +35,18 @@ function rowClass(layout: MeetingRowLayout): string {
   }
 }
 
-function thumbClass(): string {
-  return "relative aspect-video w-full min-w-0 shrink-0 overflow-hidden rounded-[14px] bg-neutral-200";
+function thumbClass(layout: MeetingRowLayout): string {
+  switch (layout) {
+    case "menu":
+      return "relative aspect-video w-full min-w-0 shrink-0 overflow-hidden rounded-lg bg-neutral-200";
+    case "card":
+    case "row":
+      return "relative aspect-video w-full min-w-0 shrink-0 overflow-hidden rounded-[14px] bg-neutral-200";
+    default: {
+      const _exhaustive: never = layout;
+      return _exhaustive;
+    }
+  }
 }
 
 function MeetingPreview(props: { blob: Meeting["blob"] }) {
@@ -59,18 +72,24 @@ function MeetingPreview(props: { blob: Meeting["blob"] }) {
   }
 }
 
-function MeetingSummary(props: { meeting: Meeting }) {
+function MeetingSummary(props: { meeting: Meeting; layout: MeetingRowLayout }) {
   const notes = toMeetingNotesView(props.meeting);
   switch (notes.kind) {
     case "pending":
       return (
-        <div className="md:min-h-[3.75rem]">
+        <div className={props.layout === "menu" ? undefined : "md:min-h-[3.75rem]"}>
           <SummarySkeleton />
         </div>
       );
     case "ready":
       return (
-        <p className="m-0 line-clamp-2 text-[0.85rem] leading-5 text-muted-foreground md:min-h-[3.75rem] md:line-clamp-3">
+        <p
+          className={
+            props.layout === "menu"
+              ? "m-0 line-clamp-2 text-[0.8rem] leading-5 text-muted-foreground"
+              : "m-0 line-clamp-2 text-[0.85rem] leading-5 text-muted-foreground md:min-h-[3.75rem] md:line-clamp-3"
+          }
+        >
           {notes.summaryText ?? ""}
         </p>
       );
@@ -93,8 +112,9 @@ export function MeetingRow(props: MeetingRowProps) {
       href={`/meetings/${id}`}
       onMouseEnter={(event) => handleHover(event, iconRef)}
       onMouseLeave={(event) => handleHover(event, iconRef)}
+      ref={props.ref}
     >
-      <div className={thumbClass()}>
+      <div className={thumbClass(layout)}>
         <div className="size-full transition-transform motion-safe:group-hover:scale-[1.03]">
           <MeetingPreview blob={meeting.blob} />
         </div>
@@ -115,7 +135,7 @@ export function MeetingRow(props: MeetingRowProps) {
             </span>
           )}
         </div>
-        <MeetingSummary meeting={meeting} />
+        <MeetingSummary layout={layout} meeting={meeting} />
         <When className="text-[0.8rem] text-muted-foreground" value={meeting.createdAt} />
       </div>
       {layout === "row" ? (
