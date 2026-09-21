@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
 import { EmptyNote } from "@components/empty-note";
 import { FilterTab } from "@components/filter-tab";
 import { ListPager } from "@components/list-pager";
@@ -91,36 +88,15 @@ function MeetingsResults(props: {
 }
 
 export function MeetingsList(props: MeetingsListProps) {
-  const router = useRouter();
-  const [draft, setDraft] = useState(props.q);
   const query = useQuery({
     ...meetingsListQuery(props.page, MEETINGS_PAGE_SIZE, props.status, props.q),
   });
   const page = query.data;
   const pageCount = page === undefined ? 1 : Math.max(1, Math.ceil(page.total / page.limit));
 
-  useEffect(() => {
-    setDraft(props.q);
-  }, [props.q]);
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const q = draft.trim();
-    router.push(meetingsHref(props.status, 1, q));
-  }
-
   return (
     <main className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-12 md:px-8">
-        <form className="mb-5 max-w-md" onSubmit={onSearch}>
-          <Input
-            aria-label="Search meetings"
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Search titles and summaries"
-            type="search"
-            value={draft}
-          />
-        </form>
         <div className="mb-6 flex gap-6 border-b border-line">
           <FilterTab
             active={props.status === "all"}

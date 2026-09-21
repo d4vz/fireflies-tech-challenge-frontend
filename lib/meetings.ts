@@ -111,6 +111,15 @@ export function meetingsHref(status: MeetingListFilter, page = 1, q = ""): strin
   return `/meetings?${query}`;
 }
 
+export function meetingsSearchTarget(
+  pathname: string,
+  status: string | null | undefined,
+  q: string,
+): string {
+  const filter = pathname === "/meetings" ? parseMeetingStatus(status) : "all";
+  return meetingsHref(filter, 1, q);
+}
+
 export function parseMeetingsView(
   status: string | undefined,
   page: string | undefined,

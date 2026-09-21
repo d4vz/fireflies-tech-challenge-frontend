@@ -48,15 +48,26 @@ test("Meetings BFF forwards status", async () => {
   expect(route).toContain("listMeetings(page, limit, status, q)");
 });
 
-test("Meetings list search box keeps q on tabs and pager", async () => {
+test("Meetings list keeps q on tabs and pager", async () => {
   const list = await Bun.file(
     join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
   ).text();
-  expect(list).toContain('aria-label="Search meetings"');
   expect(list).toContain("No matching meetings");
-  expect(list).toContain("meetingsHref(props.status, 1, q)");
+  expect(list.includes('aria-label="Search meetings"')).toBe(false);
   expect(list).toContain("meetingsHref(props.status, props.page - 1, props.q)");
   expect(list).toContain("meetingsHref(props.status, props.page + 1, props.q)");
+});
+
+test("header Search meetings opens the library with cards", async () => {
+  const search = await Bun.file(join(import.meta.dir, "../components/meeting-search.tsx")).text();
+  const frame = await Bun.file(join(import.meta.dir, "../components/app-frame.tsx")).text();
+  const list = await Bun.file(
+    join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
+  ).text();
+  expect(search).toContain('aria-label="Search meetings"');
+  expect(search).toContain("meetingsSearchTarget");
+  expect(frame).toContain("MeetingSearch");
+  expect(list).toContain('layout="card"');
 });
 
 test("Meetings and Tasks pagers sit on the right", async () => {

@@ -4,6 +4,7 @@ import {
   toPublicMeeting,
   parseMeetingStatus,
   meetingsHref,
+  meetingsSearchTarget,
   parseMeetingsView,
 } from "@lib/meetings";
 
@@ -145,6 +146,16 @@ test("parseMeetingStatus keeps ready processing failed and queued", () => {
   expect(parseMeetingStatus("queued")).toBe("queued");
   expect(parseMeetingStatus("pending")).toBe("all");
   expect(parseMeetingStatus(undefined)).toBe("all");
+});
+
+test("meetingsSearchTarget keeps list status and resets other routes to All", () => {
+  expect(meetingsSearchTarget("/", null, "standup")).toBe("/meetings?q=standup");
+  expect(meetingsSearchTarget("/tasks", "failed", "standup")).toBe("/meetings?q=standup");
+  expect(meetingsSearchTarget("/meetings/abc", "ready", "standup")).toBe("/meetings?q=standup");
+  expect(meetingsSearchTarget("/meetings", "failed", "standup")).toBe(
+    "/meetings?status=failed&q=standup",
+  );
+  expect(meetingsSearchTarget("/meetings", "failed", "  ")).toBe("/meetings?status=failed");
 });
 
 test("meetingsHref drops default all and page 1", () => {

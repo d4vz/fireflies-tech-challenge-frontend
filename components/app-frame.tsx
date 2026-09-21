@@ -7,9 +7,10 @@ import type { IconHandle } from "@animateicons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Capture } from "@components/capture";
 import { AssistantHost } from "@components/assistant-host";
+import { MeetingSearch } from "@components/meeting-search";
 import { Nav, PageTitle } from "@components/nav";
 import { Button } from "@/components/ui/button";
 import { handleHover } from "@lib/handle-hover";
@@ -103,6 +104,9 @@ export function AppFrame(props: AppFrameProps) {
               <Menu ref={menuRef} size={20} />
             </Button>
             <PageTitle />
+            <Suspense fallback={<div className="min-w-0 max-w-xl flex-1" />}>
+              <MeetingSearch />
+            </Suspense>
             <div className="min-w-0 flex-1" />
             <Link
               href={assistant.openHref}
