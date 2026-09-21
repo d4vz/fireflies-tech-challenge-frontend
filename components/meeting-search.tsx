@@ -39,11 +39,11 @@ function MeetingSearchResults(props: { panel: MeetingSearchPanel }) {
       return <p className="px-2 py-3 text-sm text-destructive">could not load meetings</p>;
     case "results":
       return (
-        <DropdownMenuGroup>
+        <DropdownMenuGroup className="grid gap-1">
           {panel.items.map((meeting) => (
             <DropdownMenuItem
               asChild
-              className="h-auto items-start p-1 focus:bg-nav"
+              className="grid h-[4.5rem] items-stretch gap-3 overflow-hidden p-0 focus:bg-nav"
               key={meeting._id}
             >
               <MeetingRow layout="menu" meeting={meeting} />

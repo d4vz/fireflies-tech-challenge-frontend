@@ -6,7 +6,7 @@ import {
   meetingsHref,
   parseMeetingsView,
 } from "@lib/meetings";
-import { meetingSearchPanel } from "@lib/meeting-search";
+import { MEETING_SEARCH_LIMIT, meetingSearchPanel } from "@lib/meeting-search";
 
 test("toPublicMeeting rewrites video urls and thumbnail", () => {
   const meeting = toPublicMeeting({
@@ -146,6 +146,10 @@ test("parseMeetingStatus keeps ready processing failed and queued", () => {
   expect(parseMeetingStatus("queued")).toBe("queued");
   expect(parseMeetingStatus("pending")).toBe("all");
   expect(parseMeetingStatus(undefined)).toBe("all");
+});
+
+test("header search asks for four meeting cards", () => {
+  expect(MEETING_SEARCH_LIMIT).toBe(4);
 });
 
 test("meetingSearchPanel stays closed until a query is open", () => {

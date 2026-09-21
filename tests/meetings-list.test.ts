@@ -66,6 +66,8 @@ test("header Search meetings opens a dropdown of meeting cards", async () => {
   expect(search).toContain('layout="menu"');
   expect(search.includes("router.push")).toBe(false);
   expect(search.includes("meetingsSearchTarget")).toBe(false);
+  expect(search).toContain("grid h-[4.5rem]");
+  expect(search).toContain("overflow-hidden");
   expect(frame).toContain("MeetingSearch");
 });
 

@@ -1,6 +1,6 @@
 import type { Meeting, MeetingListPage } from "@lib/meetings";
 
-export const MEETING_SEARCH_LIMIT = 5;
+export const MEETING_SEARCH_LIMIT = 4;
 
 export type MeetingSearchPanel =
   | { kind: "closed" }

@@ -19,8 +19,19 @@ test("meeting card thumbs stay 16:9 on mobile", async () => {
 test("menu meeting cards keep a preview, title, and summary", async () => {
   const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
   expect(row).toContain('"menu"');
-  expect(row).toContain("grid-cols-[6.75rem_minmax(0,1fr)]");
+  expect(row).toContain("grid-cols-[8rem_minmax(0,1fr)]");
+  expect(row).toContain("grid-rows-[4.5rem]");
+  expect(row).toContain("h-[4.5rem]");
   expect(row).toContain("aspect-video");
+});
+
+test("menu meeting cards keep title and summary inside the thumbnail height", async () => {
+  const row = await Bun.file(join(import.meta.dir, "../components/meeting-row.tsx")).text();
+  const menuRow = row.slice(row.indexOf('case "menu":'), row.indexOf("default: {"));
+  expect(menuRow).toContain("overflow-hidden");
+  expect(menuRow).toContain("grid-rows-[4.5rem]");
+  expect(row).toContain('layout === "menu" ? null');
+  expect(row.includes("grid-cols-[6.75rem_")).toBe(false);
 });
 
 test("busy meeting rows show a summary skeleton instead of empty copy", async () => {
