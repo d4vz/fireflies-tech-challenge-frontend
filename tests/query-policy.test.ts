@@ -22,10 +22,13 @@ test("busyRefetchInterval polls every 2s while any status is queued or processin
 
 test("query factories bundle the list, meeting, transcript, and actions keys", () => {
   expect(JSON.stringify(meetingsListQuery(2, 5, "ready").queryKey)).toBe(
-    JSON.stringify(["meetings", "list", 2, 5, "ready"]),
+    JSON.stringify(["meetings", "list", 2, 5, "ready", ""]),
   );
   expect(JSON.stringify(meetingsListQuery(1, 20).queryKey)).toBe(
-    JSON.stringify(["meetings", "list", 1, 20, "all"]),
+    JSON.stringify(["meetings", "list", 1, 20, "all", ""]),
+  );
+  expect(JSON.stringify(meetingsListQuery(1, 5, "all", "standup").queryKey)).toBe(
+    JSON.stringify(["meetings", "list", 1, 5, "all", "standup"]),
   );
   expect(JSON.stringify(meetingQuery("abc").queryKey)).toBe(JSON.stringify(["meetings", "abc"]));
   expect(JSON.stringify(transcriptsQuery("abc").queryKey)).toBe(

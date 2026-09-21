@@ -46,10 +46,13 @@ type StoredActionListPage = {
   limit: number;
 };
 
-function pageQuery(page: number, limit: number, status: string): string {
+function pageQuery(page: number, limit: number, status: string, q = ""): string {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status !== "all") {
     params.set("status", status);
+  }
+  if (q !== "") {
+    params.set("q", q);
   }
   return params.toString();
 }
@@ -80,8 +83,9 @@ export function createBackendGateway(deps: BackendGatewayDeps) {
     page: number,
     limit: number,
     status: MeetingListFilter = "all",
+    q = "",
   ): Promise<MeetingListPage> {
-    const res = await request(`/meetings?${pageQuery(page, limit, status)}`, {
+    const res = await request(`/meetings?${pageQuery(page, limit, status, q)}`, {
       cache: "no-store",
     });
     if (!res.ok) {

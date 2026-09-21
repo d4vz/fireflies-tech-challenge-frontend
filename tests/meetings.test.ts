@@ -152,10 +152,18 @@ test("meetingsHref drops default all and page 1", () => {
   expect(meetingsHref("ready")).toBe("/meetings?status=ready");
   expect(meetingsHref("failed", 2)).toBe("/meetings?status=failed&page=2");
   expect(meetingsHref("all", 2)).toBe("/meetings?page=2");
+  expect(meetingsHref("all", 1, "standup")).toBe("/meetings?q=standup");
+  expect(meetingsHref("ready", 2, "standup")).toBe("/meetings?status=ready&page=2&q=standup");
+  expect(meetingsHref("all", 1, "  ")).toBe("/meetings");
 });
 
 test("parseMeetingsView reads status and page", () => {
-  expect(parseMeetingsView(undefined, undefined)).toEqual({ status: "all", page: 1 });
-  expect(parseMeetingsView("processing", "2")).toEqual({ status: "processing", page: 2 });
-  expect(parseMeetingsView("nope", "0")).toEqual({ status: "all", page: 1 });
+  expect(parseMeetingsView(undefined, undefined)).toEqual({ status: "all", page: 1, q: "" });
+  expect(parseMeetingsView("processing", "2")).toEqual({ status: "processing", page: 2, q: "" });
+  expect(parseMeetingsView("nope", "0")).toEqual({ status: "all", page: 1, q: "" });
+  expect(parseMeetingsView("ready", "1", "  standup  ")).toEqual({
+    status: "ready",
+    page: 1,
+    q: "standup",
+  });
 });

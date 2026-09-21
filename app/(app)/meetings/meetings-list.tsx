@@ -1,7 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { EmptyNote } from "@components/empty-note";
 import { FilterTab } from "@components/filter-tab";
 import { ListPager } from "@components/list-pager";
@@ -19,6 +22,7 @@ import { meetingsListQuery } from "@lib/query-policy";
 type MeetingsListProps = {
   page: number;
   status: MeetingListFilter;
+  q: string;
 };
 
 type EmptyCopy = {
@@ -26,7 +30,13 @@ type EmptyCopy = {
   body: string;
 };
 
-function emptyCopy(status: MeetingListFilter): EmptyCopy | null {
+function emptyCopy(status: MeetingListFilter, q: string): EmptyCopy | null {
+  if (q !== "") {
+    return {
+      title: "No matching meetings",
+      body: "Try another title or summary word.",
+    };
+  }
   switch (status) {
     case "all":
       return null;
@@ -50,6 +60,7 @@ function emptyCopy(status: MeetingListFilter): EmptyCopy | null {
 
 function MeetingsResults(props: {
   status: MeetingListFilter;
+  q: string;
   error: Error | null;
   page: MeetingListPage | undefined;
 }) {
@@ -64,7 +75,7 @@ function MeetingsResults(props: {
     return <MeetingsListSkeleton />;
   }
   if (props.page.total === 0) {
-    const empty = emptyCopy(props.status);
+    const empty = emptyCopy(props.status, props.q);
     if (empty === null) {
       return <MeetingsEmpty />;
     }
@@ -80,37 +91,66 @@ function MeetingsResults(props: {
 }
 
 export function MeetingsList(props: MeetingsListProps) {
+  const router = useRouter();
+  const [draft, setDraft] = useState(props.q);
   const query = useQuery({
-    ...meetingsListQuery(props.page, MEETINGS_PAGE_SIZE, props.status),
+    ...meetingsListQuery(props.page, MEETINGS_PAGE_SIZE, props.status, props.q),
   });
   const page = query.data;
   const pageCount = page === undefined ? 1 : Math.max(1, Math.ceil(page.total / page.limit));
 
+  useEffect(() => {
+    setDraft(props.q);
+  }, [props.q]);
+
+  function onSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const q = draft.trim();
+    router.push(meetingsHref(props.status, 1, q));
+  }
+
   return (
     <main className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-12 md:px-8">
+        <form className="mb-5 max-w-md" onSubmit={onSearch}>
+          <Input
+            aria-label="Search meetings"
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="Search titles and summaries"
+            type="search"
+            value={draft}
+          />
+        </form>
         <div className="mb-6 flex gap-6 border-b border-line">
-          <FilterTab active={props.status === "all"} href={meetingsHref("all")} label="All" />
-          <FilterTab active={props.status === "ready"} href={meetingsHref("ready")} label="Ready" />
+          <FilterTab
+            active={props.status === "all"}
+            href={meetingsHref("all", 1, props.q)}
+            label="All"
+          />
+          <FilterTab
+            active={props.status === "ready"}
+            href={meetingsHref("ready", 1, props.q)}
+            label="Ready"
+          />
           <FilterTab
             active={props.status === "processing"}
-            href={meetingsHref("processing")}
+            href={meetingsHref("processing", 1, props.q)}
             label="Processing"
           />
           <FilterTab
             active={props.status === "failed"}
-            href={meetingsHref("failed")}
+            href={meetingsHref("failed", 1, props.q)}
             label="Failed"
           />
         </div>
-        <MeetingsResults error={query.error} page={page} status={props.status} />
+        <MeetingsResults error={query.error} page={page} q={props.q} status={props.status} />
       </div>
       {page !== undefined && page.total > 0 ? (
         <ListPager
           page={props.page}
           pageCount={pageCount}
-          prevHref={meetingsHref(props.status, props.page - 1)}
-          nextHref={meetingsHref(props.status, props.page + 1)}
+          prevHref={meetingsHref(props.status, props.page - 1, props.q)}
+          nextHref={meetingsHref(props.status, props.page + 1, props.q)}
         />
       ) : null}
     </main>

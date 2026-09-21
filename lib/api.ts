@@ -13,10 +13,14 @@ export async function listMeetings(
   page: number,
   limit: number,
   status: MeetingListFilter = "all",
+  q = "",
 ): Promise<MeetingListPage> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status !== "all") {
     params.set("status", status);
+  }
+  if (q !== "") {
+    params.set("q", q);
   }
   const res = await fetch(`/api/meetings?${params.toString()}`);
   if (!res.ok) {

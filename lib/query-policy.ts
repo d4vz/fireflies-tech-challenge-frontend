@@ -22,10 +22,15 @@ function meetingStatuses(items: { status: MeetingStatus }[] | undefined): Meetin
   return items.map((item) => item.status);
 }
 
-export function meetingsListQuery(page: number, limit: number, status: MeetingListFilter = "all") {
+export function meetingsListQuery(
+  page: number,
+  limit: number,
+  status: MeetingListFilter = "all",
+  q = "",
+) {
   return queryOptions({
-    queryKey: meetingsListKey(page, limit, status),
-    queryFn: () => listMeetings(page, limit, status),
+    queryKey: meetingsListKey(page, limit, status, q),
+    queryFn: () => listMeetings(page, limit, status, q),
     refetchInterval: (current) => busyRefetchInterval(meetingStatuses(current.state.data?.items)),
   });
 }

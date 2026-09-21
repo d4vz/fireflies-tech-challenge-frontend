@@ -16,8 +16,13 @@ function productionGateway() {
   });
 }
 
-export function listMeetings(page: number, limit: number, status: MeetingListFilter = "all") {
-  return productionGateway().listMeetings(page, limit, status);
+export function listMeetings(
+  page: number,
+  limit: number,
+  status: MeetingListFilter = "all",
+  q = "",
+) {
+  return productionGateway().listMeetings(page, limit, status, q);
 }
 
 export function getMeeting(id: string) {

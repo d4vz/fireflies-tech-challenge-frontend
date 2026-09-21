@@ -101,6 +101,12 @@ test("stamps Bearer and strips the trailing slash from the base URL", async () =
   ]);
 });
 
+test("listMeetings forwards a text query", async () => {
+  const { calls, fetch } = recordingFetch(200, { items: [], total: 0, page: 1, limit: 5 });
+  await gatewayOf(fetch).listMeetings(1, 5, "all", "standup");
+  expect(calls[0]?.url).toBe("http://api.test/meetings?page=1&limit=5&q=standup");
+});
+
 test("listMeetings forwards status when it is not all and rewrites media URLs", async () => {
   const { calls, fetch } = recordingFetch(200, {
     items: [videoMeeting("abc")],

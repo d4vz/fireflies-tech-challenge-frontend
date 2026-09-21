@@ -44,7 +44,19 @@ test("Meetings list is a one-column card grid on mobile", async () => {
 test("Meetings BFF forwards status", async () => {
   const route = await Bun.file(join(import.meta.dir, "../app/api/meetings/route.ts")).text();
   expect(route).toContain("parseMeetingStatus");
-  expect(route).toContain("listMeetings(page, limit, status)");
+  expect(route).toContain("parseMeetingTextQuery");
+  expect(route).toContain("listMeetings(page, limit, status, q)");
+});
+
+test("Meetings list search box keeps q on tabs and pager", async () => {
+  const list = await Bun.file(
+    join(import.meta.dir, "../app/(app)/meetings/meetings-list.tsx"),
+  ).text();
+  expect(list).toContain('aria-label="Search meetings"');
+  expect(list).toContain("No matching meetings");
+  expect(list).toContain("meetingsHref(props.status, 1, q)");
+  expect(list).toContain("meetingsHref(props.status, props.page - 1, props.q)");
+  expect(list).toContain("meetingsHref(props.status, props.page + 1, props.q)");
 });
 
 test("Meetings and Tasks pagers sit on the right", async () => {

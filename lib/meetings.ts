@@ -56,8 +56,13 @@ export const HOME_DASHBOARD_LIMIT = 20;
 
 export type MeetingListFilter = "all" | MeetingStatus;
 
-export function meetingsListKey(page: number, limit: number, status: MeetingListFilter = "all") {
-  return ["meetings", "list", page, limit, status] as const;
+export function meetingsListKey(
+  page: number,
+  limit: number,
+  status: MeetingListFilter = "all",
+  q = "",
+) {
+  return ["meetings", "list", page, limit, status, q] as const;
 }
 
 export function meetingKey(id: string) {
@@ -83,13 +88,21 @@ export function parseMeetingStatus(value: string | null | undefined): MeetingLis
   return "all";
 }
 
-export function meetingsHref(status: MeetingListFilter, page = 1): string {
+export function parseMeetingTextQuery(value: string | null | undefined): string {
+  return (value ?? "").trim();
+}
+
+export function meetingsHref(status: MeetingListFilter, page = 1, q = ""): string {
   const params = new URLSearchParams();
   if (status !== "all") {
     params.set("status", status);
   }
   if (page > 1) {
     params.set("page", String(page));
+  }
+  const text = parseMeetingTextQuery(q);
+  if (text !== "") {
+    params.set("q", text);
   }
   const query = params.toString();
   if (query === "") {
@@ -98,10 +111,15 @@ export function meetingsHref(status: MeetingListFilter, page = 1): string {
   return `/meetings?${query}`;
 }
 
-export function parseMeetingsView(status: string | undefined, page: string | undefined) {
+export function parseMeetingsView(
+  status: string | undefined,
+  page: string | undefined,
+  q?: string | null,
+) {
   return {
     status: parseMeetingStatus(status),
     page: parsePage(page),
+    q: parseMeetingTextQuery(q),
   };
 }
 
